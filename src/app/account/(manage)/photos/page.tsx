@@ -21,7 +21,9 @@ import DropZone from '@/components/shared/DropZone';
 import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import Select from '@/components/shared/Select';
+import { useManageScrollContainer } from '@/context/ManageScrollContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
+import { useManagePhotoDeepLink } from '@/hooks/useManagePhotoDeepLink';
 import { photosQueryFilterKey, setAllPhotosQueriesFromFlat } from '@/hooks/photoQueryCache';
 import { useAuth } from '@/hooks/useAuth';
 import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
@@ -50,6 +52,7 @@ import {
   useContext,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -80,6 +83,20 @@ function PhotosPageLoadingFallback() {
   );
 }
 
+function ManageScrollContainerBridge({
+  targetRef,
+}: {
+  targetRef: React.MutableRefObject<HTMLElement | null>;
+}) {
+  const scrollContainerRef = useManageScrollContainer();
+
+  useLayoutEffect(() => {
+    targetRef.current = scrollContainerRef?.current ?? null;
+  }, [scrollContainerRef, targetRef]);
+
+  return null;
+}
+
 function PhotosPageContent() {
   const { user, profile, refreshProfile } = useAuth();
   const supabase = useSupabase();
@@ -88,14 +105,15 @@ function PhotosPageContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalContext = useContext(ModalContext);
   const searchParams = useSearchParams();
+  const photoIdFromUrl = searchParams.get('photo');
   const isPhotosUploadTourMock = isPhotosTourMockMode(searchParams);
   const isPhotosManageTourMock = isPhotosManageTourMockMode(searchParams);
-
   const photoEditDirtyRef = useRef(false);
   const { setHasUnsavedChanges } = useUnsavedChanges();
   const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [photoFilter, setPhotoFilter] = useState<'all' | 'public' | 'private'>('all');
+  const manageScrollContainerElRef = useRef<HTMLElement | null>(null);
 
   // React Query hooks
   const {
@@ -105,7 +123,50 @@ function PhotosPageContent() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    pageSize,
   } = usePhotos(user?.id, photoFilter);
+
+  const openMobileEditSheet = useCallback(() => {
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        setIsMobileEditSheetOpen(true);
+      });
+    });
+  }, []);
+
+  const forcePhotoFilterAll = useCallback(() => {
+    setPhotoFilter('all');
+  }, []);
+
+  const ensureDeepLinkSelection = useCallback((photoId: string) => {
+    setSelectedPhotoIds(new Set([photoId]));
+  }, []);
+
+  const handleDeepLinkPhotoNotFound = useCallback(() => {
+    setSelectedPhotoIds(new Set());
+    window.requestAnimationFrame(() => {
+      void confirm({
+        title: 'Photo not found',
+        message:
+          'We couldn\'t open that photo for editing. The link may be wrong, or the photo may have been deleted or isn\'t in your photo library.',
+        confirmLabel: 'OK',
+        hideCancel: true,
+      });
+    });
+  }, [confirm]);
+
+  const { pendingPhoto } = useManagePhotoDeepLink({
+    userId: user?.id,
+    photoIdFromUrl,
+    pageSize,
+    photos,
+    onForceFilterAll: forcePhotoFilterAll,
+    onEnsureSelection: ensureDeepLinkSelection,
+    onOpenMobileEdit: openMobileEditSheet,
+    onPhotoNotFound: handleDeepLinkPhotoNotFound,
+    scrollContainerElRef: manageScrollContainerElRef,
+  });
   const deletePhotosMutation = useDeletePhotos(user?.id, photoFilter, profile?.nickname);
   const updatePhotoMutation = useUpdatePhoto(user?.id, photoFilter, profile?.nickname);
   const bulkUpdatePhotosMutation = useBulkUpdatePhotos(user?.id, photoFilter, profile?.nickname);
@@ -296,10 +357,12 @@ function PhotosPageContent() {
     }
   };
 
-  const selectedPhotos = useMemo(
-    () => photos.filter((p) => selectedPhotoIds.has(p.id)),
-    [photos, selectedPhotoIds],
-  );
+  const selectedPhotos = useMemo(() => {
+    const fromGrid = photos.filter((p) => selectedPhotoIds.has(p.id));
+    if (fromGrid.length > 0) return fromGrid;
+    if (pendingPhoto && selectedPhotoIds.has(pendingPhoto.id)) return [pendingPhoto];
+    return [];
+  }, [photos, selectedPhotoIds, pendingPhoto]);
   const photoIds = useMemo(() => new Set(photos.map((photo) => photo.id)), [photos]);
   const visibleUploadingPhotos = useMemo(
     () => uploadingPhotos.filter((upload) => !upload.photo || !photoIds.has(upload.photo.id)),
@@ -344,13 +407,7 @@ function PhotosPageContent() {
   });
 
   const handleMobileEdit = () => {
-    if (!window.matchMedia('(max-width: 767px)').matches) return;
-    // Defer past the current pointer event so the opening tap can't hit the backdrop.
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        setIsMobileEditSheetOpen(true);
-      });
-    });
+    openMobileEditSheet();
   };
 
   const handleMobileEditClose = async () => {
@@ -433,6 +490,7 @@ function PhotosPageContent() {
             onAddToAlbum={handleAddToAlbum}
             isLoading={photosPending && photos.length === 0}
             onDirtyChange={handleDirtyChange}
+            photoFilter={photoFilter}
           />
         }
         mobileActionBar={
@@ -486,6 +544,9 @@ function PhotosPageContent() {
           className={showEmptyState ? 'flex min-h-0 flex-1 flex-col' : 'flex flex-col'}
           overlayMessage="Drop to upload"
         >
+          <ManageScrollContainerBridge
+            targetRef={manageScrollContainerElRef}
+          />
           {showEmptyState ? (
             <EmptyState
               id="photos-tour-library"
@@ -564,6 +625,7 @@ function PhotosPageContent() {
           isLoading={photosPending}
           onDirtyChange={handleDirtyChange}
           hideTitle
+          photoFilter={photoFilter}
         />
       </BottomSheet>
     </div>

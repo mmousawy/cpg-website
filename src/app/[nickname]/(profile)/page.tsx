@@ -9,6 +9,7 @@ import { ProfileSocialSection } from '@/components/profile/ProfileSocialLinks';
 import Button from '@/components/shared/Button';
 import ProfileGearSummary from '@/components/profile/ProfileGearSummary';
 import InterestCloud from '@/components/shared/InterestCloud';
+import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadgesWrapper';
 import { notFound } from 'next/navigation';
 
@@ -150,6 +151,9 @@ async function ProfileContent({ nickname }: { nickname: string }) {
 
   return (
     <>
+      <ProfileViewTracker
+        profileId={profile.id}
+      />
       <JsonLd
         data={profileJsonLd}
       />

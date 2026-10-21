@@ -18,6 +18,8 @@ export default function StatsRankedList({
   formatValue = (v) => v.toLocaleString(),
   emptyMessage = 'No data yet',
 }: StatsRankedListProps) {
+  const rankedItems = items.filter((item) => item.value > 0);
+
   return (
     <div>
       <h3
@@ -25,7 +27,7 @@ export default function StatsRankedList({
       >
         {title}
       </h3>
-      {items.length === 0 ? (
+      {rankedItems.length === 0 ? (
         <p
           className="text-sm text-foreground/60"
         >
@@ -35,7 +37,7 @@ export default function StatsRankedList({
         <ul
           className="space-y-2"
         >
-          {items.map((item, index) => {
+          {rankedItems.map((item, index) => {
             const content = (
               <div
                 className="flex items-center gap-3 rounded-lg border border-border-color bg-background-light p-2 hover:border-primary/40 transition-colors"

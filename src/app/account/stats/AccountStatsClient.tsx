@@ -23,6 +23,8 @@ type LifetimeStats = {
   likesReceived: number;
   likesMade: number;
   viewsReceived: number;
+  contentViewsReceived?: number;
+  profileViews?: number;
   rsvpsConfirmed: number;
   rsvpsCanceled: number;
   eventsAttended: number;
@@ -34,7 +36,8 @@ type SeriesEntry = { metric: string; points: StatsTimeSeriesPoint[] };
 
 const METRIC_LABELS: Record<string, string> = {
   uploads: 'Photo uploads',
-  views: 'Views received',
+  views: 'Photo & album views',
+  profile_views: 'Profile views',
   likes: 'Likes received',
   storage_added: 'Total storage',
   followers_gained: 'New followers',
@@ -90,10 +93,9 @@ export default function AccountStatsClient() {
     );
   }
 
-  const totalPhotos = detail.publicPhotoCount + detail.privatePhotoCount;
-  const publicPct = totalPhotos
-    ? Math.round((detail.publicPhotoCount / totalPhotos) * 100)
-    : 0;
+  const profileViews = lifetime.profileViews ?? 0;
+  const contentViewsReceived = lifetime.contentViewsReceived
+    ?? Math.max(0, lifetime.viewsReceived - profileViews);
 
   return (
     <PageContainer>
@@ -107,22 +109,22 @@ export default function AccountStatsClient() {
       >
         <StatsKpiGrid
           items={[
-          { label: 'Photos', value: lifetime.photos },
-          { label: 'Albums', value: lifetime.albums },
-          { label: 'Views received', value: lifetime.viewsReceived },
-          { label: 'Likes received', value: lifetime.likesReceived },
-          { label: 'Likes given', value: lifetime.likesMade },
-          { label: 'Comments made', value: lifetime.commentsMade },
-          { label: 'Comments received', value: lifetime.commentsReceived },
-          { label: 'Storage used', value: detail.storageBytes, format: 'bytes' },
-          { label: 'Followers', value: detail.followers },
-          { label: 'Following', value: detail.following },
-          { label: 'Events attended', value: lifetime.eventsAttended },
-          { label: 'RSVPs', value: `${lifetime.rsvpsConfirmed} / ${lifetime.rsvpsCanceled} canceled`, format: 'text' },
-          { label: 'Challenges', value: lifetime.challengesParticipated },
-          { label: 'Photos accepted', value: lifetime.challengePhotosAccepted },
-          { label: 'Public photos', value: `${publicPct}%`, format: 'text' },
-          { label: 'Shared albums', value: detail.sharedAlbumsJoined },
+            { label: 'Photos', value: lifetime.photos },
+            { label: 'Albums', value: lifetime.albums },
+            { label: 'Photo & album views', value: contentViewsReceived },
+            { label: 'Profile views', value: profileViews },
+            { label: 'Likes received', value: lifetime.likesReceived },
+            { label: 'Likes given', value: lifetime.likesMade },
+            { label: 'Comments made', value: lifetime.commentsMade },
+            { label: 'Comments received', value: lifetime.commentsReceived },
+            { label: 'Storage used', value: detail.storageBytes, format: 'bytes' },
+            { label: 'Followers', value: detail.followers },
+            { label: 'Following', value: detail.following },
+            { label: 'Events attended', value: lifetime.eventsAttended },
+            { label: 'RSVPs', value: `${lifetime.rsvpsConfirmed} / ${lifetime.rsvpsCanceled} canceled`, format: 'text' },
+            { label: 'Challenges', value: lifetime.challengesParticipated },
+            { label: 'Photos accepted', value: lifetime.challengePhotosAccepted },
+            { label: 'Shared albums', value: detail.sharedAlbumsJoined },
           ]}
         />
 
@@ -150,29 +152,29 @@ export default function AccountStatsClient() {
             >
               <LoadingSpinner />
             </div>
-        ) : (
-          <div
-            className="grid gap-8 lg:grid-cols-2"
-          >
-            {series.map((s) => (
-              <StatsTimeSeriesChart
-                key={`${s.metric}-${range}`}
-                title={METRIC_LABELS[s.metric] ?? s.metric}
-                metric={s.metric}
-                seriesUrl="/api/account/stats/analytics"
-                points={s.points}
-                range={range}
-                bucket={bucket}
-                chartType={chartType}
-                valueFormatter={
-                  s.metric === 'storage_added'
-                    ? (v) => formatFileSize(v) ?? '0'
-                    : undefined
-                }
-              />
-            ))}
-          </div>
-        )}
+          ) : (
+            <div
+              className="grid gap-8 lg:grid-cols-2"
+            >
+              {series.map((s) => (
+                <StatsTimeSeriesChart
+                  key={`${s.metric}-${range}`}
+                  title={METRIC_LABELS[s.metric] ?? s.metric}
+                  metric={s.metric}
+                  seriesUrl="/api/account/stats/analytics"
+                  points={s.points}
+                  range={range}
+                  bucket={bucket}
+                  chartType={chartType}
+                  valueFormatter={
+                    s.metric === 'storage_added'
+                      ? (v) => formatFileSize(v) ?? '0'
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          )}
         </StatsSection>
 
         <div
@@ -218,7 +220,7 @@ export default function AccountStatsClient() {
               />
             </div>
           </StatsSection>
-      )}
+        )}
       </div>
     </PageContainer>
   );

@@ -494,7 +494,7 @@ export type EventPhotoPageResult = {
   currentEvent: { id: number; title: string | null; slug: string; cover_image: string | null };
   albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null; event_title?: string | null }>;
   challenges: Array<{ id: string; title: string; slug: string; cover_image_url: string | null }>;
-  siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
+  siblingPhotos: Array<{ id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
 };
 
 /**
@@ -533,7 +533,7 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
 
   const { data: siblingData } = await supabase
     .from('album_photos')
-    .select('sort_order, contributor:profiles!album_photos_added_by_fkey(nickname), photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height, deleted_at)')
+    .select('sort_order, contributor:profiles!album_photos_added_by_fkey(nickname), photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, width, height, deleted_at)')
     .eq('album_id', album.id)
     .order('sort_order', { ascending: true });
 
@@ -541,6 +541,7 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
     sort_order: number | null;
     contributor: { nickname: string | null } | null;
     photo: {
+      id: string;
       short_id: string | null;
       url: string | null;
       blurhash: string | null;
@@ -554,8 +555,9 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
     .filter((ap: AlbumPhotoRow) => !ap.photo?.deleted_at)
     .map((ap: AlbumPhotoRow, index) => {
       const p = ap.photo;
-      if (!p?.short_id || !p?.url) return null;
+      if (!p?.id || !p?.short_id || !p?.url) return null;
       return {
+        id: p.id,
         shortId: p.short_id,
         url: p.url,
         blurhash: p.blurhash ?? null,
@@ -564,7 +566,7 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
         height: p.height ?? 800,
       };
     })
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
 }
 
 /**
@@ -637,13 +639,14 @@ export async function getEventPhotoByShortId(
   // Get sibling photos from event album, ordered by sort_order
   const { data: siblingData } = await supabase
     .from('album_photos')
-    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height, deleted_at)')
+    .select('sort_order, photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, width, height, deleted_at)')
     .eq('album_id', album.id)
     .order('sort_order', { ascending: true });
 
   type AlbumPhotoRow = {
     sort_order: number | null;
     photo: {
+      id: string;
       short_id: string | null;
       url: string | null;
       blurhash: string | null;
@@ -657,8 +660,9 @@ export async function getEventPhotoByShortId(
     .filter((ap: AlbumPhotoRow) => !ap.photo?.deleted_at)
     .map((ap: AlbumPhotoRow, index) => {
       const p = ap.photo;
-      if (!p?.short_id || !p?.url) return null;
+      if (!p?.id || !p?.short_id || !p?.url) return null;
       return {
+        id: p.id,
         shortId: p.short_id,
         url: p.url,
         blurhash: p.blurhash ?? null,
@@ -667,7 +671,7 @@ export async function getEventPhotoByShortId(
         height: p.height ?? 800,
       };
     })
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
 
   // Get photo owner profile
   if (!photo.user_id) {

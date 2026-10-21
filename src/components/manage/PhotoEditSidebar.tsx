@@ -1,5 +1,6 @@
 'use client';
 
+import type { PhotoFilter } from '@/hooks/photoQueryCache';
 import type { PhotoWithAlbums } from '@/types/photos';
 import BulkPhotoEditForm from './BulkPhotoEditForm';
 import PhotoEditEmptyState from './PhotoEditEmptyState';
@@ -39,6 +40,7 @@ interface PhotoEditSidebarProps {
   hideTitle?: boolean;
   /** When true, only "Remove from album" is available — editing/deleting is disabled (e.g. selection includes non-owned photos) */
   readOnly?: boolean;
+  photoFilter?: PhotoFilter;
 }
 
 export default function PhotoEditSidebar({
@@ -59,6 +61,7 @@ export default function PhotoEditSidebar({
   externalSuccess = false,
   hideTitle = false,
   readOnly = false,
+  photoFilter = 'all',
 }: PhotoEditSidebarProps) {
   const photo = selectedPhotos[0];
   const isMultiple = selectedPhotos.length > 1;
@@ -92,6 +95,7 @@ export default function PhotoEditSidebar({
         externalSuccess={externalSuccess}
         hideTitle={hideTitle}
         readOnly={readOnly}
+        photoFilter={photoFilter}
       />
     );
   }
@@ -114,6 +118,7 @@ export default function PhotoEditSidebar({
       externalSuccess={externalSuccess}
       hideTitle={hideTitle}
       readOnly={readOnly}
+      photoFilter={photoFilter}
     />
   );
 }

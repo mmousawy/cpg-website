@@ -1,0 +1,24 @@
+---
+description: Do not hand-edit generated Supabase types; regenerate via db:types / db:sync
+alwaysApply: true
+---
+
+# `src/database.types.ts` is generated
+
+**Never edit [`src/database.types.ts`](src/database.types.ts) by hand** (no new tables, columns, RPCs, or type tweaks in that file).
+
+It is produced from the database schema and post-processed by [`scripts/postprocess-database-types.mjs`](scripts/postprocess-database-types.mjs) (`pnpm db:types`).
+
+## When the schema changes
+
+1. Add or update a SQL migration under `supabase/migrations/` (do not rely on editing types to “match” the DB).
+2. Apply migrations on the target database.
+3. Regenerate types, then post-process:
+   - **Remote (this repo’s usual flow):** `pnpm db:sync` — pulls types and baseline from the VPS, runs post-process.
+   - **Manual:** `supabase gen types typescript … > ./src/database.types.ts`, then **`pnpm db:types`** (required; patches nullable RPC UUIDs and runs ESLint on the file).
+
+See [README.md — Generate Supabase Types](README.md) for SSH/Cloud examples.
+
+## If TypeScript complains about missing DB types
+
+Fix the schema and regenerate — do not patch `database.types.ts` in the PR.

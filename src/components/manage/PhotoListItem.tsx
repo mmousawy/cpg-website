@@ -123,6 +123,12 @@ interface PhotoListItemProps {
   className?: string;
   /** Skip blurhash decode for list thumbnails (performance) */
   noBlur?: boolean;
+  /** Opens capture-details modal instead of the legacy EXIF popover */
+  onCaptureDetailsClick?: () => void;
+  /** Show the capture-details control even when exif_data is empty */
+  showCaptureDetailsAction?: boolean;
+  /** Accessible name / title for the capture-details control */
+  captureDetailsActionLabel?: string;
 }
 
 /**
@@ -137,6 +143,9 @@ export default function PhotoListItem({
   photoPageUrl,
   className = '',
   noBlur = false,
+  onCaptureDetailsClick,
+  showCaptureDetailsAction = false,
+  captureDetailsActionLabel = 'Capture details',
 }: PhotoListItemProps) {
   const displayName = getPhotoDisplayName(photo);
   const isDetailed = variant === 'detailed';
@@ -148,6 +157,9 @@ export default function PhotoListItem({
   const privateLinkRef = useRef<HTMLButtonElement>(null);
   const exifData = photo.exif_data as Record<string, unknown> | null | undefined;
   const hasExif = exifData && Object.keys(exifData).length > 0;
+  const showExifControl = onCaptureDetailsClick
+    ? showCaptureDetailsAction || hasExif
+    : hasExif;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -390,13 +402,17 @@ export default function PhotoListItem({
               document.body,
             )
           }
-          {hasExif && (
+          {showExifControl && (
             <>
               <button
                 ref={buttonRef}
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (onCaptureDetailsClick) {
+                    onCaptureDetailsClick();
+                    return;
+                  }
                   if (!showExif && buttonRef.current) {
                     const rect = buttonRef.current.getBoundingClientRect();
                     setPopoverPosition({
@@ -409,15 +425,15 @@ export default function PhotoListItem({
                   }
                 }}
                 className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/70 hover:text-foreground"
-                title="View EXIF data"
-                aria-label="View EXIF data"
+                title={captureDetailsActionLabel}
+                aria-label={captureDetailsActionLabel}
               >
                 <InfoIconSVG
                   className="size-3.5"
                 />
               </button>
 
-              {showExif &&
+              {!onCaptureDetailsClick && showExif &&
                 popoverPosition &&
                 typeof window !== 'undefined' &&
                 createPortal(
@@ -438,7 +454,7 @@ export default function PhotoListItem({
                     <div
                       className="table text-[11px]"
                     >
-                      {Object.entries(exifData).map(([key, value]) => {
+                      {Object.entries(exifData ?? {}).map(([key, value]) => {
                         const formattedValue = formatExifValue(key, value);
                         if (!formattedValue) return null;
                         return (

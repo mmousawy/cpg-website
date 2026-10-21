@@ -1,6 +1,7 @@
 'use client';
 
 import { useProgressRouter } from '@/components/layout/NavigationProgress';
+import { recordView } from '@/utils/recordView';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import clsx from 'clsx';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -14,6 +15,7 @@ function keepLightboxKeysOffThePage(lightbox: PhotoSwipeLightboxInstance) {
 }
 
 type GalleryPhoto = {
+  id: string;
   shortId: string;
   url: string;
   width: number;
@@ -54,6 +56,7 @@ export default function PhotoWithLightbox({
   const imageAnchorRef = useRef<HTMLAnchorElement>(null);
   const lightboxRef = useRef<PhotoSwipeLightboxInstance | null>(null);
   const initialIndexRef = useRef(0);
+  const skipInitialLightboxViewRef = useRef(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
   const router = useProgressRouter();
@@ -168,6 +171,21 @@ export default function PhotoWithLightbox({
         }
       });
 
+      lightbox.on('change', () => {
+        const pswp = lightbox.pswp;
+        if (!pswp || !galleryPhotos) return;
+
+        const photo = galleryPhotos[pswp.currIndex];
+        if (!photo?.id) return;
+
+        if (skipInitialLightboxViewRef.current && pswp.currIndex === initialIndexRef.current) {
+          skipInitialLightboxViewRef.current = false;
+          return;
+        }
+
+        recordView('photo', photo.id);
+      });
+
       lightbox.on('closingAnimationStart', () => {
         const pswp = lightbox.pswp;
         if (!pswp) return;
@@ -203,6 +221,7 @@ export default function PhotoWithLightbox({
 
   const openGallery = useCallback((index: number, initialPoint?: { x: number; y: number } | null) => {
     initialIndexRef.current = index;
+    skipInitialLightboxViewRef.current = true;
     lightboxRef.current?.loadAndOpen(index, undefined, initialPoint ?? null);
   }, []);
 
@@ -270,7 +289,7 @@ export default function PhotoWithLightbox({
           onLoad={() => setIsLoaded(true)}
           className={clsx(
             isInAlbum ? 'max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]'
-                      : 'max-h-[calc(100vh-90px)] sm:max-h-[calc(100vh-106px)] lg:max-h-[calc(100vh-138px)] ',
+              : 'max-h-[calc(100vh-90px)] sm:max-h-[calc(100vh-106px)] lg:max-h-[calc(100vh-138px)] ',
           )}
           style={{
             aspectRatio: `${width}/${height}`,

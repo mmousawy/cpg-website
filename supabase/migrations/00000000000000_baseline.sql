@@ -765,6 +765,25 @@ COMMENT ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb"
 
 
 
+CREATE OR REPLACE FUNCTION "public"."batch_update_photo_exif"("photo_updates" "jsonb") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  UPDATE public.photos
+  SET
+    exif_data = (update_item->'exif_data')
+  FROM jsonb_array_elements(photo_updates) AS update_item
+  WHERE public.photos.id = (update_item->>'id')::uuid
+    AND public.photos.user_id = auth.uid()
+    AND public.photos.deleted_at IS NULL;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."batch_update_photo_exif"("photo_updates" "jsonb") OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."batch_update_photos"("photo_updates" "jsonb") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -1525,7 +1544,7 @@ BEGIN
       'photos', (SELECT COUNT(*)::int FROM photos WHERE deleted_at IS NULL),
       'albums', (SELECT COUNT(*)::int FROM albums WHERE deleted_at IS NULL),
       'views', (
-        (SELECT COUNT(*)::int FROM photo_views) + (SELECT COUNT(*)::int FROM album_views)
+        (SELECT COUNT(*)::int FROM photo_views) + (SELECT COUNT(*)::int FROM album_views) + (SELECT COUNT(*)::int FROM profile_views)
       ),
       'likes', (
         (SELECT COUNT(*)::int FROM photo_likes) + (SELECT COUNT(*)::int FROM album_likes)
@@ -1619,6 +1638,7 @@ BEGIN
         FROM photos p
         JOIN profiles pr ON pr.id = p.user_id
         WHERE p.deleted_at IS NULL AND p.is_public = true
+          AND p.view_count > 0
         ORDER BY p.view_count DESC
         LIMIT 10
       ) t
@@ -1631,6 +1651,7 @@ BEGIN
         FROM photos p
         JOIN profiles pr ON pr.id = p.user_id
         WHERE p.deleted_at IS NULL AND p.is_public = true
+          AND p.likes_count > 0
         ORDER BY p.likes_count DESC
         LIMIT 10
       ) t
@@ -1644,6 +1665,7 @@ BEGIN
         FROM profiles pr
         JOIN photos p ON p.user_id = pr.id AND p.deleted_at IS NULL
         GROUP BY pr.id, pr.nickname, pr.full_name
+        HAVING COALESCE(SUM(p.file_size), 0) > 0
         ORDER BY storage_bytes DESC
         LIMIT 20
       ) t
@@ -1697,6 +1719,8 @@ BEGIN
           view_count AS value
         FROM photos
         WHERE user_id = p_user_id AND deleted_at IS NULL
+          AND storage_path NOT LIKE 'events/%'
+          AND view_count > 0
         ORDER BY view_count DESC
         LIMIT 10
       ) t
@@ -1708,6 +1732,8 @@ BEGIN
           likes_count AS value
         FROM photos
         WHERE user_id = p_user_id AND deleted_at IS NULL
+          AND storage_path NOT LIKE 'events/%'
+          AND likes_count > 0
         ORDER BY likes_count DESC
         LIMIT 10
       ) t
@@ -1719,6 +1745,8 @@ BEGIN
           file_size AS value
         FROM photos
         WHERE user_id = p_user_id AND deleted_at IS NULL
+          AND storage_path NOT LIKE 'events/%'
+          AND file_size > 0
         ORDER BY file_size DESC
         LIMIT 10
       ) t
@@ -1726,14 +1754,17 @@ BEGIN
     'storageBytes', (
       SELECT COALESCE(SUM(file_size), 0)::bigint FROM photos
       WHERE user_id = p_user_id AND deleted_at IS NULL
+        AND storage_path NOT LIKE 'events/%'
     ),
     'publicPhotoCount', (
       SELECT COUNT(*)::int FROM photos
       WHERE user_id = p_user_id AND deleted_at IS NULL AND is_public = true
+        AND storage_path NOT LIKE 'events/%'
     ),
     'privatePhotoCount', (
       SELECT COUNT(*)::int FROM photos
       WHERE user_id = p_user_id AND deleted_at IS NULL AND is_public = false
+        AND storage_path NOT LIKE 'events/%'
     ),
     'followers', (SELECT COUNT(*)::int FROM follows WHERE following_id = p_user_id),
     'following', (SELECT COUNT(*)::int FROM follows WHERE follower_id = p_user_id),
@@ -1751,6 +1782,7 @@ BEGIN
       FROM (
         SELECT mime_type, COUNT(*)::int AS cnt
         FROM photos WHERE user_id = p_user_id AND deleted_at IS NULL
+          AND storage_path NOT LIKE 'events/%'
         GROUP BY mime_type
       ) t
     ),
@@ -1759,6 +1791,7 @@ BEGIN
       FROM (
         SELECT license, COUNT(*)::int AS cnt
         FROM photos WHERE user_id = p_user_id AND deleted_at IS NULL
+          AND storage_path NOT LIKE 'events/%'
         GROUP BY license
       ) t
     ),
@@ -1769,6 +1802,7 @@ BEGIN
         FROM photo_tags pt
         JOIN photos p ON p.id = pt.photo_id
         WHERE p.user_id = p_user_id AND p.deleted_at IS NULL
+          AND p.storage_path NOT LIKE 'events/%'
         GROUP BY pt.tag
         ORDER BY cnt DESC
         LIMIT 10
@@ -1924,6 +1958,9 @@ BEGIN
       COALESCE((
         SELECT SUM(view_count)::int FROM photos
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
+      ), 0) +
+      COALESCE((
+        SELECT view_count::int FROM profiles WHERE id = p_user_id
       ), 0)
     ),
     'challengesParticipated', (
@@ -2045,6 +2082,7 @@ BEGIN
       WHERE deleted_at IS NULL
         AND created_at >= p_start AND created_at <= p_end
         AND (p_user_id IS NULL OR user_id = p_user_id)
+        AND (p_user_id IS NULL OR storage_path NOT LIKE 'events/%')
       GROUP BY 1
     ) s;
 
@@ -2062,6 +2100,7 @@ BEGIN
         WHERE pv.viewed_at >= p_start AND pv.viewed_at <= p_end
           AND p.deleted_at IS NULL
           AND (p_user_id IS NULL OR p.user_id = p_user_id)
+          AND (p_user_id IS NULL OR p.storage_path NOT LIKE 'events/%')
         UNION ALL
         SELECT av.viewed_at FROM album_views av
         JOIN albums a ON a.id = av.album_id
@@ -2069,6 +2108,21 @@ BEGIN
           AND a.deleted_at IS NULL
           AND (p_user_id IS NULL OR a.user_id = p_user_id)
       ) v
+      GROUP BY date_trunc(v_trunc, viewed_at)
+    ) s;
+
+  ELSIF p_metric = 'profile_views' THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', bucket), v_date_fmt),
+      'value', cnt
+    ) ORDER BY bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, viewed_at) AS bucket, COUNT(*)::int AS cnt
+      FROM profile_views prv
+      JOIN profiles pr ON pr.id = prv.profile_id
+      WHERE prv.viewed_at >= p_start AND prv.viewed_at <= p_end
+        AND (p_user_id IS NULL OR pr.id = p_user_id)
       GROUP BY date_trunc(v_trunc, viewed_at)
     ) s;
 
@@ -2086,6 +2140,7 @@ BEGIN
         WHERE pl.created_at >= p_start AND pl.created_at <= p_end
           AND p.deleted_at IS NULL
           AND (p_user_id IS NULL OR p.user_id = p_user_id)
+          AND (p_user_id IS NULL OR p.storage_path NOT LIKE 'events/%')
         UNION ALL
         SELECT al.created_at FROM album_likes al
         JOIN albums a ON a.id = al.album_id
@@ -2130,6 +2185,7 @@ BEGIN
       ) AS gs(bucket)
       LEFT JOIN photos p ON
         (p_user_id IS NULL OR p.user_id = p_user_id)
+        AND (p_user_id IS NULL OR p.storage_path NOT LIKE 'events/%')
         AND (p.created_at AT TIME ZONE 'UTC') < gs.bucket + v_step
         AND (
           p.deleted_at IS NULL
@@ -2150,6 +2206,7 @@ BEGIN
       WHERE deleted_at IS NOT NULL
         AND deleted_at >= p_start AND deleted_at <= p_end
         AND (p_user_id IS NULL OR user_id = p_user_id)
+        AND (p_user_id IS NULL OR storage_path NOT LIKE 'events/%')
       GROUP BY 1
     ) s;
 
@@ -2253,9 +2310,15 @@ BEGIN
        JOIN photos p ON p.id = pl.photo_id
        WHERE pl.user_id = p_user_id AND p.deleted_at IS NULL)
     ),
+    'contentViewsReceived', (
+      COALESCE((SELECT SUM(view_count)::int FROM albums WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL), 0) +
+      COALESCE((SELECT SUM(view_count)::int FROM photos WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL AND storage_path NOT LIKE 'events/%'), 0)
+    ),
+    'profileViews', COALESCE((SELECT view_count::int FROM profiles WHERE id = p_user_id), 0),
     'viewsReceived', (
       COALESCE((SELECT SUM(view_count)::int FROM albums WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL), 0) +
-      COALESCE((SELECT SUM(view_count)::int FROM photos WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL), 0)
+      COALESCE((SELECT SUM(view_count)::int FROM photos WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL AND storage_path NOT LIKE 'events/%'), 0) +
+      COALESCE((SELECT view_count::int FROM profiles WHERE id = p_user_id), 0)
     ),
     'rsvpsConfirmed', (
       SELECT COUNT(DISTINCT event_id)::int FROM events_rsvps
@@ -2632,6 +2695,17 @@ BEGIN
 
     UPDATE albums SET view_count = view_count + 1 WHERE id = p_entity_id;
     INSERT INTO album_views (album_id, viewed_at) VALUES (p_entity_id, NOW());
+  ELSIF p_entity_type = 'profile' THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM profiles
+      WHERE id = p_entity_id
+        AND public.profile_is_public_member(nickname, suspended_at, deletion_scheduled_at)
+    ) THEN
+      RETURN;
+    END IF;
+
+    UPDATE profiles SET view_count = view_count + 1 WHERE id = p_entity_id;
+    INSERT INTO profile_views (profile_id, viewed_at) VALUES (p_entity_id, NOW());
   END IF;
 END;
 $$;
@@ -3081,6 +3155,10 @@ BEGIN
 
   IF NEW.nickname_changed_at IS DISTINCT FROM OLD.nickname_changed_at THEN
     RAISE EXCEPTION 'Cannot modify nickname_changed_at';
+  END IF;
+
+  IF NEW.view_count IS DISTINCT FROM OLD.view_count THEN
+    RAISE EXCEPTION 'Cannot modify profile engagement counters';
   END IF;
 
   RETURN NEW;
@@ -4264,6 +4342,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "photo_captions" "text" DEFAULT 'hover'::"text",
     "motion" "text" DEFAULT 'system'::"text",
     "tours" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "view_count" integer DEFAULT 0 NOT NULL,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_motion_check" CHECK ((("motion" IS NULL) OR ("motion" = ANY (ARRAY['system'::"text", 'reduce'::"text"])))),
@@ -4723,6 +4802,20 @@ CREATE TABLE IF NOT EXISTS "public"."profile_interests" (
 ALTER TABLE "public"."profile_interests" OWNER TO "supabase_admin";
 
 
+CREATE TABLE IF NOT EXISTS "public"."profile_views" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "profile_id" "uuid" NOT NULL,
+    "viewed_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."profile_views" OWNER TO "supabase_admin";
+
+
+COMMENT ON TABLE "public"."profile_views" IS 'Tracks individual profile page views with timestamps for analytics';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."reports" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "reporter_id" "uuid",
@@ -4812,6 +4905,17 @@ ALTER TABLE "public"."scene_events" OWNER TO "supabase_admin";
 
 COMMENT ON TABLE "public"."scene_events" IS 'Community-curated photography events. Members add events directly; moderation via reports.';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."scrappy_camera_matches" (
+    "alias_key" "text" NOT NULL,
+    "display_name" "text" NOT NULL,
+    "file_name" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."scrappy_camera_matches" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."shared_album_members" (
@@ -5190,6 +5294,11 @@ ALTER TABLE ONLY "public"."profile_interests"
 
 
 
+ALTER TABLE ONLY "public"."profile_views"
+    ADD CONSTRAINT "profile_views_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_nickname_key" UNIQUE ("nickname");
 
@@ -5222,6 +5331,11 @@ ALTER TABLE ONLY "public"."scene_events"
 
 ALTER TABLE ONLY "public"."scene_events"
     ADD CONSTRAINT "scene_events_slug_key" UNIQUE ("slug");
+
+
+
+ALTER TABLE ONLY "public"."scrappy_camera_matches"
+    ADD CONSTRAINT "scrappy_camera_matches_pkey" PRIMARY KEY ("alias_key");
 
 
 
@@ -5677,6 +5791,14 @@ CREATE INDEX "idx_profile_interests_interest" ON "public"."profile_interests" US
 
 
 CREATE INDEX "idx_profile_interests_profile_id" ON "public"."profile_interests" USING "btree" ("profile_id");
+
+
+
+CREATE INDEX "idx_profile_views_profile_viewed_at" ON "public"."profile_views" USING "btree" ("profile_id", "viewed_at" DESC);
+
+
+
+CREATE INDEX "idx_profile_views_viewed_at" ON "public"."profile_views" USING "btree" ("viewed_at" DESC);
 
 
 
@@ -6162,6 +6284,11 @@ ALTER TABLE ONLY "public"."profile_interests"
 
 
 
+ALTER TABLE ONLY "public"."profile_views"
+    ADD CONSTRAINT "profile_views_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -6496,6 +6623,10 @@ CREATE POLICY "Profile interests are viewable by everyone" ON "public"."profile_
 
 
 
+CREATE POLICY "Profile views are publicly readable" ON "public"."profile_views" FOR SELECT USING (true);
+
+
+
 CREATE POLICY "Read own or managed members" ON "public"."shared_album_members" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."albums" "a"
   WHERE (("a"."id" = "shared_album_members"."album_id") AND (("a"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()))))));
@@ -6545,6 +6676,10 @@ CREATE POLICY "Service role manages notification email batches" ON "public"."not
 
 
 CREATE POLICY "Service role manages pending notifications" ON "public"."pending_notifications" TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Service role manages scrappy camera matches" ON "public"."scrappy_camera_matches" TO "service_role" USING (true) WITH CHECK (true);
 
 
 
@@ -6881,6 +7016,9 @@ ALTER TABLE "public"."photos" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."profile_interests" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."profile_views" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
@@ -6894,6 +7032,9 @@ ALTER TABLE "public"."scene_event_interests" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."scene_events" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."scrappy_camera_matches" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."shared_album_members" ENABLE ROW LEVEL SECURITY;
@@ -7329,6 +7470,13 @@ GRANT ALL ON FUNCTION "public"."auto_assign_album_photo_sort_order"() TO "servic
 GRANT ALL ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb") TO "postgres";
 GRANT ALL ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."batch_update_photo_exif"("photo_updates" "jsonb") TO "postgres";
+GRANT ALL ON FUNCTION "public"."batch_update_photo_exif"("photo_updates" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."batch_update_photo_exif"("photo_updates" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."batch_update_photo_exif"("photo_updates" "jsonb") TO "service_role";
 
 
 
@@ -8150,6 +8298,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_views" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_views" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_views" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_views" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."reports" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."reports" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."reports" TO "authenticated";
@@ -8175,6 +8330,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_events" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_events" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_events" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scrappy_camera_matches" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scrappy_camera_matches" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scrappy_camera_matches" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scrappy_camera_matches" TO "service_role";
 
 
 

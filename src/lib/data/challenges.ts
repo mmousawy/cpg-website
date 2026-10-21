@@ -249,7 +249,7 @@ export type ChallengePhotoPageResult = {
   currentChallenge: { id: string; title: string; slug: string; cover_image_url: string | null };
   albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null; event_title?: string | null }>;
   challenges: Array<{ id: string; title: string; slug: string; cover_image_url: string | null }>;
-  siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
+  siblingPhotos: Array<{ id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
 };
 
 /**
@@ -275,12 +275,13 @@ export async function getChallengeSiblingPhotos(challengeSlug: string, includeTe
 
   const { data: siblingData } = await supabase
     .from('challenge_photos')
-    .select('short_id, url, blurhash, width, height, reviewed_at, profile_nickname')
+    .select('photo_id, short_id, url, blurhash, width, height, reviewed_at, profile_nickname')
     .eq('challenge_id', challenge.id)
     .order('reviewed_at', { ascending: false });
 
   return filterChallengePhotos(siblingData || [], includeTestContent)
     .map((sp, index) => ({
+      id: sp.photo_id ?? '',
       shortId: sp.short_id ?? '',
       url: sp.url ?? '',
       blurhash: sp.blurhash,
@@ -288,7 +289,7 @@ export async function getChallengeSiblingPhotos(challengeSlug: string, includeTe
       width: sp.width ?? 1200,
       height: sp.height ?? 800,
     }))
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => !!p.shortId && !!p.url);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => !!p.id && !!p.shortId && !!p.url);
 }
 
 /**
@@ -347,12 +348,13 @@ export async function getChallengePhotoByShortId(
   // Get sibling photos (all accepted photos in this challenge, ordered by reviewed_at)
   const { data: siblingData } = await supabase
     .from('challenge_photos')
-    .select('short_id, url, blurhash, width, height, reviewed_at')
+    .select('photo_id, short_id, url, blurhash, width, height, reviewed_at')
     .eq('challenge_id', challenge.id)
     .order('reviewed_at', { ascending: false });
 
   const siblingPhotos = (siblingData || [])
     .map((sp, index) => ({
+      id: sp.photo_id ?? '',
       shortId: sp.short_id ?? '',
       url: sp.url ?? '',
       blurhash: sp.blurhash,
@@ -360,7 +362,7 @@ export async function getChallengePhotoByShortId(
       width: sp.width ?? 1200,
       height: sp.height ?? 800,
     }))
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => !!p.shortId && !!p.url);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => !!p.id && !!p.shortId && !!p.url);
 
   // Get photo owner profile
   if (!photo.user_id) {

@@ -3,14 +3,14 @@
 ### Stats & insights
 - Per-image stats: views/likes/comments over time for a single photo, plus where traffic came from (gallery, profile, challenge, search, external share)
 - Per-album stats (same idea, plus which photos in the album perform best)
-- Profile visit stats (who/how many visited `/@username`, follower growth over time)
+- Who visited a profile
 - Challenge stats for members: acceptance rate, how my submissions compare to the average
 - Event stats for admins: RSVP → attendance conversion, no-show rate per member, repeat attendees
 
 ### Discovery & social
-- "Following" feed: a timeline of new uploads/albums from people you follow (follows exist, but there's no feed that uses them)
+- "Following" feed: a timeline of new uploads and albums from people you follow
 - Saved/bookmarked photos (private, separate from public likes)
-- Photo map: GPS is already extracted from EXIF but never shown; opt-in map per photo/album/profile (with location privacy, e.g. blur to city level)
+- Opt-in location privacy on photos (for example blur to city level), plus a map for an album or a profile
 - Browse by gear: "photos shot with this camera/lens" pages built from EXIF
 - Related photos on the photo detail page (same tags, same event, same photographer)
 - Mentions (`@nickname`) in comments and captions, with notifications
@@ -29,7 +29,7 @@
 
 ### Portfolio & profile
 - Featured/pinned photos on the profile (portfolio showcase)
-- Custom profile layout/cover image
+- Custom public profile layout
 - Downloadable originals toggle per photo (respecting license), plus print-size info
 
 ### Admin & moderation
@@ -37,7 +37,7 @@
 - Audit log of admin actions (who suspended/resolved/deleted what, and when)
 - Member roles beyond admin (e.g. moderator, event host) with scoped permissions
 - Newsletter analytics (open/click rates via Resend webhooks) and a newsletter archive page
-- Bulk member actions (export CSV, message a filtered group)
+- Message a filtered group of members
 
 ### Platform & quality
 - PWA polish: installable, offline shell, web push notifications (in-app notifications already exist)

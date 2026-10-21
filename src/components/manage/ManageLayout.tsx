@@ -212,7 +212,7 @@ function ManageLayoutContent({
                         size="sm"
                       />
                     </div>
-              )}
+                  )}
 
                   {/* Album switcher (only in album detail mode - hidden on mobile) */}
                   {albumDetail && (
@@ -224,7 +224,7 @@ function ManageLayoutContent({
                         slug={albumDetail.slug}
                       />
                     </div>
-              )}
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -246,13 +246,13 @@ function ManageLayoutContent({
                     compact
                   />
                 </div>
-          )}
+              )}
             </div>
 
             {/* Content area — this is the scroll container for infinite scroll sentinels */}
             <div
               ref={scrollContainerRef}
-              className="flex min-h-0 flex-1 flex-col overflow-y-auto max-sm:pb-(--mobile-shell-padding-bottom)"
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto max-md:pb-(--mobile-shell-padding-bottom)"
             >
               {children}
             </div>
