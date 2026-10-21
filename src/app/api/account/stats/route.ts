@@ -10,6 +10,8 @@ interface UserStats {
   likesReceived: number;
   likesMade: number;
   viewsReceived: number;
+  contentViewsReceived?: number;
+  profileViews?: number;
   rsvpsConfirmed: number;
   rsvpsCanceled: number;
   eventsAttended: number;

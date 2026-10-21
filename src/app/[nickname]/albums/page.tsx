@@ -6,6 +6,7 @@ import {
   ProfileHeroBanner,
 } from '@/components/profile/ProfileHeader';
 import EmptyState from '@/components/shared/EmptyState';
+import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
@@ -93,6 +94,9 @@ async function CachedAlbumsContent({ nickname }: { nickname: string }) {
 
   return (
     <>
+      <ProfileViewTracker
+        profileId={profile.id}
+      />
       <ProfileHeroBanner
         profile={profile}
         followerCount={followCounts.followerCount}

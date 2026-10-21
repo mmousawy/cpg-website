@@ -568,7 +568,7 @@ export default function AlbumDetailClient() {
           albumOwnerId={album.user_id ?? ''}
           currentUserId={user?.id}
           isOwner={false}
-          onInviteClick={() => {}}
+          onInviteClick={() => { }}
         />
       )}
       <div
@@ -662,8 +662,8 @@ export default function AlbumDetailClient() {
               nickname={profile?.nickname}
               onSave={handleSaveAlbum}
               onDelete={handleDeleteAlbum}
-              onBulkSave={async () => {}}
-              onBulkDelete={async () => {}}
+              onBulkSave={async () => { }}
+              onBulkDelete={async () => { }}
               isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handleAlbumDirtyChange}
             />
@@ -728,7 +728,7 @@ export default function AlbumDetailClient() {
           <DropZone
             onDrop={handleFileDrop}
             disabled={isUploading}
-            className="flex min-h-0 flex-1 flex-col max-sm:pb-16"
+            className="flex min-h-0 flex-1 flex-col max-md:pb-16"
             overlayMessage="Drop to add to album"
           >
             {photosLoading && photos.length === 0 ? (
@@ -802,28 +802,28 @@ export default function AlbumDetailClient() {
             onRemoveFromAlbum={handleRemoveFromAlbum}
             onSetAsCover={handleSetAsCover}
             currentAlbum={album ? {
-                id: album.id,
-                slug: album.slug,
-                cover_image_url: album.cover_image_url,
-                eventSlug: album.event_slug,
-              } : null}
+              id: album.id,
+              slug: album.slug,
+              cover_image_url: album.cover_image_url,
+              eventSlug: album.event_slug,
+            } : null}
             isLoading={photosLoading}
             onDirtyChange={handlePhotoDirtyChange}
             hideTitle
           />
-          ) : (
-            <AlbumEditSidebar
-              selectedAlbums={album ? [album] : []}
-              nickname={profile?.nickname}
-              onSave={handleSaveAlbum}
-              onDelete={handleDeleteAlbum}
-              onBulkSave={async () => {}}
-              onBulkDelete={async () => {}}
-              isLoading={photosLoading}
-              onDirtyChange={handleAlbumDirtyChange}
-              hideTitle
-            />
-          )}
+        ) : (
+          <AlbumEditSidebar
+            selectedAlbums={album ? [album] : []}
+            nickname={profile?.nickname}
+            onSave={handleSaveAlbum}
+            onDelete={handleDeleteAlbum}
+            onBulkSave={async () => { }}
+            onBulkDelete={async () => { }}
+            isLoading={photosLoading}
+            onDirtyChange={handleAlbumDirtyChange}
+            hideTitle
+          />
+        )}
       </BottomSheet>
     </>
   );

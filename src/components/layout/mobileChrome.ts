@@ -47,6 +47,19 @@ export const mobileTabBarZClassName = 'max-sm:z-[35]';
 
 export const mobileScrimZClassName = 'max-sm:z-[25]';
 
+/** Manage photos/albums: bottom chrome stays active below the `md` sidebar breakpoint. */
+export const manageMobileFloatingPillClassName =
+  'bg-noise max-md:rounded-2xl max-md:border max-md:border-border-color-strong max-md:bg-background-light max-md:shadow-lg';
+
+export const manageMobileFloatingPillInsetClassName = 'max-md:px-3';
+
+export const manageMobileFixedBottomChromeClassName =
+  'max-md:fixed max-md:inset-x-0 max-sm:bottom-[calc(var(--mobile-nav-offset,4.5rem)+0.25rem)] sm:max-md:bottom-3';
+
+export const manageMobileStickyChromeZClassName = 'max-md:z-30';
+
+export const manageMobileChromeMediaQuery = '(max-width: 767px)';
+
 /** Sliding active-tab pill — fill + inset highlight. */
 export const mobileTabActivePillClassName =
   'bg-foreground/[0.14] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.55),inset_0_0_0_1px_rgba(0,0,0,0.07)] dark:bg-foreground/[0.12] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),inset_0_0_0_1px_var(--selection-ring)]';

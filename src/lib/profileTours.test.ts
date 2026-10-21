@@ -47,6 +47,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
     watermark_style: null,
     watermark_text: null,
     website: null,
+    view_count: 0,
     ...overrides,
   };
 }

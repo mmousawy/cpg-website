@@ -123,6 +123,8 @@ export type AccountStats = {
   likesReceived: number;
   likesMade: number;
   viewsReceived: number;
+  contentViewsReceived?: number;
+  profileViews?: number;
   rsvpsConfirmed: number;
   rsvpsCanceled: number;
   eventsAttended: number;
@@ -317,7 +319,7 @@ export function useAccountForm() {
       if (!user) return false;
 
       try {
-      // Load email preferences
+        // Load email preferences
         const preferences = await getUserEmailPreferences(user.id);
         setEmailPreferences(preferences);
 
@@ -337,7 +339,7 @@ export function useAccountForm() {
         // PGRST116 = no rows returned (profile doesn't exist yet)
         if (error) {
           if (error.code === 'PGRST116') {
-          // Profile doesn't exist, try to create it
+            // Profile doesn't exist, try to create it
             const { data: newProfile, error: insertError } = await supabase
               .from('profiles')
               .insert({
@@ -355,22 +357,22 @@ export function useAccountForm() {
                 ...newProfile,
                 social_links: (newProfile.social_links as SocialLink[] | null) ?? null,
                 album_card_style: (newProfile.album_card_style === 'large' ||
-              newProfile.album_card_style === 'compact'
-              ? newProfile.album_card_style
-              : null) as 'large' | 'compact' | null,
+                  newProfile.album_card_style === 'compact'
+                  ? newProfile.album_card_style
+                  : null) as 'large' | 'compact' | null,
                 photo_grid_style: parsePhotoGridStyle(newProfile.photo_grid_style),
                 photo_grid_density: parsePhotoGridDensity(newProfile.photo_grid_density),
                 photo_captions: parsePhotoCaptionsMode(newProfile.photo_captions),
                 motion: parseMotionPreference(newProfile.motion),
                 theme: (newProfile.theme &&
-              ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
-              ? newProfile.theme
-              : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
+                  ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
+                  ? newProfile.theme
+                  : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
                 newsletter_opt_in: newProfile.newsletter_opt_in ?? false,
                 watermark_style: (newProfile.watermark_style &&
-              ['text', 'diagonal'].includes(newProfile.watermark_style)
-              ? newProfile.watermark_style
-              : null) as 'text' | 'diagonal' | null | undefined,
+                  ['text', 'diagonal'].includes(newProfile.watermark_style)
+                  ? newProfile.watermark_style
+                  : null) as 'text' | 'diagonal' | null | undefined,
               });
               setNickname(newProfile.nickname || '');
               setSavedAvatarUrl(newProfile.avatar_url);
@@ -380,12 +382,12 @@ export function useAccountForm() {
               // Load saved album card style from localStorage (takes priority)
               const storedStyle = localStorage.getItem('album-card-style');
               const albumStyle: 'large' | 'compact' =
-              storedStyle === 'large' || storedStyle === 'compact'
-                ? storedStyle
-                : newProfile.album_card_style === 'large' ||
+                storedStyle === 'large' || storedStyle === 'compact'
+                  ? storedStyle
+                  : newProfile.album_card_style === 'large' ||
                     newProfile.album_card_style === 'compact'
-                  ? newProfile.album_card_style
-                  : 'large';
+                    ? newProfile.album_card_style
+                    : 'large';
 
               const displayPrefs = readDisplayPreferencesForForm(newProfile);
 
@@ -397,7 +399,7 @@ export function useAccountForm() {
                 // For newsletter, also check newsletter_opt_in for backward compatibility
                 if (type.type_key === 'newsletter') {
                   emailPrefs[type.type_key] =
-                  (newProfile.newsletter_opt_in ?? (pref ? !pref.opted_out : true));
+                    (newProfile.newsletter_opt_in ?? (pref ? !pref.opted_out : true));
                 } else {
                   emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
                 }
@@ -487,16 +489,16 @@ export function useAccountForm() {
             ...data,
             social_links: (data.social_links as SocialLink[] | null) ?? null,
             album_card_style: (data.album_card_style === 'large' ||
-          data.album_card_style === 'compact'
-            ? data.album_card_style
-            : null) as 'large' | 'compact' | null,
+              data.album_card_style === 'compact'
+              ? data.album_card_style
+              : null) as 'large' | 'compact' | null,
             photo_grid_style: parsePhotoGridStyle(data.photo_grid_style),
             photo_grid_density: parsePhotoGridDensity(data.photo_grid_density),
             photo_captions: parsePhotoCaptionsMode(data.photo_captions),
             motion: parseMotionPreference(data.motion),
             theme: (data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
-            ? data.theme
-            : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
+              ? data.theme
+              : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
             watermark_style: (data.watermark_style &&
               ['text', 'diagonal'].includes(data.watermark_style)
               ? data.watermark_style
@@ -510,19 +512,19 @@ export function useAccountForm() {
           // Load saved album card style from localStorage (takes priority)
           const storedStyle = localStorage.getItem('album-card-style');
           const albumStyle: 'large' | 'compact' =
-          storedStyle === 'large' || storedStyle === 'compact'
-            ? storedStyle
-            : data.album_card_style === 'large' || data.album_card_style === 'compact'
-              ? data.album_card_style
-              : 'large';
+            storedStyle === 'large' || storedStyle === 'compact'
+              ? storedStyle
+              : data.album_card_style === 'large' || data.album_card_style === 'compact'
+                ? data.album_card_style
+                : 'large';
 
           const displayPrefs = readDisplayPreferencesForForm(data);
 
           // Get theme from database (don't use useTheme() value as it may be undefined initially)
           const profileTheme: 'system' | 'light' | 'dark' | 'midnight' =
-          data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
-            ? (data.theme as 'system' | 'light' | 'dark' | 'midnight')
-            : 'system';
+            data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
+              ? (data.theme as 'system' | 'light' | 'dark' | 'midnight')
+              : 'system';
 
           // Build email preferences object from loaded preferences
           const emailPrefs: Record<string, boolean> = {};
