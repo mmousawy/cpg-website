@@ -90,7 +90,7 @@ export default function Modal() {
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-3 sm:p-6',
         'bg-black/60',
-        'transition-[visibility,opacity,top,height] duration-200 ease-out',
+        'transition-[visibility,opacity] duration-200 ease-out',
       ])}
     >
       <FocusTrap
@@ -110,10 +110,10 @@ export default function Modal() {
             'w-full',
             sizeClasses[size],
             'relative m-auto',
-            'max-h-[calc(var(--vv-height,100vh)-3rem)] max-sm:max-h-[calc(var(--vv-height,100vh)-2rem)]',
+            'max-h-full min-h-0',
             'flex flex-col',
             'rounded-xl sm:rounded-2xl border border-border-color-strong bg-background-medium shadow-xl shadow-black/20',
-            'transition-[scale,max-height] duration-200 ease-out',
+            'transition-[scale] duration-200 ease-out',
           ])}
         >
           {/* Fixed header */}
@@ -141,8 +141,10 @@ export default function Modal() {
           </div>
           {/* Scrollable content */}
           <div
+            data-modal-scroll-body
             className={clsx(
-              'flex-1 min-h-0 overflow-y-auto bg-background-light p-4 sm:p-6 rounded-b-2xl',
+              'flex-1 min-h-0 overflow-y-auto bg-background-light p-4 sm:p-6',
+              footer ? 'rounded-none' : 'rounded-b-2xl',
               flushContentTop && 'pt-0',
             )}
           >
@@ -151,9 +153,11 @@ export default function Modal() {
           {/* Fixed footer for actions */}
           {footer && (
             <div
+              data-modal-footer
               className="relative shrink-0 border-t border-border-color rounded-b-2xl bg-background-light p-4 sm:px-6"
             >
               <div
+                data-modal-footer-fade
                 className="absolute -top-4.25 left-0 right-0 bg-linear-to-b from-transparent to-background-light h-4 w-full pointer-events-none"
               ></div>
               {footer}

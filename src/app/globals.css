@@ -370,10 +370,12 @@ html[data-overlay-scroll-lock]:not(.manage-page) body[data-scroll-locked] {
 }
 
 /* While the on-screen keyboard is open, scroll inside the panel — not the dialog.
-   The card stays centered in the visible area via its own auto margins. */
+   top/height are set in JS and must not transition; opacity still fades on close. */
 @media (max-width: 767px) {
-  dialog[data-keyboard-inset] {
+  dialog[data-keyboard-inset],
+  [data-keyboard-inset].overlay-keyboard-root {
     overflow: hidden;
+    bottom: auto;
   }
 }
 

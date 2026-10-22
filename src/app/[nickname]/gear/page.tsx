@@ -114,6 +114,7 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
         <GearPageClient
           profileNickname={profileNickname}
           initialProfile={gearProfile ?? { ...EMPTY_GEAR_PROFILE }}
+          categoryHeadingLevel="h2"
         />
       </PageContainer>
     </>

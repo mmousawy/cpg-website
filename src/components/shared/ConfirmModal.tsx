@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useConfirmState } from '@/app/providers/ConfirmProvider';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import TrashSVG from 'public/icons/trash.svg';
 import Button from './Button';
@@ -16,6 +17,7 @@ export default function ConfirmModal() {
   const [isTrapped, setIsTrapped] = useState(false);
 
   useBodyScrollLock(isOpen);
+  useDialogVisualViewport(modalRef, isOpen);
 
   useLayoutEffect(() => {
     if (!isOpen) return;
@@ -65,7 +67,7 @@ export default function ConfirmModal() {
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none flex-col items-center justify-center p-3 max-sm:p-4',
+        'flex size-full max-h-none max-w-none p-3 max-sm:p-4',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',
       ])}
@@ -88,7 +90,8 @@ export default function ConfirmModal() {
               isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
               'w-full min-w-0',
               panelSize,
-              'relative',
+              'relative m-auto',
+              'max-h-full min-h-0 overflow-y-auto',
               'rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
               'transition-[scale] duration-200 ease-out',
             ])}

@@ -58,7 +58,6 @@ export function HomeExploreSection({
       {challenges.length > 0 && (
         <div>
           <StickySectionHeading
-            as="h3"
             stickyClassName="mb-4 sm:mb-4"
             accessory={(
               <ArrowLink

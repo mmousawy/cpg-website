@@ -13,6 +13,7 @@ import EventRsvpList from '@/components/admin/EventRsvpList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import StickyActionBar from '@/components/shared/StickyActionBar';
@@ -710,20 +711,20 @@ function AdminEventForm() {
           >
             <EventForm
               formData={{
-              title,
-              slug,
-              description,
-              date,
-              time,
-              location,
+                title,
+                slug,
+                description,
+                date,
+                time,
+                location,
               }}
               onFormDataChange={(data) => {
-              if (data.title !== undefined) setTitle(data.title);
-              if (data.slug !== undefined) setSlug(data.slug);
-              if (data.description !== undefined) setDescription(data.description);
-              if (data.date !== undefined) setDate(data.date);
-              if (data.time !== undefined) setTime(data.time);
-              if (data.location !== undefined) setLocation(data.location);
+                if (data.title !== undefined) setTitle(data.title);
+                if (data.slug !== undefined) setSlug(data.slug);
+                if (data.description !== undefined) setDescription(data.description);
+                if (data.date !== undefined) setDate(data.date);
+                if (data.time !== undefined) setTime(data.time);
+                if (data.location !== undefined) setLocation(data.location);
               }}
               onTitleChange={handleTitleChange}
               onTitleBlur={handleTitleBlur}
@@ -750,7 +751,7 @@ function AdminEventForm() {
                 onRemove={handleRemoveRsvp}
                 onAdd={handleAddRsvp}
               />
-          )}
+            )}
 
             {/* Notifications Section - Only show for existing events */}
             {!isNewEvent && event && (
@@ -822,18 +823,19 @@ function AdminEventForm() {
                   </div>
                 </div>
               </Container>
-          )}
+            )}
 
             {/* Danger Zone - Only show for existing events */}
             {!isNewEvent && (
               <Container
                 className="border-red-500/30 bg-red-500/5 mb-4"
               >
-                <h3
-                  className="mb-2 font-semibold text-red-600"
+                <StickySectionHeading
+                  className="text-red-600 sm:text-lg dark:text-red-500"
+                  stickyClassName="mb-2 sm:mb-2"
                 >
                   Danger zone
-                </h3>
+                </StickySectionHeading>
                 <p
                   className="mb-4 text-sm text-foreground/80"
                 >
@@ -850,9 +852,9 @@ function AdminEventForm() {
                   Delete event
                 </Button>
               </Container>
-          )}
+            )}
           </div>
-      )}
+        )}
       </PageContainer>
 
       {/* Sticky Save Bar */}
