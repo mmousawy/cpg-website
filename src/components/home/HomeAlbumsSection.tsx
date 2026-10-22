@@ -17,21 +17,19 @@ export function HomeAlbumsSection({ albums }: HomeAlbumsSectionProps) {
     <PageContainer
       className="relative z-10 py-0!"
     >
-      <div
-        className="mb-4 flex items-center justify-between"
+      <StickySectionHeading
+        stickyClassName="mb-4 sm:mb-4"
+        accessory={(
+          <ArrowLink
+            href={routes.gallery.url}
+            prefetch={false}
+          >
+            View all albums
+          </ArrowLink>
+        )}
       >
-        <h3
-          className="text-xl font-semibold font-heading"
-        >
-          Recent albums
-        </h3>
-        <ArrowLink
-          href={routes.gallery.url}
-          prefetch={false}
-        >
-          View all albums
-        </ArrowLink>
-      </div>
+        Recent albums
+      </StickySectionHeading>
       <AlbumGrid
         albums={albums}
         liveLikeCounts={false}

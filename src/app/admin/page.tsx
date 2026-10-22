@@ -172,11 +172,11 @@ export default function AdminDashboardPage() {
               >
                 {card.icon}
               </div>
-              <h3
+              <h2
                 className="mb-2 text-lg font-semibold font-heading"
               >
                 {card.title}
-              </h3>
+              </h2>
               <p
                 className="text-sm text-foreground/80"
               >

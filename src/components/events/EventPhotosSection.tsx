@@ -1,6 +1,7 @@
 'use client';
 
 import SubmitToSharedAlbumButton from '@/components/albums/SubmitToSharedAlbumButton';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import EmptyState from '@/components/shared/EmptyState';
 import { useSession } from '@/hooks/useSession';
@@ -44,12 +45,10 @@ function transformToStreamPhotos(photos: EventAlbum['photos']): StreamPhoto[] {
     })) as StreamPhoto[];
 }
 
-/** Heading for Event photos section */
+/** Title content for Event photos section (wrap with StickySectionHeading). */
 export function EventPhotosHeading({ photoCount }: { photoCount: number }) {
   return (
-    <h2
-      className="text-xl font-semibold font-heading"
-    >
+    <>
       Event photos
       {photoCount > 0 && (
         <span
@@ -58,7 +57,7 @@ export function EventPhotosHeading({ photoCount }: { photoCount: number }) {
           {photoCount}
         </span>
       )}
-    </h2>
+    </>
   );
 }
 
@@ -102,13 +101,9 @@ function Header({ photoCount, album, albumSlug, ownerNickname, eventId }: { phot
   const { user } = useSession();
 
   return (
-    <div
-      className="flex items-center justify-between mb-4 sm:mb-6"
-    >
-      <EventPhotosHeading
-        photoCount={photoCount}
-      />
-      {user && (
+    <StickySectionHeading
+      stickyClassName="mb-4 sm:mb-6"
+      accessory={user ? (
         <EventPhotosAddButton
           albumId={album.id}
           albumTitle={album.title}
@@ -118,8 +113,12 @@ function Header({ photoCount, album, albumSlug, ownerNickname, eventId }: { phot
           eventId={eventId}
           inline
         />
-      )}
-    </div>
+      ) : undefined}
+    >
+      <EventPhotosHeading
+        photoCount={photoCount}
+      />
+    </StickySectionHeading>
   );
 }
 

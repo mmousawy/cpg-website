@@ -16,7 +16,6 @@ export function HomeRecentPhotosSection({ photos }: HomeRecentPhotosSectionProps
       className="py-0!"
     >
       <StickySectionHeading
-        as="h3"
         stickyClassName="mb-4 sm:mb-4"
         accessory={(
           <ArrowLink

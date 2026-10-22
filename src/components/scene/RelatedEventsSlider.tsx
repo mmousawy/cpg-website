@@ -80,13 +80,14 @@ export default function RelatedEventsSlider({
     <section
       className="mt-8 min-w-0 sm:-mx-16 sm:px-16 sm:mt-12"
     >
-      <h2
+      <StickySectionHeading
         className="text-lg"
+        stickyClassName="mb-3 sm:mb-3"
       >
         More events in
         {' '}
         {cityName}
-      </h2>
+      </StickySectionHeading>
 
       <div
         className="relative"

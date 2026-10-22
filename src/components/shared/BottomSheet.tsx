@@ -1,12 +1,13 @@
 'use client';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useMounted } from '@/hooks/useMounted';
 import { motionDuration } from '@/utils/reduceMotion';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import CloseSVG from 'public/icons/close.svg';
@@ -27,6 +28,7 @@ export default function BottomSheet({
   children,
   maxHeight = 90,
 }: BottomSheetProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   const suppressBackdropDismissRef = useRef(false);
@@ -39,6 +41,31 @@ export default function BottomSheet({
   // Track if animation should show open state (delayed to allow mount animation)
   const [isAnimatedOpen, setIsAnimatedOpen] = useState(false);
   const mounted = useMounted();
+  const baseHeightRef = useRef(0);
+  const [viewportTick, setViewportTick] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!shouldRender) {
+      baseHeightRef.current = 0;
+      return;
+    }
+
+    const sync = () => {
+      const layoutHeight = window.innerHeight;
+      if (layoutHeight > baseHeightRef.current) baseHeightRef.current = layoutHeight;
+      setViewportTick((tick) => tick + 1);
+    };
+
+    sync();
+    window.addEventListener('resize', sync);
+    window.visualViewport?.addEventListener('resize', sync);
+    window.visualViewport?.addEventListener('scroll', sync);
+    return () => {
+      window.removeEventListener('resize', sync);
+      window.visualViewport?.removeEventListener('resize', sync);
+      window.visualViewport?.removeEventListener('scroll', sync);
+    };
+  }, [shouldRender]);
 
   onCloseRef.current = onClose;
 
@@ -96,6 +123,7 @@ export default function BottomSheet({
 
   // Handle body scroll lock
   useBodyScrollLock(isOpen);
+  useDialogVisualViewport(overlayRef, isOpen && shouldRender, { reposition: false });
   useCloseOnRouteChange(isOpen, onClose);
 
   useEffect(() => {
@@ -176,6 +204,17 @@ export default function BottomSheet({
     setIsDragging(false);
   };
 
+  const layoutHeight = mounted ? window.innerHeight : 0;
+  if (shouldRender && layoutHeight > baseHeightRef.current) {
+    baseHeightRef.current = layoutHeight;
+  }
+  const visibleBottom = mounted && window.visualViewport
+    ? window.visualViewport.offsetTop + window.visualViewport.height
+    : layoutHeight;
+  const sheetTop = baseHeightRef.current * (1 - maxHeight / 100);
+  const sheetHeight = Math.max(0, Math.min(visibleBottom, layoutHeight) - sheetTop);
+  void viewportTick;
+
   const dragDeltaY = isDragging && startY !== null && currentY !== null
     ? Math.max(0, currentY - startY)
     : 0;
@@ -183,7 +222,8 @@ export default function BottomSheet({
   const getBackdropOpacity = () => {
     if (!isOpen || !isAnimatedOpen) return 0;
     if (dragDeltaY <= 0) return 1;
-    const sheetHeightPx = (maxHeight / 100) * window.innerHeight;
+    const overlayHeight = overlayRef.current?.clientHeight ?? window.innerHeight;
+    const sheetHeightPx = (maxHeight / 100) * overlayHeight;
     return Math.max(0, 1 - dragDeltaY / sheetHeightPx);
   };
 
@@ -195,8 +235,9 @@ export default function BottomSheet({
   // Portal to body so manage layout overflow:hidden can't clip the full-viewport backdrop.
   return createPortal(
     <div
+      ref={overlayRef}
       className={clsx(
-        'fixed inset-0 z-50',
+        'overlay-keyboard-root fixed inset-0 z-50',
         isAnimatedOpen ? 'pointer-events-auto' : 'pointer-events-none',
       )}
     >
@@ -223,13 +264,14 @@ export default function BottomSheet({
         <div
           ref={sheetRef}
           className={clsx(
-            'absolute bottom-0 left-0 right-0 flex flex-col',
+            'absolute left-0 right-0 flex flex-col',
             'bg-background-light rounded-t-2xl border-t border-border-color-strong shadow-xl',
             !isDragging && 'transition-transform duration-200 ease-out',
           )}
           style={{
-            maxHeight: `${maxHeight}vh`,
-            height: `${maxHeight}vh`,
+            top: `${sheetTop}px`,
+            height: `${sheetHeight}px`,
+            maxHeight: `${sheetHeight}px`,
             transform: isDragging
               ? `translateY(${dragDeltaY}px)`
               : isAnimatedOpen

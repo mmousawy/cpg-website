@@ -22,11 +22,11 @@ export default async function PopularTagsSection({ activeTag }: PopularTagsSecti
     <div
       className="mb-10 md:mb-12"
     >
-      <h2
-        className="text-xl"
+      <StickySectionHeading
+        stickyClassName="mb-3 sm:mb-3"
       >
         Browse by tag
-      </h2>
+      </StickySectionHeading>
       <TagCloud
         tags={popularTags}
         activeTag={activeTag}

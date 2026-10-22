@@ -9,6 +9,8 @@ type StatsRankedListProps = {
   valueLabel?: string;
   formatValue?: (value: number) => string;
   emptyMessage?: string;
+  /** When false, omit the list h3 (parent section already names this block). */
+  showTitle?: boolean;
 };
 
 export default function StatsRankedList({
@@ -17,16 +19,19 @@ export default function StatsRankedList({
   valueLabel = 'Count',
   formatValue = (v) => v.toLocaleString(),
   emptyMessage = 'No data yet',
+  showTitle = true,
 }: StatsRankedListProps) {
   const rankedItems = items.filter((item) => item.value > 0);
 
   return (
     <div>
-      <h3
-        className="mb-3 text-base font-semibold font-heading text-foreground"
-      >
-        {title}
-      </h3>
+      {showTitle && (
+        <h3
+          className="mb-3 text-base font-semibold font-heading text-foreground"
+        >
+          {title}
+        </h3>
+      )}
       {rankedItems.length === 0 ? (
         <p
           className="text-sm text-foreground/60"
