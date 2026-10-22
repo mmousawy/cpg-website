@@ -127,3 +127,5 @@ Verify: `pnpm verify:image-icc -- "<object-public-url>"`
 | Cron 401 | `CRON_SECRET` matches scheduled task |
 | OAuth redirect error | Supabase + provider URLs include correct hostname |
 | Build OOM | More RAM or Coolify remote builder |
+| `pnpm install` / Corepack **503** from `registry.npmjs.org` | Transient npm outage or VPS network; **redeploy**. Dockerfile installs `pnpm` globally with retries (no Corepack on-demand download). |
+| Coolify warns `NODE_ENV=production` at build-time | Safe to ignore for this Dockerfile (deps stage uses `CI=true` and installs devDependencies). Prefer runtime-only for secrets; keep `NEXT_PUBLIC_*` at build-time. |
