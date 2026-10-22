@@ -3,6 +3,7 @@ export { default as SelectableGrid } from './SelectableGrid';
 
 // Photo management components
 export { default as AddPhotosToAlbumModal } from './AddPhotosToAlbumModal';
+export { default as FilterPhotosModal } from './FilterPhotosModal';
 export { default as AddToAlbumContent } from './AddToAlbumContent';
 export { default as AlbumPicker } from './AlbumPicker';
 export { default as PhotoCard } from './PhotoCard';

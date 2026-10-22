@@ -11,10 +11,15 @@ import { formatCatalogDisplayName } from '@/lib/gear/formatCatalogDisplayName';
 import { useAuth } from '@/hooks/useAuth';
 import { useGearCatalogSearch } from '@/hooks/useGearCatalogSearch';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
+import {
+  confirmBulkExifSave,
+  prepareBulkExifApply,
+} from '@/components/manage/bulkExifSaveConfirm';
 import PhotoExifReadOnlyContent from '@/components/manage/PhotoExifReadOnlyContent';
 import { useBulkUpdatePhotoExif, useUpdatePhotoExif } from '@/hooks/usePhotoMutations';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmClearPhotoCaptureDetails, confirmUnsavedChanges } from '@/utils/confirmHelpers';
+import { toUserFacingError } from '@/utils/userFacingHttpError';
 import {
   type ExifEditFormValues,
   emptyExifEditFormValues,
@@ -23,14 +28,20 @@ import {
   parseExposureTimeInput,
 } from '@/utils/exif';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+const EXIF_SAVE_SUCCESS_MS = 650;
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import CheckMiniSVG from 'public/icons/check-mini.svg';
+
+/** Empty capture fields: softer placeholder; filled state uses Input `filled` prop. */
+const EXIF_FIELD_INPUT_CLASS = 'placeholder:text-foreground/45';
+
 const exifEditFormSchema = z
   .object({
-    make: z.string(),
-    model: z.string(),
+    camera: z.string(),
     lensModel: z.string(),
     iso: z.string(),
     aperture: z.string(),
@@ -105,13 +116,6 @@ function photoHasCaptureDetails(photo: PhotoWithAlbums): boolean {
     && typeof photo.exif_data === 'object'
     && Object.keys(photo.exif_data as object).length > 0,
   );
-}
-
-function makeIsImpliedByModel(make: string, model: string): boolean {
-  const makeLower = make.toLowerCase();
-  const modelLower = model.toLowerCase();
-  if (modelLower.includes(makeLower)) return true;
-  return makeLower === 'apple' && /iphone|ipad|ipod/.test(modelLower);
 }
 
 function PhotoExifModalReadOnly({
@@ -197,6 +201,7 @@ function PhotoExifModalEditable({
   const updateExifMutation = useUpdatePhotoExif(user?.id, photoFilter, profile?.nickname, albumId);
   const bulkUpdateExifMutation = useBulkUpdatePhotoExif(user?.id, photoFilter, profile?.nickname, albumId);
   const hasCaptureDetails = photos.some(photoHasCaptureDetails);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const {
     register,
@@ -212,17 +217,20 @@ function PhotoExifModalEditable({
 
   useEffect(() => {
     clearGpsOnSaveRef.current = false;
+    setSaveSuccess(false);
     reset(savedValues);
   }, [photoIdsKey, reset, savedValues]);
 
-  const modelQuery = watch('model');
-  const lensQuery = watch('lensModel');
-  const { results: modelResults, loading: modelLoading } = useGearCatalogSearch(modelQuery, null);
+  const formValues = watch();
+  const cameraQuery = formValues.camera;
+  const lensQuery = formValues.lensModel;
+  const isExifFieldFilled = (key: keyof ExifEditFormValues) => Boolean(formValues[key]?.trim());
+  const { results: cameraResults, loading: cameraLoading } = useGearCatalogSearch(cameraQuery, null);
   const { results: lensResults, loading: lensLoading } = useGearCatalogSearch(lensQuery, 'lens');
 
-  const modelSuggestions = useMemo(
-    () => modelResults.map((r) => formatCatalogDisplayName(r.brand, r.name)),
-    [modelResults],
+  const cameraSuggestions = useMemo(
+    () => cameraResults.map((r) => formatCatalogDisplayName(r.brand, r.name)),
+    [cameraResults],
   );
   const lensSuggestions = useMemo(() => lensResults.map((r) => r.name), [lensResults]);
 
@@ -238,10 +246,29 @@ function PhotoExifModalEditable({
     async (data: ExifEditFormValues) => {
       try {
         if (isBatch) {
+          const clearGps = clearGpsOnSaveRef.current;
+          const { form: applyForm, clearGps: applyClearGps, changes } = prepareBulkExifApply(
+            photos,
+            data,
+            clearGps,
+          );
+          if (changes.length === 0) {
+            return;
+          }
+          const confirmed = await confirm(confirmBulkExifSave(photos.length, changes));
+          if (!confirmed) {
+            return;
+          }
           await bulkUpdateExifMutation.mutateAsync({
             photoIds: photos.map((p) => p.id),
-            form: data,
-            mergeOptions: { clearGps: clearGpsOnSaveRef.current },
+            form: applyForm,
+            mergeOptions: { clearGps: applyClearGps },
+            exifBaseByPhotoId: Object.fromEntries(
+              photos.map((p) => [
+                p.id,
+                p.exif_data as Record<string, unknown> | null | undefined,
+              ]),
+            ),
           });
           clearGpsOnSaveRef.current = false;
         } else {
@@ -253,14 +280,18 @@ function PhotoExifModalEditable({
         }
         skipCloseCheckRef.current = true;
         reset(data);
+        setSaveSuccess(true);
+        await new Promise((resolve) => setTimeout(resolve, EXIF_SAVE_SUCCESS_MS));
         modalContext.setIsOpen(false);
         onClose();
       } catch {
+        setSaveSuccess(false);
         // mutation error surfaced below
       }
     },
     [
       bulkUpdateExifMutation,
+      confirm,
       isBatch,
       modalContext,
       onClose,
@@ -303,6 +334,9 @@ function PhotoExifModalEditable({
     updateExifMutation,
   ]);
 
+  const isSaving = isSubmitting || updateExifMutation.isPending || bulkUpdateExifMutation.isPending;
+  const formLocked = isSaving || saveSuccess;
+
   useEffect(() => {
     handleSubmitRef.current = () => handleSubmit(onSubmit)();
     handleCloseRef.current = () => modalContext.requestClose();
@@ -315,14 +349,13 @@ function PhotoExifModalEditable({
         skipCloseCheckRef.current = false;
         return true;
       }
+      if (saveSuccess || isSaving) return false;
       if (!isDirty) return true;
       const confirmed = await confirm(confirmUnsavedChanges());
       return confirmed;
     });
     return () => modalContext.setBeforeCloseCheck(null);
-  }, [confirm, isDirty, modalContext]);
-
-  const isSaving = isSubmitting || updateExifMutation.isPending || bulkUpdateExifMutation.isPending;
+  }, [confirm, isDirty, isSaving, modalContext, saveSuccess]);
   const saveError = updateExifMutation.error ?? bulkUpdateExifMutation.error;
 
   const footerContent = useMemo(
@@ -334,7 +367,7 @@ function PhotoExifModalEditable({
           type="button"
           variant="danger"
           onClick={() => handleRemoveAllRef.current?.()}
-          disabled={!hasCaptureDetails || isSaving}
+          disabled={!hasCaptureDetails || formLocked}
         >
           Remove all data
         </Button>
@@ -345,22 +378,27 @@ function PhotoExifModalEditable({
             type="button"
             variant="secondary"
             onClick={() => handleCloseRef.current?.()}
-            disabled={isSaving}
+            disabled={formLocked}
           >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={() => handleSubmitRef.current?.()}
-            disabled={isSaving || !isDirty}
-            loading={isSaving}
+            disabled={formLocked || (!isDirty && !saveSuccess)}
+            loading={isSaving && !saveSuccess}
+            icon={saveSuccess ? (
+              <CheckMiniSVG
+                className="size-5 -ml-0.5"
+              />
+            ) : undefined}
           >
-            Save
+            {saveSuccess ? 'Saved' : 'Save'}
           </Button>
         </div>
       </div>
     ),
-    [hasCaptureDetails, isDirty, isSaving],
+    [formLocked, hasCaptureDetails, isDirty, isSaving, saveSuccess],
   );
 
   useEffect(() => {
@@ -378,13 +416,6 @@ function PhotoExifModalEditable({
       className="space-y-4"
       onSubmit={handleSubmit(onSubmit)}
     >
-      <p
-        className="text-sm text-foreground/70"
-      >
-        {isBatch
-          ? 'These details are shown on your public photo pages. They are stored separately from the image files.'
-          : 'These details are shown to viewers on your public photo page. They are stored separately from the image file.'}
-      </p>
       {isBatch && (
         <p
           className="text-xs text-foreground/60"
@@ -397,58 +428,37 @@ function PhotoExifModalEditable({
         className="grid grid-cols-1 gap-4 sm:grid-cols-2"
       >
         <div
-          className="flex flex-col gap-2"
+          className="flex flex-col gap-2 sm:col-span-2"
         >
           <label
             className="text-sm font-medium"
-            htmlFor="exif-make"
+            htmlFor="exif-camera"
           >
-            Make
-          </label>
-          <Input
-            id="exif-make"
-            {...register('make')}
-            placeholder="e.g. Canon"
-            disabled={isSaving}
-          />
-        </div>
-
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-model"
-          >
-            Model
+            Camera
           </label>
           <AutocompleteInput
-            id="exif-model"
-            value={modelQuery}
-            onChange={(v) => setValue('model', v, { shouldDirty: true })}
-            suggestions={modelSuggestions}
+            id="exif-camera"
+            value={cameraQuery}
+            onChange={(v) => setValue('camera', v, { shouldDirty: true })}
+            suggestions={cameraSuggestions}
             disableFilter
-            loading={modelLoading}
-            placeholder="Camera or phone model"
-            disabled={isSaving}
+            loading={cameraLoading}
+            placeholder="Camera or phone"
+            disabled={formLocked}
+            filled={isExifFieldFilled('camera')}
+            className={EXIF_FIELD_INPUT_CLASS}
             onSelect={(s) => {
-              const hit = modelResults.find((r) => formatCatalogDisplayName(r.brand, r.name) === s)
-                ?? modelResults.find((r) => r.name === s);
+              const hit = cameraResults.find((r) => formatCatalogDisplayName(r.brand, r.name) === s)
+                ?? cameraResults.find((r) => r.name === s);
               const name = hit ? formatCatalogDisplayName(hit.brand, hit.name) : s;
-              setValue('model', name, { shouldDirty: true });
-              if (hit?.brand) {
-                const currentMake = watch('make');
-                if (!currentMake || !makeIsImpliedByModel(hit.brand, name)) {
-                  setValue('make', hit.brand, { shouldDirty: true });
-                }
-              }
+              setValue('camera', name, { shouldDirty: true });
             }}
           />
-          {fieldError('model') && (
+          {fieldError('camera') && (
             <p
               className="text-xs text-red-500"
             >
-              {fieldError('model')}
+              {fieldError('camera')}
             </p>
           )}
         </div>
@@ -471,7 +481,9 @@ function PhotoExifModalEditable({
           disableFilter
           loading={lensLoading}
           placeholder="Lens name"
-          disabled={isSaving}
+          disabled={formLocked}
+          filled={isExifFieldFilled('lensModel')}
+          className={EXIF_FIELD_INPUT_CLASS}
           onSelect={(s) => {
             const hit = lensResults.find((r) => r.name === s);
             setValue('lensModel', hit?.name ?? s, { shouldDirty: true });
@@ -496,8 +508,10 @@ function PhotoExifModalEditable({
             inputMode="numeric"
             {...register('iso')}
             placeholder="400"
-            disabled={isSaving}
+            disabled={formLocked}
             error={!!errors.iso}
+            filled={isExifFieldFilled('iso')}
+            className={EXIF_FIELD_INPUT_CLASS}
           />
           {fieldError('iso') && (
             <p
@@ -521,8 +535,10 @@ function PhotoExifModalEditable({
             inputMode="decimal"
             {...register('aperture')}
             placeholder="2.8"
-            disabled={isSaving}
+            disabled={formLocked}
             error={!!errors.aperture}
+            filled={isExifFieldFilled('aperture')}
+            className={EXIF_FIELD_INPUT_CLASS}
           />
           {fieldError('aperture') && (
             <p
@@ -545,8 +561,10 @@ function PhotoExifModalEditable({
             id="exif-shutter"
             {...register('exposureTime')}
             placeholder="1/250 or 2s"
-            disabled={isSaving}
+            disabled={formLocked}
             error={!!errors.exposureTime}
+            filled={isExifFieldFilled('exposureTime')}
+            className={EXIF_FIELD_INPUT_CLASS}
           />
           {fieldError('exposureTime') && (
             <p
@@ -570,8 +588,10 @@ function PhotoExifModalEditable({
             inputMode="decimal"
             {...register('focalLength')}
             placeholder="50"
-            disabled={isSaving}
+            disabled={formLocked}
             error={!!errors.focalLength}
+            filled={isExifFieldFilled('focalLength')}
+            className={EXIF_FIELD_INPUT_CLASS}
           />
           {fieldError('focalLength') && (
             <p
@@ -598,7 +618,9 @@ function PhotoExifModalEditable({
           id="exif-capture-time"
           type="datetime-local"
           {...register('captureTime')}
-          disabled={isSaving}
+          disabled={formLocked}
+          filled={isExifFieldFilled('captureTime')}
+          className={EXIF_FIELD_INPUT_CLASS}
         />
       </div>
 
@@ -618,7 +640,7 @@ function PhotoExifModalEditable({
             variant="secondary"
             size="sm"
             onClick={clearLocation}
-            disabled={isSaving}
+            disabled={formLocked}
           >
             Remove location
           </Button>
@@ -640,8 +662,10 @@ function PhotoExifModalEditable({
               inputMode="decimal"
               {...register('latitude')}
               placeholder="52.3676"
-              disabled={isSaving}
+              disabled={formLocked}
               error={!!errors.latitude}
+              filled={isExifFieldFilled('latitude')}
+              className={EXIF_FIELD_INPUT_CLASS}
             />
           </div>
           <div
@@ -658,8 +682,10 @@ function PhotoExifModalEditable({
               inputMode="decimal"
               {...register('longitude')}
               placeholder="4.9041"
-              disabled={isSaving}
+              disabled={formLocked}
               error={!!errors.longitude}
+              filled={isExifFieldFilled('longitude')}
+              className={EXIF_FIELD_INPUT_CLASS}
             />
           </div>
         </div>
@@ -676,7 +702,7 @@ function PhotoExifModalEditable({
         <ErrorMessage
           variant="compact"
         >
-          {saveError.message}
+          {toUserFacingError(saveError, 'Could not save capture details')}
         </ErrorMessage>
       )}
     </form>

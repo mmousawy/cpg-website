@@ -34,13 +34,49 @@ EOF
 VHOSTS=(
   /etc/nginx/sites-available/creativephotography.group
   /etc/nginx/sites-available/staging.creativephotography.group
+  /etc/nginx/sites-available/supabase
+  /etc/nginx/sites-available/db.creativephotography.group
+  /etc/nginx/sites-available/db-staging.creativephotography.group
 )
 
+# Production db vhost was often created manually (certbot / one-off name). Discover any file
+# that defines server_name for db.* hosts.
+discover_db_vhosts() {
+  local search_dirs=(/etc/nginx/sites-available /etc/nginx/sites-enabled /etc/nginx/conf.d)
+  local pat='server_name[[:space:]].*db(\-staging)?\.creativephotography\.group'
+  local f
+  for dir in "${search_dirs[@]}"; do
+    [[ -d "$dir" ]] || continue
+    while IFS= read -r f; do
+      [[ -n "$f" && -f "$f" ]] || continue
+      VHOSTS+=("$f")
+    done < <(grep -El "$pat" "$dir"/* 2>/dev/null || true)
+  done
+}
+discover_db_vhosts
+
+declare -A SEEN_VHOST=()
+UNIQUE_VHOSTS=()
 for vhost in "${VHOSTS[@]}"; do
   if [[ ! -f "$vhost" ]]; then
     echo "skip (missing): $vhost"
     continue
   fi
+  real="$(readlink -f "$vhost" 2>/dev/null || echo "$vhost")"
+  if [[ -n "${SEEN_VHOST[$real]:-}" ]]; then
+    continue
+  fi
+  SEEN_VHOST[$real]=1
+  UNIQUE_VHOSTS+=("$vhost")
+done
+
+if [[ ${#UNIQUE_VHOSTS[@]} -eq 0 ]]; then
+  echo "No vhost files found. Locate db host config with:" >&2
+  echo "  sudo grep -r 'db.creativephotography.group' /etc/nginx" >&2
+  exit 1
+fi
+
+for vhost in "${UNIQUE_VHOSTS[@]}"; do
 
   python3 - "$vhost" <<'PY'
 from pathlib import Path

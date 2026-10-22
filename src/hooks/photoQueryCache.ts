@@ -1,4 +1,6 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
+import type { PhotoLibraryFilters } from '@/hooks/photoLibraryFilters';
+import { photoLibraryFiltersQuerySegment } from '@/hooks/photoLibraryFilters';
 import type { PhotoWithAlbums } from '@/types/photos';
 
 export type PhotoFilter = 'all' | 'public' | 'private';
@@ -13,8 +15,17 @@ export type PhotosInfiniteData = InfiniteData<PhotosInfinitePage, number>;
 export const MANAGE_PHOTOS_PAGE_SIZE_DESKTOP = 54;
 export const MANAGE_PHOTOS_PAGE_SIZE_MOBILE = 24;
 
-export function photosQueryKey(userId: string, filter: PhotoFilter, pageSize: number) {
-  return ['photos', userId, filter, pageSize] as const;
+export function photosQueryKey(
+  userId: string,
+  pageSize: number,
+  libraryFilters: PhotoLibraryFilters,
+) {
+  const visibility = libraryFilters.visibility;
+  const segment = photoLibraryFiltersQuerySegment(libraryFilters);
+  if (!segment) {
+    return ['photos', userId, visibility, pageSize] as const;
+  }
+  return ['photos', userId, visibility, pageSize, segment] as const;
 }
 
 export function photosQueryFilterKey(userId: string, filter: PhotoFilter) {
@@ -25,6 +36,33 @@ export function getFlatPhotos(data: PhotosInfiniteData | undefined): PhotoWithAl
   return data?.pages.flatMap((page) => page.photos) ?? [];
 }
 
+export type PhotosQueriesSnapshot = Array<{
+  queryKey: readonly unknown[];
+  data: PhotosInfiniteData | undefined;
+}>;
+
+/** All infinite photo queries for this user + visibility (includes meta-filter variants). */
+export function snapshotPhotosQueries(
+  queryClient: QueryClient,
+  userId: string,
+  filter: PhotoFilter,
+): PhotosQueriesSnapshot {
+  return queryClient
+    .getQueriesData<PhotosInfiniteData>({ queryKey: photosQueryFilterKey(userId, filter) })
+    .map(([queryKey, data]) => ({ queryKey: [...queryKey], data }));
+}
+
+export function restorePhotosQueriesSnapshot(
+  queryClient: QueryClient,
+  snapshot: PhotosQueriesSnapshot | undefined,
+) {
+  if (!snapshot?.length) return;
+  for (const { queryKey, data } of snapshot) {
+    queryClient.setQueryData(queryKey, data);
+  }
+}
+
+/** First matching query only — prefer snapshotPhotosQueries when rolling back mutations. */
 export function getPhotosInfiniteData(
   queryClient: QueryClient,
   userId: string,

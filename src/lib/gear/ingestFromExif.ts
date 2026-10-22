@@ -5,7 +5,7 @@ import { ensureExifCatalogEntry, findCatalogIdByAlias } from '@/lib/gear/catalog
 import { ensureScrappyCameraMatch } from '@/lib/gear/scrappyCameraMatch';
 import { normalizeExifBrand } from '@/lib/gear/normalizeExifBrand';
 import type { GearCategory } from '@/lib/gear/types';
-import { formatExifData, parseExifData } from '@/utils/exif';
+import { formatExifData, parseExifData, splitCameraFieldToMakeModel } from '@/utils/exif';
 
 type AdminClient = SupabaseClient<Database>;
 
@@ -32,9 +32,12 @@ export async function ingestGearFromExifData(
 
   let ingested = 0;
 
-  if (formatted?.camera && parsed?.make) {
-    const brand = normalizeExifBrand(parsed.make);
-    const category: GearCategory = isPhoneBody(parsed.make, parsed.model || '') ? 'phone' : 'camera_body';
+  if (formatted?.camera) {
+    const split = splitCameraFieldToMakeModel(formatted.camera);
+    const make = (parsed?.make || split.make || '').trim();
+    const model = (parsed?.model || split.model || '').trim();
+    const brand = make ? normalizeExifBrand(make) : '';
+    const category: GearCategory = isPhoneBody(make, model) ? 'phone' : 'camera_body';
     const name = formatted.camera;
     const existing = await findCatalogIdByAlias(supabase, name);
     if (!existing) {
@@ -42,7 +45,7 @@ export async function ingestGearFromExifData(
         category,
         brand,
         name,
-        aliasStrings: [name, parsed.model || '', `${brand} ${parsed.model || ''}`],
+        aliasStrings: [name, model, brand && model ? `${brand} ${model}` : ''].filter(Boolean),
       });
       if (id) ingested += 1;
     }
