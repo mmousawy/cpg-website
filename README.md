@@ -43,6 +43,9 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Social share buttons on photos and albums (native share on mobile; copy link, Facebook, X, WhatsApp, Instagram, and Pinterest on desktop)
 - View tracking with "Most viewed this week" sections
 - Bulk photo and album editing (multi-select, batch operations)
+- Photo library filters in manage (camera, lens, tags, albums, challenges, license, visibility, title, dates, sort; filters persist locally)
+- Batch capture details / EXIF edit for multi-select (partial apply, bulk clear, confirm before save)
+- Choose GPS on a map (Leaflet + OpenStreetMap) when editing capture details
 - Add photos to albums modal
 - Challenge badges on photos (shows which challenges a photo was accepted in)
 - Copyright & licensing: per-photo license selection (All Rights Reserved, CC BY, CC BY-NC, CC BY-NC-ND, CC0), automatic watermarking (corner or diagonal text), EXIF copyright embedding
@@ -90,7 +93,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 
 ### Search
 - Global search (Cmd/Ctrl+K)
-- Search across albums, photos, members, events, and tags
+- Search across albums, photos, members, events, tags, gear catalog, and member camera pages
 - Keyboard navigation support
 - Debounced queries with loading states
 
@@ -471,7 +474,7 @@ Leave the **staging** Coolify app on git branch **`staging`** (auto-deploy on). 
   - New members
   - Explore by photo style (tags with member counts)
   - Random interests with member samples
-- [x] Search (albums, photos, members, events, tags)
+- [x] Search (albums, photos, members, events, tags, gear)
 - [x] Featured/trending galleries (Most viewed this week)
 
 ### Gear
