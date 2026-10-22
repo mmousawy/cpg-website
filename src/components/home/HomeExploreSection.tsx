@@ -1,4 +1,4 @@
-import ChallengesList, { challengesListGridClassName } from '@/components/challenges/ChallengesList';
+import ChallengesList from '@/components/challenges/ChallengesList';
 import EventsList from '@/components/events/EventsList';
 import PageContainer from '@/components/layout/PageContainer';
 import StickySectionHeading from '@/components/layout/StickySectionHeading';
@@ -75,7 +75,7 @@ export function HomeExploreSection({
             serverNow={serverNow}
             prefetchLinks={false}
             coverImageSizes={HOME_TWO_COLUMN_COVER_SIZES}
-            className={`${challengesListGridClassName} sm:[&>:nth-child(n+4)]:hidden`}
+            className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] max-sm:[&>:nth-child(n+5)]:hidden sm:[&>:nth-child(n+4)]:hidden"
           />
         </div>
       )}

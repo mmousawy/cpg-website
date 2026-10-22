@@ -61,6 +61,10 @@ export async function getRecentAlbums(limit = 6, includeTestContent = false) {
 
   const supabase = createPublicClient();
 
+  // The query limit runs before event albums (no owner) and suspended profiles are
+  // dropped, so fetch extra rows and apply `limit` to the filtered list.
+  const fetchLimit = Math.max(limit * 3, limit);
+
   const { data: albums } = await supabase
     .from('albums')
     .select(`
@@ -83,7 +87,7 @@ export async function getRecentAlbums(limit = 6, includeTestContent = false) {
     .eq('is_public', true)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .limit(limit);
+    .limit(fetchLimit);
 
   // Filter out albums with no photos and albums from suspended users
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count'>;
@@ -109,7 +113,8 @@ export async function getRecentAlbums(limit = 6, includeTestContent = false) {
       event_cover_image: album.event?.cover_image || null,
     }));
 
-  return filterAlbumProfiles(albumsWithPhotos as unknown as AlbumWithPhotos[], includeTestContent);
+  return filterAlbumProfiles(albumsWithPhotos as unknown as AlbumWithPhotos[], includeTestContent)
+    .slice(0, limit);
 }
 
 /**
