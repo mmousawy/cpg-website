@@ -31,6 +31,19 @@ jobs:
           git fetch origin staging
           echo "sha=$(git rev-parse origin/staging)" >> "$GITHUB_OUTPUT"
 
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Wait for staging to serve origin/staging
         env:
           TARGET_SHA: ${{ steps.staging-sha.outputs.sha }}
@@ -60,19 +73,6 @@ jobs:
           echo "::error::Staging did not serve origin/staging ($TARGET_SHA) within 15 minutes."
           echo "Confirm Coolify staging auto-deployed the latest staging push and /api/health returns { commit: \"<sha>\" }."
           exit 1
-
-      - uses: pnpm/action-setup@v5
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
 
       - name: E2E tests
         run: pnpm run test:e2e

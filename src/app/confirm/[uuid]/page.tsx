@@ -1,5 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { Database } from '@/database.types';
 import { CPGEvent } from '@/types/events';
 import { createClient } from '@/utils/supabase/server';
@@ -55,11 +56,9 @@ async function ConfirmContent({
 
   return (
     <PageContainer>
-      <h2
-        className="mb-4 text-lg font-bold leading-tight"
-      >
-        Confirm your sign up
-      </h2>
+      <PageHeading
+        title="Confirm your sign up"
+      />
       <Container>
         {(!event || !rsvp || !rsvp.email) && (
           <ErrorMessage>

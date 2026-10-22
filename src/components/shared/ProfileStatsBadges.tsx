@@ -13,6 +13,7 @@ import {
   PhotosIcon,
   ViewsReceivedIcon,
 } from '@/components/icons/profile-stats';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import {
   useRef,
   useState,
@@ -322,11 +323,11 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
     <div
       className="mt-8"
     >
-      <h2
-        className="mb-3 sm:mb-4 text-xl font-semibold font-heading"
+      <StickySectionHeading
+        stickyClassName="mb-3 sm:mb-4"
       >
         Achievements
-      </h2>
+      </StickySectionHeading>
 
       <div
         className="relative"

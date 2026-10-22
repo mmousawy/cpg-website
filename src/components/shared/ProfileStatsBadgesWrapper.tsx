@@ -1,5 +1,6 @@
 'use client';
 
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import dynamic from 'next/dynamic';
 
 function ProfileStatsBadgesPlaceholder() {
@@ -7,11 +8,11 @@ function ProfileStatsBadgesPlaceholder() {
     <div
       className="mt-8"
     >
-      <h2
-        className="mb-3 sm:mb-4 text-xl font-semibold font-heading"
+      <StickySectionHeading
+        stickyClassName="mb-3 sm:mb-4"
       >
         Achievements
-      </h2>
+      </StickySectionHeading>
       <div
         className="flex gap-2 overflow-hidden pb-4"
         aria-hidden="true"

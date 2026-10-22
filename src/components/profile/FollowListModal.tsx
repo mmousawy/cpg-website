@@ -138,7 +138,7 @@ export default function FollowListModal({
         'fixed inset-0 z-50 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-3 max-sm:p-2',
         'bg-black/60',
-        'transition-[visibility,opacity,top,height] duration-200 ease-out',
+        'transition-[visibility,opacity] duration-200 ease-out',
       ])}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -161,10 +161,10 @@ export default function FollowListModal({
             isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
             'w-full max-w-xl',
             'relative m-auto',
-            'max-h-[calc(var(--vv-height,100vh)-1rem)] sm:max-h-[calc(var(--vv-height,100vh)-2rem)]',
+            'max-h-full min-h-0',
             'flex flex-col',
             'rounded-xl sm:rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
-            'transition-[scale,max-height] duration-200 ease-out',
+            'transition-[scale] duration-200 ease-out',
           ])}
           onClick={(e) => e.stopPropagation()}
         >

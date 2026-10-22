@@ -43,6 +43,8 @@ type GearPageClientProps = {
   useGearForm?: boolean;
   /** Server-rendered gear; skips client fetch on public gear pages. */
   initialProfile?: UserGearProfile;
+  /** Category group titles: h2 on public profile gear, h3 under account inventory panel. */
+  categoryHeadingLevel?: 'h2' | 'h3';
 };
 
 type GearPageClientCoreProps = GearPageClientProps & {
@@ -64,17 +66,20 @@ function CategoryHeading({
   label,
   itemCount,
   onAdd,
+  headingLevel = 'h3',
 }: {
   category: GearCategory;
   label: string;
   itemCount: number;
   onAdd?: () => void;
+  headingLevel?: 'h2' | 'h3';
 }) {
+  const HeadingTag = headingLevel;
   return (
     <div
       className="mb-3 flex items-center justify-between gap-3"
     >
-      <h3
+      <HeadingTag
         className="flex min-w-0 items-center gap-2 text-lg font-semibold font-heading text-foreground"
       >
         <GearCategoryIconBadge
@@ -89,7 +94,7 @@ function CategoryHeading({
           {' '}
           {itemCount}
         </span>
-      </h3>
+      </HeadingTag>
       {onAdd && (
         <Button
           type="button"
@@ -117,6 +122,7 @@ function GearPageClientCore({
   mode = 'public',
   hideAccountToolbar = false,
   onInventoryActions,
+  categoryHeadingLevel = 'h3',
   profile,
   hydrated,
   updateProfile,
@@ -388,6 +394,7 @@ function GearPageClientCore({
                 label={group.label}
                 itemCount={group.items.length}
                 onAdd={editable ? () => openAddModal(undefined, group.category) : undefined}
+                headingLevel={categoryHeadingLevel}
               />
               <div
                 className={accountLayout ? inventoryPanelListClass : publicGearPanelListClass}
