@@ -10,6 +10,8 @@ import {
   mergeExifEditsPartial,
   parseDatetimeLocalInTimeZone,
   parseExposureTimeInput,
+  buildCameraDisplayOrFilter,
+  splitCameraFieldToMakeModel,
   wallClockInTimeZoneToUtc,
 } from '@/utils/exif';
 
@@ -68,13 +70,38 @@ describe('parseExposureTimeInput', () => {
   });
 });
 
+describe('splitCameraFieldToMakeModel', () => {
+  it('splits known brands and keeps iPhone as Apple', () => {
+    expect(splitCameraFieldToMakeModel('Canon EOS R5')).toEqual({
+      make: 'Canon',
+      model: 'EOS R5',
+    });
+    expect(splitCameraFieldToMakeModel('iPhone 15 Pro')).toEqual({
+      make: 'Apple',
+      model: 'iPhone 15 Pro',
+    });
+    expect(splitCameraFieldToMakeModel('Unknown body')).toEqual({
+      make: '',
+      model: 'Unknown body',
+    });
+  });
+});
+
+describe('buildCameraDisplayOrFilter', () => {
+  it('matches make+model and model-only variants for the same display line', () => {
+    const filter = buildCameraDisplayOrFilter('Canon EOS R7');
+    expect(filter).toContain('exif_data->>Make.eq."Canon"');
+    expect(filter).toContain('exif_data->>Model.eq."EOS R7"');
+    expect(filter).toContain('exif_data->>Model.eq."Canon EOS R7"');
+  });
+});
+
 describe('mergeExifEdits', () => {
   it('preserves unknown keys and clears GPS degree fields when setting decimal coords', () => {
     const merged = mergeExifEdits(
       { CustomTag: 'keep', GPSLatitude: [51, 55, 21], Make: 'Old' },
       {
-        make: 'Canon',
-        model: 'EOS R5',
+        camera: 'Canon EOS R5',
         lensModel: '',
         iso: '400',
         aperture: '2.8',
@@ -119,8 +146,7 @@ describe('getCommonExifFormValues', () => {
       { exif_data: { Make: 'Canon', Model: 'R6', ISO: 400 } },
     ]);
 
-    expect(common.make).toBe('Canon');
-    expect(common.model).toBe('');
+    expect(common.camera).toBe('');
     expect(common.iso).toBe('400');
   });
 });
@@ -130,8 +156,7 @@ describe('mergeExifEditsPartial', () => {
     const merged = mergeExifEditsPartial(
       { Make: 'Nikon', Model: 'Z9', CustomTag: 'keep', ISO: 200 },
       {
-        make: 'Canon',
-        model: '',
+        camera: 'Canon',
         lensModel: '',
         iso: '',
         aperture: '',

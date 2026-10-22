@@ -4,6 +4,7 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
   AddPhotosToAlbumModal,
+  FilterPhotosModal,
   PhotoEditSidebar,
   PhotoGrid,
   UploadingPhotoCard,
@@ -11,22 +12,33 @@ import {
   type PhotoFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
-import ManageLoadMoreSentinel from '@/components/manage/ManageLoadMoreSentinel';
 import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
 import ManageSidebarSkeleton from '@/components/manage/ManageSidebarSkeleton';
 import MobileActionBar from '@/components/manage/MobileActionBar';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DropZone from '@/components/shared/DropZone';
 import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
-import Select from '@/components/shared/Select';
 import { useManageScrollContainer } from '@/context/ManageScrollContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useManagePhotoDeepLink } from '@/hooks/useManagePhotoDeepLink';
+import {
+  countActivePhotoLibraryFilters,
+  EMPTY_PHOTO_LIBRARY_FILTERS,
+  isPhotoLibraryFiltersActive,
+  type PhotoLibraryFilters,
+} from '@/hooks/photoLibraryFilters';
+import {
+  clearPersistedPhotoLibraryFilters,
+  loadPersistedPhotoLibraryFilters,
+  persistPhotoLibraryFilters,
+} from '@/hooks/photoLibraryFiltersStorage';
 import { photosQueryFilterKey, setAllPhotosQueriesFromFlat } from '@/hooks/photoQueryCache';
 import { useAuth } from '@/hooks/useAuth';
-import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
+import { photoLibraryFilterOptionsQueryKey } from '@/hooks/usePhotoLibraryFilterOptions';
+import { photoCountQueryKey, usePhotoCount } from '@/hooks/usePhotoCounts';
 import {
   useBulkUpdatePhotos,
   useDeletePhotos,
@@ -58,6 +70,7 @@ import {
   useState,
 } from 'react';
 
+import FilterSVG from 'public/icons/filter.svg';
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
 import ImageSVG from 'public/icons/image.svg';
 import PlusMiniSVG from 'public/icons/plus-mini.svg';
@@ -112,7 +125,8 @@ function PhotosPageContent() {
   const { setHasUnsavedChanges } = useUnsavedChanges();
   const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
-  const [photoFilter, setPhotoFilter] = useState<'all' | 'public' | 'private'>('all');
+  const [libraryFilters, setLibraryFilters] = useState<PhotoLibraryFilters>(EMPTY_PHOTO_LIBRARY_FILTERS);
+  const photoFilter = libraryFilters.visibility;
   const manageScrollContainerElRef = useRef<HTMLElement | null>(null);
 
   // React Query hooks
@@ -120,11 +134,12 @@ function PhotosPageContent() {
     photos,
     isPending: photosPending,
     isFetching: photosFetching,
-    fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
     pageSize,
-  } = usePhotos(user?.id, photoFilter);
+  } = usePhotos(user?.id, libraryFilters, { loadAll: !photoIdFromUrl });
+  const { data: libraryPhotoCount = 0 } = usePhotoCount(user?.id);
 
   const openMobileEditSheet = useCallback(() => {
     if (!window.matchMedia('(max-width: 767px)').matches) return;
@@ -135,9 +150,27 @@ function PhotosPageContent() {
     });
   }, []);
 
-  const forcePhotoFilterAll = useCallback(() => {
-    setPhotoFilter('all');
-  }, []);
+  const applyLibraryFilters = useCallback(
+    (filters: PhotoLibraryFilters) => {
+      setLibraryFilters(filters);
+      if (user?.id) {
+        persistPhotoLibraryFilters(user.id, filters);
+      }
+    },
+    [user?.id],
+  );
+
+  const clearLibraryFilters = useCallback(() => {
+    setLibraryFilters(EMPTY_PHOTO_LIBRARY_FILTERS);
+    if (user?.id) {
+      clearPersistedPhotoLibraryFilters(user.id);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setLibraryFilters(loadPersistedPhotoLibraryFilters(user.id));
+  }, [user?.id]);
 
   const ensureDeepLinkSelection = useCallback((photoId: string) => {
     setSelectedPhotoIds(new Set([photoId]));
@@ -161,7 +194,7 @@ function PhotosPageContent() {
     photoIdFromUrl,
     pageSize,
     photos,
-    onForceFilterAll: forcePhotoFilterAll,
+    onForceFilterAll: clearLibraryFilters,
     onEnsureSelection: ensureDeepLinkSelection,
     onOpenMobileEdit: openMobileEditSheet,
     onPhotoNotFound: handleDeepLinkPhotoNotFound,
@@ -295,6 +328,19 @@ function PhotosPageContent() {
     setSelectedPhotoIds(new Set());
   };
 
+  const handleOpenFilterModal = useCallback(() => {
+    modalContext.setTitle('Filter photos');
+    modalContext.setSize('medium');
+    modalContext.setContent(
+      <FilterPhotosModal
+        activeFilters={libraryFilters}
+        onApply={applyLibraryFilters}
+        onClose={() => modalContext.setIsOpen(false)}
+      />,
+    );
+    modalContext.setIsOpen(true);
+  }, [applyLibraryFilters, libraryFilters, modalContext]);
+
   const handleAddToAlbum = (photoIds?: string[]) => {
     const ids = photoIds ?? Array.from(selectedPhotoIds);
     const photosToAdd = ids
@@ -337,6 +383,7 @@ function PhotosPageContent() {
       if (uploadedPhotos.length > 0) {
         await queryClient.refetchQueries({ queryKey: photosQueryFilterKey(user.id, photoFilter) });
         queryClient.invalidateQueries({ queryKey: photoCountQueryKey(user.id) });
+        queryClient.invalidateQueries({ queryKey: photoLibraryFilterOptionsQueryKey(user.id) });
       }
 
       // Drop the upload cards. Their file previews stay on the new grid items.
@@ -374,12 +421,22 @@ function PhotosPageContent() {
   const isPhotosGridInitiallyLoading =
     photos.length === 0 && (photosPending || photosFetching);
 
+  const showFilteredEmptyState =
+    !isPhotosGridInitiallyLoading
+    && photos.length === 0
+    && uploadingPhotos.length === 0
+    && !hasNextPage
+    && !isFetchingNextPage
+    && libraryPhotoCount > 0
+    && isPhotoLibraryFiltersActive(libraryFilters);
+
   const showRealEmptyState =
     !isPhotosGridInitiallyLoading
     && photos.length === 0
     && uploadingPhotos.length === 0
     && !hasNextPage
-    && !isFetchingNextPage;
+    && !isFetchingNextPage
+    && !showFilteredEmptyState;
   const showEmptyState =
     isPhotosUploadTourMock || (!isPhotosManageTourMock && showRealEmptyState);
   const manageTourActive =
@@ -417,6 +474,8 @@ function PhotosPageContent() {
     setIsMobileEditSheetOpen(false);
   };
 
+  const activeFilterCount = countActivePhotoLibraryFilters(libraryFilters);
+
   const handleMobileBulkDelete = async () => {
     if (selectedCount === 0) return;
 
@@ -438,23 +497,38 @@ function PhotosPageContent() {
               label="How to upload photos"
               size="sm"
             />
-            <div
+            <Button
               id="photos-tour-filter"
-              className="min-w-20 md:min-w-25"
+              onClick={handleOpenFilterModal}
+              variant="secondary"
+              className={
+                activeFilterCount > 0
+                  ? 'border-primary/60 bg-[color-mix(in_srgb,var(--primary)_6%,var(--background-raised))]'
+                  : undefined
+              }
+              icon={<FilterSVG
+                className="size-5 -ml-0.5"
+              />}
+              aria-label={
+                activeFilterCount > 0
+                  ? `Filter photos, ${activeFilterCount} active`
+                  : 'Filter photos'
+              }
             >
-              <Select
-                value={photoFilter}
-                onValueChange={(value) => setPhotoFilter(value as 'all' | 'public' | 'private')}
-                options={[
-                  { value: 'all', label: 'All' },
-                  { value: 'public', label: 'Public' },
-                  { value: 'private', label: 'Private' },
-                ]}
-                fullWidth={false}
-                mono
-                className="w-full"
-              />
-            </div>
+              <span
+                className="hidden md:inline"
+              >
+                Filter
+              </span>
+              {activeFilterCount > 0 && (
+                <span
+                  aria-hidden
+                  className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-none text-white tabular-nums"
+                >
+                  {activeFilterCount > 99 ? '99+' : activeFilterCount}
+                </span>
+              )}
+            </Button>
             <Button
               id="photos-tour-upload"
               onClick={() => fileInputRef.current?.click()}
@@ -567,6 +641,23 @@ function PhotosPageContent() {
                 </Button>
               )}
             />
+          ) : showFilteredEmptyState ? (
+            <EmptyState
+              className="m-4 min-h-0 flex-1"
+              icon={<ImageSVG
+                className="size-10 inline-block"
+              />}
+              title="No photos match your filters"
+              description="Try changing or clearing your filters to see more photos."
+              action={(
+                <Button
+                  onClick={clearLibraryFilters}
+                  variant="secondary"
+                >
+                  Clear filters
+                </Button>
+              )}
+            />
           ) : !isPhotosUploadTourMock && !isPhotosManageTourMock && isPhotosGridInitiallyLoading ? (
             <ManagePhotoGridSkeleton />
           ) : (
@@ -580,7 +671,7 @@ function PhotosPageContent() {
                 onClearSelection={handleClearSelection}
                 onSelectMultiple={handleSelectMultiple}
                 onReorder={handleReorderPhotos}
-                sortable
+                sortable={!isPhotoLibraryFiltersActive(libraryFilters)}
                 localPreviewUrls={localPreviewUrls}
                 onLocalPreviewReleased={releaseLocalPreview}
                 leadingContent={
@@ -597,13 +688,17 @@ function PhotosPageContent() {
                   ) : undefined
                 }
               />
-              <ManageLoadMoreSentinel
-                hasNextPage={hasNextPage ?? false}
-                isFetchingNextPage={isFetchingNextPage}
-                onLoadMore={() => fetchNextPage()}
-                resetKey={photoFilter}
-                itemCount={photos.length}
-              />
+              {((hasNextPage && !isFetchNextPageError) || isFetchingNextPage) && (
+                <div
+                  className="flex justify-center py-4"
+                  role="status"
+                  aria-label="Loading more photos"
+                >
+                  <LoadingSpinner
+                    size="sm"
+                  />
+                </div>
+              )}
             </>
           )}
         </DropZone>

@@ -30,6 +30,8 @@ interface AutocompleteInputProps {
   loading?: boolean;
   /** Error state — forwarded to the underlying input */
   error?: boolean;
+  /** Stronger border when the field has a value */
+  filled?: boolean;
 }
 
 type DropdownPosition = {
@@ -55,6 +57,7 @@ export default function AutocompleteInput({
   className,
   loading = false,
   error = false,
+  filled = false,
 }: AutocompleteInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -246,6 +249,7 @@ export default function AutocompleteInput({
         disabled={disabled}
         fullWidth={fullWidth}
         error={error}
+        filled={filled}
         className={className}
       />
 

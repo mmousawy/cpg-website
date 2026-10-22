@@ -42,6 +42,12 @@ export default function ConfirmModal() {
   };
 
   const isDanger = options?.variant === 'danger';
+  const sizeClasses: Record<'default' | 'medium' | 'large', string> = {
+    default: 'max-w-md',
+    medium: 'max-w-[42rem]',
+    large: 'max-w-3xl',
+  };
+  const panelSize = sizeClasses[options?.size ?? 'default'];
   const confirmIcon =
     options?.confirmIcon === false
       ? undefined
@@ -59,7 +65,7 @@ export default function ConfirmModal() {
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none p-3 max-sm:p-4',
+        'flex size-full max-h-none max-w-none flex-col items-center justify-center p-3 max-sm:p-4',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',
       ])}
@@ -75,51 +81,56 @@ export default function ConfirmModal() {
         }}
       >
         <div
-          className={clsx([
-            isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
-            'w-full max-w-md',
-            'relative m-auto',
-            'rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
-            'transition-[scale] duration-200 ease-out',
-          ])}
+          className="flex w-full min-w-0 justify-center"
         >
-          <h2
-            className="mb-3 text-xl font-bold"
-          >
-            {options?.title}
-          </h2>
-          <p
-            className="text-foreground/80"
-          >
-            {options?.message}
-          </p>
-
-          {options?.content && (
-            <div
-              className="my-4"
-            >
-              {options.content}
-            </div>
-          )}
-
           <div
-            className={clsx('flex justify-end gap-3', !options?.content && 'mt-6')}
+            className={clsx([
+              isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
+              'w-full min-w-0',
+              panelSize,
+              'relative',
+              'rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
+              'transition-[scale] duration-200 ease-out',
+            ])}
           >
-            {!options?.hideCancel && (
-              <Button
-                variant="secondary"
-                onClick={handleCancel}
-              >
-                {options?.cancelLabel || 'Cancel'}
-              </Button>
-            )}
-            <Button
-              variant={isDanger ? 'danger' : 'primary'}
-              onClick={handleConfirm}
-              icon={confirmIcon}
+            <h2
+              className="mb-3 text-xl font-bold"
             >
-              {options?.confirmLabel || 'Confirm'}
-            </Button>
+              {options?.title}
+            </h2>
+            <p
+              className="text-foreground/80"
+            >
+              {options?.message}
+            </p>
+
+            {options?.content && (
+              <div
+                className="my-4"
+              >
+                {options.content}
+              </div>
+            )}
+
+            <div
+              className={clsx('flex justify-end gap-3', !options?.content && 'mt-6')}
+            >
+              {!options?.hideCancel && (
+                <Button
+                  variant="secondary"
+                  onClick={handleCancel}
+                >
+                  {options?.cancelLabel || 'Cancel'}
+                </Button>
+              )}
+              <Button
+                variant={isDanger ? 'danger' : 'primary'}
+                onClick={handleConfirm}
+                icon={confirmIcon}
+              >
+                {options?.confirmLabel || 'Confirm'}
+              </Button>
+            </div>
           </div>
         </div>
       </FocusTrap>

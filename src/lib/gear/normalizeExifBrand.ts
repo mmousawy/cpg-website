@@ -26,3 +26,14 @@ export function normalizeExifBrand(make: string): string {
   const key = make.trim().toLowerCase();
   return MAKE_ALIASES[key] ?? make.trim();
 }
+
+/** Canonical brand if the token is a known EXIF make prefix, else null. */
+export function exifBrandFromLeadingToken(token: string): string | null {
+  const key = token.trim().toLowerCase();
+  if (!key) return null;
+  if (MAKE_ALIASES[key]) return MAKE_ALIASES[key];
+  for (const brand of Object.values(MAKE_ALIASES)) {
+    if (brand.toLowerCase() === key) return brand;
+  }
+  return null;
+}

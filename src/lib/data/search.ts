@@ -1,7 +1,31 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { filterSearchResults } from '@/lib/auth/isTestProfile';
+import { getGroupedMemberGearDiscovery } from '@/lib/data/memberGear';
+import { searchGearPages } from '@/lib/gear/searchGearPages';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { SearchResult, SearchEntityType } from '@/types/search';
+
+export const ALL_SEARCH_ENTITY_TYPES: SearchEntityType[] = [
+  'albums',
+  'photos',
+  'members',
+  'events',
+  'tags',
+  'scene-events',
+  'challenges',
+  'gear',
+];
+
+function mergeSearchResults(results: SearchResult[], limit: number): SearchResult[] {
+  return [...results]
+    .sort((a, b) => {
+      if (b.rank !== a.rank) {
+        return b.rank - a.rank;
+      }
+      return a.title.localeCompare(b.title);
+    })
+    .slice(0, limit);
+}
 
 /**
  * Search across all entity types using PostgreSQL Full-Text Search
@@ -14,7 +38,7 @@ import type { SearchResult, SearchEntityType } from '@/types/search';
  */
 export async function searchEntities(
   query: string,
-  types: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags', 'scene-events', 'challenges'],
+  types: SearchEntityType[] = ALL_SEARCH_ENTITY_TYPES,
   limit = 20,
   includeTestContent = false,
 ): Promise<SearchResult[]> {
@@ -30,18 +54,34 @@ export async function searchEntities(
     return [];
   }
 
-  const supabase = createPublicClient();
+  const trimmed = query.trim();
+  const includeGear = types.includes('gear');
+  const rpcTypes = types.filter((type) => type !== 'gear');
 
-  const { data, error } = await supabase.rpc('global_search', {
-    search_query: query.trim(),
-    result_limit: limit,
-    search_types: types.length > 0 ? types : ['albums', 'photos', 'members', 'events', 'tags'],
-  });
+  let results: SearchResult[] = [];
 
-  if (error) {
-    console.error('Search error:', error);
-    return [];
+  if (rpcTypes.length > 0) {
+    const supabase = createPublicClient();
+
+    const { data, error } = await supabase.rpc('global_search', {
+      search_query: trimmed,
+      result_limit: limit,
+      search_types: rpcTypes,
+    });
+
+    if (error) {
+      console.error('Search error:', error);
+    } else {
+      results = filterSearchResults((data || []) as SearchResult[], includeTestContent);
+    }
   }
 
-  return filterSearchResults((data || []) as SearchResult[], includeTestContent);
+  if (includeGear) {
+    cacheTag('user-gear');
+    const grouped = await getGroupedMemberGearDiscovery(includeTestContent);
+    const gearHits = searchGearPages(grouped, trimmed);
+    results = [...results, ...gearHits];
+  }
+
+  return mergeSearchResults(results, limit);
 }

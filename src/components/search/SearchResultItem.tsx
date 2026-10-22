@@ -1,6 +1,10 @@
 'use client';
 
 import Avatar from '@/components/auth/Avatar';
+import GearCategoryIconBadge from '@/components/gear/GearCategoryIconBadge';
+import { parseGearSearchEntityId } from '@/lib/gear/searchGearPages';
+import { SHOOTING_FORMAT_MICRO_ICONS } from '@/lib/gear/shootingFormatIcons';
+import { isShootingFormatSlug } from '@/lib/gear/groupMembersByGear';
 import BlurImage from '@/components/shared/BlurImage';
 import type { SearchResult } from '@/types/search';
 import { stripHtml } from '@/utils/stripHtml';
@@ -351,6 +355,74 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
               className="mt-1 text-xs text-foreground/60 line-clamp-2"
             >
               {stripHtml(result.subtitle)}
+            </p>
+          )}
+        </div>
+      </Link>
+    );
+  }
+
+  if (result.entity_type === 'gear') {
+    const parsed = parseGearSearchEntityId(result.entity_id);
+    const formatKey = parsed?.kind === 'format' && isShootingFormatSlug(parsed.key)
+      ? parsed.key
+      : null;
+    const FormatIcon = formatKey ? SHOOTING_FORMAT_MICRO_ICONS[formatKey] : null;
+
+    return (
+      <Link
+        ref={itemRef}
+        href={result.url || '#'}
+        onClick={handleClick}
+        className={clsx(
+          'group flex items-center gap-3 rounded-lg border p-3 transition-colors',
+          isSelected
+            ? 'border-primary bg-background'
+            : 'border-border-color-strong bg-background-light hover:border-primary hover:bg-background',
+        )}
+      >
+        {parsed?.kind === 'camera' && (
+          <GearCategoryIconBadge
+            category="camera_body"
+            className="size-10"
+          />
+        )}
+        {parsed?.kind === 'lens' && (
+          <GearCategoryIconBadge
+            category="lens"
+            className="size-10"
+          />
+        )}
+        {parsed?.kind === 'format' && FormatIcon && (
+          <span
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-foreground shadow-sm dark:bg-zinc-900 dark:shadow-black/40"
+            aria-hidden
+          >
+            <FormatIcon
+              className="size-4"
+              aria-hidden
+            />
+          </span>
+        )}
+        {parsed?.kind === 'format' && !FormatIcon && (
+          <GearCategoryIconBadge
+            category="other"
+            className="size-10"
+          />
+        )}
+        <div
+          className="min-w-0 flex-1"
+        >
+          <p
+            className="font-medium text-sm leading-tight line-clamp-1"
+          >
+            {result.title}
+          </p>
+          {result.subtitle && (
+            <p
+              className="mt-0.5 text-xs text-foreground/60 line-clamp-1"
+            >
+              {result.subtitle}
             </p>
           )}
         </div>

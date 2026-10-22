@@ -11,10 +11,16 @@ import { formatCatalogDisplayName } from '@/lib/gear/formatCatalogDisplayName';
 import { useAuth } from '@/hooks/useAuth';
 import { useGearCatalogSearch } from '@/hooks/useGearCatalogSearch';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
+import {
+  confirmBulkExifSave,
+  prepareBulkExifApply,
+} from '@/components/manage/bulkExifSaveConfirm';
 import PhotoExifReadOnlyContent from '@/components/manage/PhotoExifReadOnlyContent';
+import { ROTTERDAM_CENTER } from '@/lib/location/mapDefaults';
 import { useBulkUpdatePhotoExif, useUpdatePhotoExif } from '@/hooks/usePhotoMutations';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmClearPhotoCaptureDetails, confirmUnsavedChanges } from '@/utils/confirmHelpers';
+import { toUserFacingError } from '@/utils/userFacingHttpError';
 import {
   type ExifEditFormValues,
   emptyExifEditFormValues,
@@ -23,14 +29,26 @@ import {
   parseExposureTimeInput,
 } from '@/utils/exif';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+const LocationMapPickerModal = dynamic(
+  () => import('@/components/manage/LocationMapPickerModal'),
+  { ssr: false },
+);
+
+const EXIF_SAVE_SUCCESS_MS = 650;
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import CheckMiniSVG from 'public/icons/check-mini.svg';
+
+/** Empty capture fields: softer placeholder; filled state uses Input `filled` prop. */
+const EXIF_FIELD_INPUT_CLASS = 'placeholder:text-foreground/45';
+
 const exifEditFormSchema = z
   .object({
-    make: z.string(),
-    model: z.string(),
+    camera: z.string(),
     lensModel: z.string(),
     iso: z.string(),
     aperture: z.string(),
@@ -105,13 +123,6 @@ function photoHasCaptureDetails(photo: PhotoWithAlbums): boolean {
     && typeof photo.exif_data === 'object'
     && Object.keys(photo.exif_data as object).length > 0,
   );
-}
-
-function makeIsImpliedByModel(make: string, model: string): boolean {
-  const makeLower = make.toLowerCase();
-  const modelLower = model.toLowerCase();
-  if (modelLower.includes(makeLower)) return true;
-  return makeLower === 'apple' && /iphone|ipad|ipod/.test(modelLower);
 }
 
 function PhotoExifModalReadOnly({
@@ -197,6 +208,8 @@ function PhotoExifModalEditable({
   const updateExifMutation = useUpdatePhotoExif(user?.id, photoFilter, profile?.nickname, albumId);
   const bulkUpdateExifMutation = useBulkUpdatePhotoExif(user?.id, photoFilter, profile?.nickname, albumId);
   const hasCaptureDetails = photos.some(photoHasCaptureDetails);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   const {
     register,
@@ -212,17 +225,20 @@ function PhotoExifModalEditable({
 
   useEffect(() => {
     clearGpsOnSaveRef.current = false;
+    setSaveSuccess(false);
     reset(savedValues);
   }, [photoIdsKey, reset, savedValues]);
 
-  const modelQuery = watch('model');
-  const lensQuery = watch('lensModel');
-  const { results: modelResults, loading: modelLoading } = useGearCatalogSearch(modelQuery, null);
+  const formValues = watch();
+  const cameraQuery = formValues.camera;
+  const lensQuery = formValues.lensModel;
+  const isExifFieldFilled = (key: keyof ExifEditFormValues) => Boolean(formValues[key]?.trim());
+  const { results: cameraResults, loading: cameraLoading } = useGearCatalogSearch(cameraQuery, null);
   const { results: lensResults, loading: lensLoading } = useGearCatalogSearch(lensQuery, 'lens');
 
-  const modelSuggestions = useMemo(
-    () => modelResults.map((r) => formatCatalogDisplayName(r.brand, r.name)),
-    [modelResults],
+  const cameraSuggestions = useMemo(
+    () => cameraResults.map((r) => formatCatalogDisplayName(r.brand, r.name)),
+    [cameraResults],
   );
   const lensSuggestions = useMemo(() => lensResults.map((r) => r.name), [lensResults]);
 
@@ -234,14 +250,45 @@ function PhotoExifModalEditable({
     setValue('longitude', '', { shouldDirty: true });
   };
 
+  const handleMapChoose = useCallback(
+    ({ lat, lng }: { lat: number; lng: number }) => {
+      if (isBatch) {
+        clearGpsOnSaveRef.current = false;
+      }
+      setValue('latitude', lat.toFixed(6), { shouldDirty: true });
+      setValue('longitude', lng.toFixed(6), { shouldDirty: true });
+      setIsMapPickerOpen(false);
+    },
+    [isBatch, setValue],
+  );
+
   const onSubmit = useCallback(
     async (data: ExifEditFormValues) => {
       try {
         if (isBatch) {
+          const clearGps = clearGpsOnSaveRef.current;
+          const { form: applyForm, clearGps: applyClearGps, changes } = prepareBulkExifApply(
+            photos,
+            data,
+            clearGps,
+          );
+          if (changes.length === 0) {
+            return;
+          }
+          const confirmed = await confirm(confirmBulkExifSave(photos.length, changes));
+          if (!confirmed) {
+            return;
+          }
           await bulkUpdateExifMutation.mutateAsync({
             photoIds: photos.map((p) => p.id),
-            form: data,
-            mergeOptions: { clearGps: clearGpsOnSaveRef.current },
+            form: applyForm,
+            mergeOptions: { clearGps: applyClearGps },
+            exifBaseByPhotoId: Object.fromEntries(
+              photos.map((p) => [
+                p.id,
+                p.exif_data as Record<string, unknown> | null | undefined,
+              ]),
+            ),
           });
           clearGpsOnSaveRef.current = false;
         } else {
@@ -253,14 +300,18 @@ function PhotoExifModalEditable({
         }
         skipCloseCheckRef.current = true;
         reset(data);
+        setSaveSuccess(true);
+        await new Promise((resolve) => setTimeout(resolve, EXIF_SAVE_SUCCESS_MS));
         modalContext.setIsOpen(false);
         onClose();
       } catch {
+        setSaveSuccess(false);
         // mutation error surfaced below
       }
     },
     [
       bulkUpdateExifMutation,
+      confirm,
       isBatch,
       modalContext,
       onClose,
@@ -303,6 +354,9 @@ function PhotoExifModalEditable({
     updateExifMutation,
   ]);
 
+  const isSaving = isSubmitting || updateExifMutation.isPending || bulkUpdateExifMutation.isPending;
+  const formLocked = isSaving || saveSuccess;
+
   useEffect(() => {
     handleSubmitRef.current = () => handleSubmit(onSubmit)();
     handleCloseRef.current = () => modalContext.requestClose();
@@ -315,14 +369,13 @@ function PhotoExifModalEditable({
         skipCloseCheckRef.current = false;
         return true;
       }
+      if (saveSuccess || isSaving) return false;
       if (!isDirty) return true;
       const confirmed = await confirm(confirmUnsavedChanges());
       return confirmed;
     });
     return () => modalContext.setBeforeCloseCheck(null);
-  }, [confirm, isDirty, modalContext]);
-
-  const isSaving = isSubmitting || updateExifMutation.isPending || bulkUpdateExifMutation.isPending;
+  }, [confirm, isDirty, isSaving, modalContext, saveSuccess]);
   const saveError = updateExifMutation.error ?? bulkUpdateExifMutation.error;
 
   const footerContent = useMemo(
@@ -334,7 +387,7 @@ function PhotoExifModalEditable({
           type="button"
           variant="danger"
           onClick={() => handleRemoveAllRef.current?.()}
-          disabled={!hasCaptureDetails || isSaving}
+          disabled={!hasCaptureDetails || formLocked}
         >
           Remove all data
         </Button>
@@ -345,22 +398,27 @@ function PhotoExifModalEditable({
             type="button"
             variant="secondary"
             onClick={() => handleCloseRef.current?.()}
-            disabled={isSaving}
+            disabled={formLocked}
           >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={() => handleSubmitRef.current?.()}
-            disabled={isSaving || !isDirty}
-            loading={isSaving}
+            disabled={formLocked || (!isDirty && !saveSuccess)}
+            loading={isSaving && !saveSuccess}
+            icon={saveSuccess ? (
+              <CheckMiniSVG
+                className="size-5 -ml-0.5"
+              />
+            ) : undefined}
           >
-            Save
+            {saveSuccess ? 'Saved' : 'Save'}
           </Button>
         </div>
       </div>
     ),
-    [hasCaptureDetails, isDirty, isSaving],
+    [formLocked, hasCaptureDetails, isDirty, isSaving, saveSuccess],
   );
 
   useEffect(() => {
@@ -374,43 +432,59 @@ function PhotoExifModalEditable({
   };
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={handleSubmit(onSubmit)}
+    <div
+      className="contents"
     >
-      <p
-        className="text-sm text-foreground/70"
+      <form
+        className="space-y-4"
+        onSubmit={handleSubmit(onSubmit)}
       >
-        {isBatch
-          ? 'These details are shown on your public photo pages. They are stored separately from the image files.'
-          : 'These details are shown to viewers on your public photo page. They are stored separately from the image file.'}
-      </p>
-      {isBatch && (
-        <p
-          className="text-xs text-foreground/60"
-        >
-          Leave a field empty to keep each photo&apos;s existing value.
-        </p>
-      )}
-
-      <div
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-      >
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-make"
+        {isBatch && (
+          <p
+            className="text-xs text-foreground/60"
           >
-            Make
-          </label>
-          <Input
-            id="exif-make"
-            {...register('make')}
-            placeholder="e.g. Canon"
-            disabled={isSaving}
-          />
+            Leave a field empty to keep each photo&apos;s existing value.
+          </p>
+        )}
+
+        <div
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+        >
+          <div
+            className="flex flex-col gap-2 sm:col-span-2"
+          >
+            <label
+              className="text-sm font-medium"
+              htmlFor="exif-camera"
+            >
+              Camera
+            </label>
+            <AutocompleteInput
+              id="exif-camera"
+              value={cameraQuery}
+              onChange={(v) => setValue('camera', v, { shouldDirty: true })}
+              suggestions={cameraSuggestions}
+              disableFilter
+              loading={cameraLoading}
+              placeholder="Camera or phone"
+              disabled={formLocked}
+              filled={isExifFieldFilled('camera')}
+              className={EXIF_FIELD_INPUT_CLASS}
+              onSelect={(s) => {
+                const hit = cameraResults.find((r) => formatCatalogDisplayName(r.brand, r.name) === s)
+                  ?? cameraResults.find((r) => r.name === s);
+                const name = hit ? formatCatalogDisplayName(hit.brand, hit.name) : s;
+                setValue('camera', name, { shouldDirty: true });
+              }}
+            />
+            {fieldError('camera') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('camera')}
+              </p>
+            )}
+          </div>
         </div>
 
         <div
@@ -418,211 +492,28 @@ function PhotoExifModalEditable({
         >
           <label
             className="text-sm font-medium"
-            htmlFor="exif-model"
+            htmlFor="exif-lens"
           >
-            Model
+            Lens
           </label>
           <AutocompleteInput
-            id="exif-model"
-            value={modelQuery}
-            onChange={(v) => setValue('model', v, { shouldDirty: true })}
-            suggestions={modelSuggestions}
+            id="exif-lens"
+            value={lensQuery}
+            onChange={(v) => setValue('lensModel', v, { shouldDirty: true })}
+            suggestions={lensSuggestions}
             disableFilter
-            loading={modelLoading}
-            placeholder="Camera or phone model"
-            disabled={isSaving}
+            loading={lensLoading}
+            placeholder="Lens name"
+            disabled={formLocked}
+            filled={isExifFieldFilled('lensModel')}
+            className={EXIF_FIELD_INPUT_CLASS}
             onSelect={(s) => {
-              const hit = modelResults.find((r) => formatCatalogDisplayName(r.brand, r.name) === s)
-                ?? modelResults.find((r) => r.name === s);
-              const name = hit ? formatCatalogDisplayName(hit.brand, hit.name) : s;
-              setValue('model', name, { shouldDirty: true });
-              if (hit?.brand) {
-                const currentMake = watch('make');
-                if (!currentMake || !makeIsImpliedByModel(hit.brand, name)) {
-                  setValue('make', hit.brand, { shouldDirty: true });
-                }
-              }
+              const hit = lensResults.find((r) => r.name === s);
+              setValue('lensModel', hit?.name ?? s, { shouldDirty: true });
             }}
           />
-          {fieldError('model') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('model')}
-            </p>
-          )}
         </div>
-      </div>
 
-      <div
-        className="flex flex-col gap-2"
-      >
-        <label
-          className="text-sm font-medium"
-          htmlFor="exif-lens"
-        >
-          Lens
-        </label>
-        <AutocompleteInput
-          id="exif-lens"
-          value={lensQuery}
-          onChange={(v) => setValue('lensModel', v, { shouldDirty: true })}
-          suggestions={lensSuggestions}
-          disableFilter
-          loading={lensLoading}
-          placeholder="Lens name"
-          disabled={isSaving}
-          onSelect={(s) => {
-            const hit = lensResults.find((r) => r.name === s);
-            setValue('lensModel', hit?.name ?? s, { shouldDirty: true });
-          }}
-        />
-      </div>
-
-      <div
-        className="grid grid-cols-2 gap-4"
-      >
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-iso"
-          >
-            ISO
-          </label>
-          <Input
-            id="exif-iso"
-            inputMode="numeric"
-            {...register('iso')}
-            placeholder="400"
-            disabled={isSaving}
-            error={!!errors.iso}
-          />
-          {fieldError('iso') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('iso')}
-            </p>
-          )}
-        </div>
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-aperture"
-          >
-            Aperture (f-number)
-          </label>
-          <Input
-            id="exif-aperture"
-            inputMode="decimal"
-            {...register('aperture')}
-            placeholder="2.8"
-            disabled={isSaving}
-            error={!!errors.aperture}
-          />
-          {fieldError('aperture') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('aperture')}
-            </p>
-          )}
-        </div>
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-shutter"
-          >
-            Shutter
-          </label>
-          <Input
-            id="exif-shutter"
-            {...register('exposureTime')}
-            placeholder="1/250 or 2s"
-            disabled={isSaving}
-            error={!!errors.exposureTime}
-          />
-          {fieldError('exposureTime') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('exposureTime')}
-            </p>
-          )}
-        </div>
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-focal"
-          >
-            Focal length (mm)
-          </label>
-          <Input
-            id="exif-focal"
-            inputMode="decimal"
-            {...register('focalLength')}
-            placeholder="50"
-            disabled={isSaving}
-            error={!!errors.focalLength}
-          />
-          {fieldError('focalLength') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('focalLength')}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div
-        className="flex flex-col gap-2"
-      >
-        <label
-          className="text-sm font-medium"
-          htmlFor="exif-capture-time"
-        >
-          Capture time (
-          {EVENT_TIMEZONE}
-          )
-        </label>
-        <Input
-          id="exif-capture-time"
-          type="datetime-local"
-          {...register('captureTime')}
-          disabled={isSaving}
-        />
-      </div>
-
-      <div
-        className="space-y-2"
-      >
-        <div
-          className="flex items-center justify-between gap-2"
-        >
-          <span
-            className="text-sm font-medium"
-          >
-            Location (GPS)
-          </span>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={clearLocation}
-            disabled={isSaving}
-          >
-            Remove location
-          </Button>
-        </div>
         <div
           className="grid grid-cols-2 gap-4"
         >
@@ -630,56 +521,246 @@ function PhotoExifModalEditable({
             className="flex flex-col gap-2"
           >
             <label
-              className="text-xs text-foreground/70"
-              htmlFor="exif-lat"
+              className="text-sm font-medium"
+              htmlFor="exif-iso"
             >
-              Latitude
+              ISO
             </label>
             <Input
-              id="exif-lat"
-              inputMode="decimal"
-              {...register('latitude')}
-              placeholder="52.3676"
-              disabled={isSaving}
-              error={!!errors.latitude}
+              id="exif-iso"
+              inputMode="numeric"
+              {...register('iso')}
+              placeholder="400"
+              disabled={formLocked}
+              error={!!errors.iso}
+              filled={isExifFieldFilled('iso')}
+              className={EXIF_FIELD_INPUT_CLASS}
             />
+            {fieldError('iso') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('iso')}
+              </p>
+            )}
           </div>
           <div
             className="flex flex-col gap-2"
           >
             <label
-              className="text-xs text-foreground/70"
-              htmlFor="exif-lng"
+              className="text-sm font-medium"
+              htmlFor="exif-aperture"
             >
-              Longitude
+              Aperture (f-number)
             </label>
             <Input
-              id="exif-lng"
+              id="exif-aperture"
               inputMode="decimal"
-              {...register('longitude')}
-              placeholder="4.9041"
-              disabled={isSaving}
-              error={!!errors.longitude}
+              {...register('aperture')}
+              placeholder="2.8"
+              disabled={formLocked}
+              error={!!errors.aperture}
+              filled={isExifFieldFilled('aperture')}
+              className={EXIF_FIELD_INPUT_CLASS}
             />
+            {fieldError('aperture') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('aperture')}
+              </p>
+            )}
+          </div>
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+              htmlFor="exif-shutter"
+            >
+              Shutter
+            </label>
+            <Input
+              id="exif-shutter"
+              {...register('exposureTime')}
+              placeholder="1/250 or 2s"
+              disabled={formLocked}
+              error={!!errors.exposureTime}
+              filled={isExifFieldFilled('exposureTime')}
+              className={EXIF_FIELD_INPUT_CLASS}
+            />
+            {fieldError('exposureTime') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('exposureTime')}
+              </p>
+            )}
+          </div>
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+              htmlFor="exif-focal"
+            >
+              Focal length (mm)
+            </label>
+            <Input
+              id="exif-focal"
+              inputMode="decimal"
+              {...register('focalLength')}
+              placeholder="50"
+              disabled={formLocked}
+              error={!!errors.focalLength}
+              filled={isExifFieldFilled('focalLength')}
+              className={EXIF_FIELD_INPUT_CLASS}
+            />
+            {fieldError('focalLength') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('focalLength')}
+              </p>
+            )}
           </div>
         </div>
-        {(fieldError('latitude') || fieldError('longitude')) && (
-          <p
-            className="text-xs text-red-500"
-          >
-            {fieldError('latitude') || fieldError('longitude')}
-          </p>
-        )}
-      </div>
 
-      {saveError && (
-        <ErrorMessage
-          variant="compact"
+        <div
+          className="flex flex-col gap-2"
         >
-          {saveError.message}
-        </ErrorMessage>
-      )}
-    </form>
+          <label
+            className="text-sm font-medium"
+            htmlFor="exif-capture-time"
+          >
+            Capture time (
+            {EVENT_TIMEZONE}
+            )
+          </label>
+          <Input
+            id="exif-capture-time"
+            type="datetime-local"
+            {...register('captureTime')}
+            disabled={formLocked}
+            filled={isExifFieldFilled('captureTime')}
+            className={EXIF_FIELD_INPUT_CLASS}
+          />
+        </div>
+
+        <div
+          className="space-y-2"
+        >
+          <div
+            className="flex items-center justify-between gap-2"
+          >
+            <span
+              className="text-sm font-medium"
+            >
+              Location (GPS)
+            </span>
+            <div
+              className="flex shrink-0 flex-wrap gap-2"
+            >
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsMapPickerOpen(true)}
+                disabled={formLocked}
+                aria-label="Choose on map"
+              >
+                Choose on map
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={clearLocation}
+                disabled={formLocked}
+                aria-label="Remove location"
+              >
+                <span
+                  className="sm:hidden"
+                >
+                  Remove
+                </span>
+                <span
+                  className="hidden sm:inline"
+                >
+                  Remove location
+                </span>
+              </Button>
+            </div>
+          </div>
+          <div
+            className="grid grid-cols-2 gap-4"
+          >
+            <div
+              className="flex flex-col gap-2"
+            >
+              <label
+                className="text-xs text-foreground/70"
+                htmlFor="exif-lat"
+              >
+                Latitude
+              </label>
+              <Input
+                id="exif-lat"
+                inputMode="decimal"
+                {...register('latitude')}
+                placeholder={String(ROTTERDAM_CENTER.lat)}
+                disabled={formLocked}
+                error={!!errors.latitude}
+                filled={isExifFieldFilled('latitude')}
+                className={EXIF_FIELD_INPUT_CLASS}
+              />
+            </div>
+            <div
+              className="flex flex-col gap-2"
+            >
+              <label
+                className="text-xs text-foreground/70"
+                htmlFor="exif-lng"
+              >
+                Longitude
+              </label>
+              <Input
+                id="exif-lng"
+                inputMode="decimal"
+                {...register('longitude')}
+                placeholder={String(ROTTERDAM_CENTER.lng)}
+                disabled={formLocked}
+                error={!!errors.longitude}
+                filled={isExifFieldFilled('longitude')}
+                className={EXIF_FIELD_INPUT_CLASS}
+              />
+            </div>
+          </div>
+          {(fieldError('latitude') || fieldError('longitude')) && (
+            <p
+              className="text-xs text-red-500"
+            >
+              {fieldError('latitude') || fieldError('longitude')}
+            </p>
+          )}
+        </div>
+
+        {saveError && (
+          <ErrorMessage
+            variant="compact"
+          >
+            {toUserFacingError(saveError, 'Could not save capture details')}
+          </ErrorMessage>
+        )}
+      </form>
+      <LocationMapPickerModal
+        isOpen={isMapPickerOpen}
+        onClose={() => setIsMapPickerOpen(false)}
+        onChoose={handleMapChoose}
+        initialLatitude={formValues.latitude}
+        initialLongitude={formValues.longitude}
+      />
+    </div>
   );
 }
 

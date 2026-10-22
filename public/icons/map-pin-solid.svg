@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+  <path
+    fill="#d54a3e"
+    stroke="#732421"
+    stroke-width="0.5"
+    d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"
+  />
+  <circle
+    cx="12"
+    cy="9"
+    r="2.65"
+    fill="#732421"
+  />
+</svg>

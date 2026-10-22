@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
-import { searchEntities } from '@/lib/data/search';
+import { ALL_SEARCH_ENTITY_TYPES, searchEntities } from '@/lib/data/search';
 import type { SearchEntityType } from '@/types/search';
 
 export async function GET(request: NextRequest) {
@@ -11,13 +11,12 @@ export async function GET(request: NextRequest) {
   const limitParam = searchParams.get('limit');
 
   // Parse types filter
-  let types: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags', 'scene-events', 'challenges'];
+  let types: SearchEntityType[] = ALL_SEARCH_ENTITY_TYPES;
   if (typesParam) {
     const requestedTypes = typesParam.split(',').map((t) => t.trim().toLowerCase()) as SearchEntityType[];
-    const validTypes: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags', 'scene-events', 'challenges'];
-    types = requestedTypes.filter((t) => validTypes.includes(t));
+    types = requestedTypes.filter((t) => ALL_SEARCH_ENTITY_TYPES.includes(t));
     if (types.length === 0) {
-      types = validTypes; // Default to all if invalid types provided
+      types = ALL_SEARCH_ENTITY_TYPES;
     }
   }
 
