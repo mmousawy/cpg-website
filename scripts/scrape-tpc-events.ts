@@ -7,6 +7,7 @@
  *   --delay N    Delay between requests in ms (default: 1000)
  *   --no-cache   Always hit DB for duplicate checks (cache file still updated at end)
  *   --months N   Number of months to fetch ahead including current (default: 3)
+ *   --month MM-YYYY  Fetch one month instead of the default window
  */
 
 import {
@@ -30,12 +31,20 @@ interface TPCLocation {
   addressLine2?: string;
 }
 
-interface TPCItem {
-  id: string;
-  title?: string;
-  excerpt?: string;
+interface TPCStructuredContent {
   startDate?: number;
   endDate?: number;
+}
+
+interface TPCItem {
+  id?: string;
+  systemDataId?: string;
+  title?: string;
+  excerpt?: string;
+  /** Legacy top-level timestamps. Current responses put these on structuredContent. */
+  startDate?: number;
+  endDate?: number;
+  structuredContent?: TPCStructuredContent;
   fullUrl?: string;
   assetUrl?: string;
   urlId?: string;
@@ -70,18 +79,45 @@ function getTimezoneForCity(city: string): string {
   return 'Europe/London';
 }
 
+function itemKey(item: TPCItem): string | undefined {
+  return item.id || item.systemDataId;
+}
+
+function eventStartMs(item: TPCItem): number | undefined {
+  return item.startDate ?? item.structuredContent?.startDate;
+}
+
+function eventEndMs(item: TPCItem): number | undefined {
+  return item.endDate ?? item.structuredContent?.endDate;
+}
+
+/** Squarespace dropped category tags; titles still lead with Photowalk / Workshop / … */
+function categorySource(item: TPCItem, title: string): string {
+  if (item.categories?.[0]) return item.categories[0];
+  const fromTitle = title.match(/\b(photowalk|workshop|meetup|exhibition|lezing|talk|festival)\b/i);
+  return fromTitle?.[1] ?? 'other';
+}
+
+function slugFromUrl(fullUrl: string): string | undefined {
+  const path = fullUrl.split('?')[0]?.split('#')[0] ?? fullUrl;
+  const slug = path.split('/').filter(Boolean).pop();
+  return slug || undefined;
+}
+
 function itemToScrapedEvent(item: TPCItem): ScrapedEvent | null {
   const title = item.title?.trim();
   const locationTitle = item.location?.addressTitle?.trim();
   const addressLine2 = item.location?.addressLine2;
   const city = parseAddressLine2(addressLine2) || 'Unknown';
   const fullUrl = item.fullUrl?.trim();
+  const startMs = eventStartMs(item);
 
   if (!title || !locationTitle || !fullUrl) return null;
-  if (!item.startDate) return null;
+  if (startMs == null) return null;
 
-  const start = new Date(item.startDate);
-  const end = item.endDate ? new Date(item.endDate) : null;
+  const start = new Date(startMs);
+  const endMs = eventEndMs(item);
+  const end = endMs != null ? new Date(endMs) : null;
   const tz = getTimezoneForCity(city);
 
   const timeOpts: Intl.DateTimeFormatOptions = {
@@ -91,7 +127,7 @@ function itemToScrapedEvent(item: TPCItem): ScrapedEvent | null {
     hour12: false,
   };
   const startTimeStr = start.toLocaleTimeString('en-GB', timeOpts);
-  const start_date = start.toISOString().slice(0, 10);
+  const start_date = start.toLocaleDateString('en-CA', { timeZone: tz });
   const start_time = `${startTimeStr}:00`;
   let end_date: string | null = null;
   let end_time: string | null = null;
@@ -103,7 +139,7 @@ function itemToScrapedEvent(item: TPCItem): ScrapedEvent | null {
     end_time = `${endTimeStr}:00`;
   }
 
-  const category = mapCategory(item.categories?.[0] ?? 'other');
+  const category = mapCategory(categorySource(item, title));
   const eventUrl = fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`;
 
   return {
@@ -121,7 +157,7 @@ function itemToScrapedEvent(item: TPCItem): ScrapedEvent | null {
     image_url: item.assetUrl?.trim() || null,
     organizer: 'The Photographers Club',
     price_info: null,
-    slug: item.urlId?.trim() || undefined,
+    slug: item.urlId?.trim() || slugFromUrl(fullUrl),
   };
 }
 
@@ -139,27 +175,26 @@ async function fetchMonth(monthStr: string): Promise<TPCItem[]> {
 }
 
 async function fetchAllEvents(
-  monthsAhead: number,
+  months: string[],
   delayMs: number,
 ): Promise<ScrapedEvent[]> {
   const events: ScrapedEvent[] = [];
   const seenIds = new Set<string>();
 
-  const now = new Date();
-  for (let i = 0; i < monthsAhead; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-    const monthStr = formatMonthYear(d);
+  for (let i = 0; i < months.length; i++) {
+    const monthStr = months[i]!;
     const items = await fetchMonth(monthStr);
 
     for (const item of items) {
-      if (item.id && seenIds.has(item.id)) continue;
-      if (item.id) seenIds.add(item.id);
+      const key = itemKey(item);
+      if (key && seenIds.has(key)) continue;
+      if (key) seenIds.add(key);
 
       const event = itemToScrapedEvent(item);
       if (event) events.push(event);
     }
 
-    if (i < monthsAhead - 1) await delay(delayMs);
+    if (i < months.length - 1) await delay(delayMs);
   }
 
   return events;
@@ -173,16 +208,29 @@ async function main() {
     monthsIdx >= 0 && args[monthsIdx + 1]
       ? parseInt(args[monthsIdx + 1], 10)
       : 3;
+  const monthIdx = args.indexOf('--month');
+  const singleMonth = monthIdx >= 0 && args[monthIdx + 1] ? args[monthIdx + 1] : null;
 
-  if (monthsAhead < 1) {
+  if (singleMonth && !/^\d{2}-\d{4}$/.test(singleMonth)) {
+    console.error('--month must be MM-YYYY');
+    process.exit(1);
+  }
+  if (!singleMonth && monthsAhead < 1) {
     console.error('--months must be at least 1');
     process.exit(1);
   }
 
-  console.log(`\n[TPC] Fetching events for ${monthsAhead} months...\n`);
+  const now = new Date();
+  const months = singleMonth
+    ? [singleMonth]
+    : Array.from({ length: monthsAhead }, (_, i) =>
+      formatMonthYear(new Date(now.getFullYear(), now.getMonth() + i, 1)),
+    );
+
+  console.log(`\n[TPC] Fetching events for ${months.join(', ')}...\n`);
 
   const supabase = createScraperSupabase();
-  const events = await fetchAllEvents(monthsAhead, options.delayMs);
+  const events = await fetchAllEvents(months, options.delayMs);
 
   console.log(`[TPC] Fetched ${events.length} events\n`);
 

@@ -35,7 +35,7 @@ export function HomeAlbumsSection({ albums }: HomeAlbumsSectionProps) {
         liveLikeCounts={false}
         prefetchLinks={false}
         coverImageSizes={HOME_ALBUM_COVER_SIZES}
-        className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] sm:[&>:nth-child(n+4)]:hidden"
+        className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] max-sm:[&>:nth-child(n+5)]:hidden sm:[&>:nth-child(n+4)]:hidden"
       />
     </PageContainer>
   );
