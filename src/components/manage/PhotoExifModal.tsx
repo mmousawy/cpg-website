@@ -16,6 +16,7 @@ import {
   prepareBulkExifApply,
 } from '@/components/manage/bulkExifSaveConfirm';
 import PhotoExifReadOnlyContent from '@/components/manage/PhotoExifReadOnlyContent';
+import { ROTTERDAM_CENTER } from '@/lib/location/mapDefaults';
 import { useBulkUpdatePhotoExif, useUpdatePhotoExif } from '@/hooks/usePhotoMutations';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmClearPhotoCaptureDetails, confirmUnsavedChanges } from '@/utils/confirmHelpers';
@@ -28,7 +29,13 @@ import {
   parseExposureTimeInput,
 } from '@/utils/exif';
 import { zodResolver } from '@hookform/resolvers/zod';
+import dynamic from 'next/dynamic';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+const LocationMapPickerModal = dynamic(
+  () => import('@/components/manage/LocationMapPickerModal'),
+  { ssr: false },
+);
 
 const EXIF_SAVE_SUCCESS_MS = 650;
 import { useForm } from 'react-hook-form';
@@ -202,6 +209,7 @@ function PhotoExifModalEditable({
   const bulkUpdateExifMutation = useBulkUpdatePhotoExif(user?.id, photoFilter, profile?.nickname, albumId);
   const hasCaptureDetails = photos.some(photoHasCaptureDetails);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   const {
     register,
@@ -241,6 +249,18 @@ function PhotoExifModalEditable({
     setValue('latitude', '', { shouldDirty: true });
     setValue('longitude', '', { shouldDirty: true });
   };
+
+  const handleMapChoose = useCallback(
+    ({ lat, lng }: { lat: number; lng: number }) => {
+      if (isBatch) {
+        clearGpsOnSaveRef.current = false;
+      }
+      setValue('latitude', lat.toFixed(6), { shouldDirty: true });
+      setValue('longitude', lng.toFixed(6), { shouldDirty: true });
+      setIsMapPickerOpen(false);
+    },
+    [isBatch, setValue],
+  );
 
   const onSubmit = useCallback(
     async (data: ExifEditFormValues) => {
@@ -412,239 +432,88 @@ function PhotoExifModalEditable({
   };
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={handleSubmit(onSubmit)}
+    <div
+      className="contents"
     >
-      {isBatch && (
-        <p
-          className="text-xs text-foreground/60"
-        >
-          Leave a field empty to keep each photo&apos;s existing value.
-        </p>
-      )}
-
-      <div
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+      <form
+        className="space-y-4"
+        onSubmit={handleSubmit(onSubmit)}
       >
+        {isBatch && (
+          <p
+            className="text-xs text-foreground/60"
+          >
+            Leave a field empty to keep each photo&apos;s existing value.
+          </p>
+        )}
+
         <div
-          className="flex flex-col gap-2 sm:col-span-2"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+        >
+          <div
+            className="flex flex-col gap-2 sm:col-span-2"
+          >
+            <label
+              className="text-sm font-medium"
+              htmlFor="exif-camera"
+            >
+              Camera
+            </label>
+            <AutocompleteInput
+              id="exif-camera"
+              value={cameraQuery}
+              onChange={(v) => setValue('camera', v, { shouldDirty: true })}
+              suggestions={cameraSuggestions}
+              disableFilter
+              loading={cameraLoading}
+              placeholder="Camera or phone"
+              disabled={formLocked}
+              filled={isExifFieldFilled('camera')}
+              className={EXIF_FIELD_INPUT_CLASS}
+              onSelect={(s) => {
+                const hit = cameraResults.find((r) => formatCatalogDisplayName(r.brand, r.name) === s)
+                  ?? cameraResults.find((r) => r.name === s);
+                const name = hit ? formatCatalogDisplayName(hit.brand, hit.name) : s;
+                setValue('camera', name, { shouldDirty: true });
+              }}
+            />
+            {fieldError('camera') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('camera')}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div
+          className="flex flex-col gap-2"
         >
           <label
             className="text-sm font-medium"
-            htmlFor="exif-camera"
+            htmlFor="exif-lens"
           >
-            Camera
+            Lens
           </label>
           <AutocompleteInput
-            id="exif-camera"
-            value={cameraQuery}
-            onChange={(v) => setValue('camera', v, { shouldDirty: true })}
-            suggestions={cameraSuggestions}
+            id="exif-lens"
+            value={lensQuery}
+            onChange={(v) => setValue('lensModel', v, { shouldDirty: true })}
+            suggestions={lensSuggestions}
             disableFilter
-            loading={cameraLoading}
-            placeholder="Camera or phone"
+            loading={lensLoading}
+            placeholder="Lens name"
             disabled={formLocked}
-            filled={isExifFieldFilled('camera')}
+            filled={isExifFieldFilled('lensModel')}
             className={EXIF_FIELD_INPUT_CLASS}
             onSelect={(s) => {
-              const hit = cameraResults.find((r) => formatCatalogDisplayName(r.brand, r.name) === s)
-                ?? cameraResults.find((r) => r.name === s);
-              const name = hit ? formatCatalogDisplayName(hit.brand, hit.name) : s;
-              setValue('camera', name, { shouldDirty: true });
+              const hit = lensResults.find((r) => r.name === s);
+              setValue('lensModel', hit?.name ?? s, { shouldDirty: true });
             }}
           />
-          {fieldError('camera') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('camera')}
-            </p>
-          )}
         </div>
-      </div>
 
-      <div
-        className="flex flex-col gap-2"
-      >
-        <label
-          className="text-sm font-medium"
-          htmlFor="exif-lens"
-        >
-          Lens
-        </label>
-        <AutocompleteInput
-          id="exif-lens"
-          value={lensQuery}
-          onChange={(v) => setValue('lensModel', v, { shouldDirty: true })}
-          suggestions={lensSuggestions}
-          disableFilter
-          loading={lensLoading}
-          placeholder="Lens name"
-          disabled={formLocked}
-          filled={isExifFieldFilled('lensModel')}
-          className={EXIF_FIELD_INPUT_CLASS}
-          onSelect={(s) => {
-            const hit = lensResults.find((r) => r.name === s);
-            setValue('lensModel', hit?.name ?? s, { shouldDirty: true });
-          }}
-        />
-      </div>
-
-      <div
-        className="grid grid-cols-2 gap-4"
-      >
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-iso"
-          >
-            ISO
-          </label>
-          <Input
-            id="exif-iso"
-            inputMode="numeric"
-            {...register('iso')}
-            placeholder="400"
-            disabled={formLocked}
-            error={!!errors.iso}
-            filled={isExifFieldFilled('iso')}
-            className={EXIF_FIELD_INPUT_CLASS}
-          />
-          {fieldError('iso') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('iso')}
-            </p>
-          )}
-        </div>
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-aperture"
-          >
-            Aperture (f-number)
-          </label>
-          <Input
-            id="exif-aperture"
-            inputMode="decimal"
-            {...register('aperture')}
-            placeholder="2.8"
-            disabled={formLocked}
-            error={!!errors.aperture}
-            filled={isExifFieldFilled('aperture')}
-            className={EXIF_FIELD_INPUT_CLASS}
-          />
-          {fieldError('aperture') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('aperture')}
-            </p>
-          )}
-        </div>
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-shutter"
-          >
-            Shutter
-          </label>
-          <Input
-            id="exif-shutter"
-            {...register('exposureTime')}
-            placeholder="1/250 or 2s"
-            disabled={formLocked}
-            error={!!errors.exposureTime}
-            filled={isExifFieldFilled('exposureTime')}
-            className={EXIF_FIELD_INPUT_CLASS}
-          />
-          {fieldError('exposureTime') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('exposureTime')}
-            </p>
-          )}
-        </div>
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-            htmlFor="exif-focal"
-          >
-            Focal length (mm)
-          </label>
-          <Input
-            id="exif-focal"
-            inputMode="decimal"
-            {...register('focalLength')}
-            placeholder="50"
-            disabled={formLocked}
-            error={!!errors.focalLength}
-            filled={isExifFieldFilled('focalLength')}
-            className={EXIF_FIELD_INPUT_CLASS}
-          />
-          {fieldError('focalLength') && (
-            <p
-              className="text-xs text-red-500"
-            >
-              {fieldError('focalLength')}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div
-        className="flex flex-col gap-2"
-      >
-        <label
-          className="text-sm font-medium"
-          htmlFor="exif-capture-time"
-        >
-          Capture time (
-          {EVENT_TIMEZONE}
-          )
-        </label>
-        <Input
-          id="exif-capture-time"
-          type="datetime-local"
-          {...register('captureTime')}
-          disabled={formLocked}
-          filled={isExifFieldFilled('captureTime')}
-          className={EXIF_FIELD_INPUT_CLASS}
-        />
-      </div>
-
-      <div
-        className="space-y-2"
-      >
-        <div
-          className="flex items-center justify-between gap-2"
-        >
-          <span
-            className="text-sm font-medium"
-          >
-            Location (GPS)
-          </span>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={clearLocation}
-            disabled={formLocked}
-          >
-            Remove location
-          </Button>
-        </div>
         <div
           className="grid grid-cols-2 gap-4"
         >
@@ -652,60 +521,246 @@ function PhotoExifModalEditable({
             className="flex flex-col gap-2"
           >
             <label
-              className="text-xs text-foreground/70"
-              htmlFor="exif-lat"
+              className="text-sm font-medium"
+              htmlFor="exif-iso"
             >
-              Latitude
+              ISO
             </label>
             <Input
-              id="exif-lat"
-              inputMode="decimal"
-              {...register('latitude')}
-              placeholder="52.3676"
+              id="exif-iso"
+              inputMode="numeric"
+              {...register('iso')}
+              placeholder="400"
               disabled={formLocked}
-              error={!!errors.latitude}
-              filled={isExifFieldFilled('latitude')}
+              error={!!errors.iso}
+              filled={isExifFieldFilled('iso')}
               className={EXIF_FIELD_INPUT_CLASS}
             />
+            {fieldError('iso') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('iso')}
+              </p>
+            )}
           </div>
           <div
             className="flex flex-col gap-2"
           >
             <label
-              className="text-xs text-foreground/70"
-              htmlFor="exif-lng"
+              className="text-sm font-medium"
+              htmlFor="exif-aperture"
             >
-              Longitude
+              Aperture (f-number)
             </label>
             <Input
-              id="exif-lng"
+              id="exif-aperture"
               inputMode="decimal"
-              {...register('longitude')}
-              placeholder="4.9041"
+              {...register('aperture')}
+              placeholder="2.8"
               disabled={formLocked}
-              error={!!errors.longitude}
-              filled={isExifFieldFilled('longitude')}
+              error={!!errors.aperture}
+              filled={isExifFieldFilled('aperture')}
               className={EXIF_FIELD_INPUT_CLASS}
             />
+            {fieldError('aperture') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('aperture')}
+              </p>
+            )}
+          </div>
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+              htmlFor="exif-shutter"
+            >
+              Shutter
+            </label>
+            <Input
+              id="exif-shutter"
+              {...register('exposureTime')}
+              placeholder="1/250 or 2s"
+              disabled={formLocked}
+              error={!!errors.exposureTime}
+              filled={isExifFieldFilled('exposureTime')}
+              className={EXIF_FIELD_INPUT_CLASS}
+            />
+            {fieldError('exposureTime') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('exposureTime')}
+              </p>
+            )}
+          </div>
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+              htmlFor="exif-focal"
+            >
+              Focal length (mm)
+            </label>
+            <Input
+              id="exif-focal"
+              inputMode="decimal"
+              {...register('focalLength')}
+              placeholder="50"
+              disabled={formLocked}
+              error={!!errors.focalLength}
+              filled={isExifFieldFilled('focalLength')}
+              className={EXIF_FIELD_INPUT_CLASS}
+            />
+            {fieldError('focalLength') && (
+              <p
+                className="text-xs text-red-500"
+              >
+                {fieldError('focalLength')}
+              </p>
+            )}
           </div>
         </div>
-        {(fieldError('latitude') || fieldError('longitude')) && (
-          <p
-            className="text-xs text-red-500"
-          >
-            {fieldError('latitude') || fieldError('longitude')}
-          </p>
-        )}
-      </div>
 
-      {saveError && (
-        <ErrorMessage
-          variant="compact"
+        <div
+          className="flex flex-col gap-2"
         >
-          {toUserFacingError(saveError, 'Could not save capture details')}
-        </ErrorMessage>
-      )}
-    </form>
+          <label
+            className="text-sm font-medium"
+            htmlFor="exif-capture-time"
+          >
+            Capture time (
+            {EVENT_TIMEZONE}
+            )
+          </label>
+          <Input
+            id="exif-capture-time"
+            type="datetime-local"
+            {...register('captureTime')}
+            disabled={formLocked}
+            filled={isExifFieldFilled('captureTime')}
+            className={EXIF_FIELD_INPUT_CLASS}
+          />
+        </div>
+
+        <div
+          className="space-y-2"
+        >
+          <div
+            className="flex items-center justify-between gap-2"
+          >
+            <span
+              className="text-sm font-medium"
+            >
+              Location (GPS)
+            </span>
+            <div
+              className="flex shrink-0 flex-wrap gap-2"
+            >
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsMapPickerOpen(true)}
+                disabled={formLocked}
+                aria-label="Choose on map"
+              >
+                Choose on map
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={clearLocation}
+                disabled={formLocked}
+                aria-label="Remove location"
+              >
+                <span
+                  className="sm:hidden"
+                >
+                  Remove
+                </span>
+                <span
+                  className="hidden sm:inline"
+                >
+                  Remove location
+                </span>
+              </Button>
+            </div>
+          </div>
+          <div
+            className="grid grid-cols-2 gap-4"
+          >
+            <div
+              className="flex flex-col gap-2"
+            >
+              <label
+                className="text-xs text-foreground/70"
+                htmlFor="exif-lat"
+              >
+                Latitude
+              </label>
+              <Input
+                id="exif-lat"
+                inputMode="decimal"
+                {...register('latitude')}
+                placeholder={String(ROTTERDAM_CENTER.lat)}
+                disabled={formLocked}
+                error={!!errors.latitude}
+                filled={isExifFieldFilled('latitude')}
+                className={EXIF_FIELD_INPUT_CLASS}
+              />
+            </div>
+            <div
+              className="flex flex-col gap-2"
+            >
+              <label
+                className="text-xs text-foreground/70"
+                htmlFor="exif-lng"
+              >
+                Longitude
+              </label>
+              <Input
+                id="exif-lng"
+                inputMode="decimal"
+                {...register('longitude')}
+                placeholder={String(ROTTERDAM_CENTER.lng)}
+                disabled={formLocked}
+                error={!!errors.longitude}
+                filled={isExifFieldFilled('longitude')}
+                className={EXIF_FIELD_INPUT_CLASS}
+              />
+            </div>
+          </div>
+          {(fieldError('latitude') || fieldError('longitude')) && (
+            <p
+              className="text-xs text-red-500"
+            >
+              {fieldError('latitude') || fieldError('longitude')}
+            </p>
+          )}
+        </div>
+
+        {saveError && (
+          <ErrorMessage
+            variant="compact"
+          >
+            {toUserFacingError(saveError, 'Could not save capture details')}
+          </ErrorMessage>
+        )}
+      </form>
+      <LocationMapPickerModal
+        isOpen={isMapPickerOpen}
+        onClose={() => setIsMapPickerOpen(false)}
+        onChoose={handleMapChoose}
+        initialLatitude={formValues.latitude}
+        initialLongitude={formValues.longitude}
+      />
+    </div>
   );
 }
 
