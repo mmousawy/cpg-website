@@ -4,11 +4,15 @@ import { createContext, useCallback, useContext, useLayoutEffect, useRef, useSta
 
 import { subscribeRouteChange } from '@/lib/routeChange';
 
+export type ConfirmSize = 'default' | 'medium' | 'large';
+
 export interface ConfirmOptions {
   title: string;
   message: string;
   /** Optional content to display between message and buttons (e.g., list of items) */
   content?: React.ReactNode;
+  /** Panel width when `content` needs more room (default: narrow). */
+  size?: ConfirmSize;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'danger' | 'default';

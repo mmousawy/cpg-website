@@ -7,7 +7,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM base AS deps
 ENV CI=true
-RUN corepack enable pnpm
+# Match package.json "packageManager". Install globally with retries instead of
+# `corepack enable` (first `pnpm` run downloads from registry.npmjs.org and can 503).
+ARG PNPM_VERSION=11.28.5
+RUN set -eux; \
+  for attempt in 1 2 3 4 5; do \
+    npm install -g "pnpm@${PNPM_VERSION}" && exit 0; \
+    echo "pnpm global install attempt ${attempt} failed, retrying..." >&2; \
+    sleep $((attempt * 15)); \
+  done; \
+  exit 1
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile

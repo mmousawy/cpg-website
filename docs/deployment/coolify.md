@@ -122,8 +122,10 @@ Verify: `pnpm verify:image-icc -- "<object-public-url>"`
 
 | Symptom | Fix |
 | --- | --- |
-| 502 Bad Gateway | Check `docker ps` port mapping; Nginx `proxy_pass` must match host bind (prod `:3000`, staging `:2000`). Logged-in client only (incognito works): chunked `sb-*-auth-token` cookies overflow Nginx headers — run `sudo bash infra/coolify/fix-nginx-proxy-headers.sh` on the VPS (uses `conf.d` for `large_client_header_buffers`, not inside `location`); on the device clear website data for the site and log in again. |
+| 502 Bad Gateway | Check `docker ps` port mapping; Nginx `proxy_pass` must match host bind (prod `:3000`, staging `:2000`). **Supabase host (`db.*`)**: `grep 'too big header' /var/log/nginx/error.log` — Kong auth responses need larger **proxy** buffers on the **db** vhost too; run `sudo bash infra/coolify/fix-nginx-proxy-headers.sh` (includes `db.creativephotography.group` and db-staging). Logged-in client only (incognito works): chunked `sb-*-auth-token` cookies — same script sets `large_client_header_buffers` in `conf.d`; clear site cookies and log in again if needed. |
 | Wrong site URL in emails | Rebuild after `NEXT_PUBLIC_SITE_URL` change |
 | Cron 401 | `CRON_SECRET` matches scheduled task |
 | OAuth redirect error | Supabase + provider URLs include correct hostname |
 | Build OOM | More RAM or Coolify remote builder |
+| `pnpm install` / Corepack **503** from `registry.npmjs.org` | Transient npm outage or VPS network; **redeploy**. Dockerfile installs `pnpm` globally with retries (no Corepack on-demand download). |
+| Coolify warns `NODE_ENV=production` at build-time | Safe to ignore for this Dockerfile (deps stage uses `CI=true` and installs devDependencies). Prefer runtime-only for secrets; keep `NEXT_PUBLIC_*` at build-time. |

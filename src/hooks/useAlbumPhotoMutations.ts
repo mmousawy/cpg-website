@@ -1,7 +1,13 @@
-import { revalidateAlbum, revalidateAlbumBySlug, revalidateEventAlbum, revalidateGalleryData, revalidateProfile } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateGalleryData, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
+import {
+  bulkPhotoDetailsBatchBody,
+  patchAlbumPhotosBatch,
+  patchPhotoDetailsBatch,
+  reorderAlbumPhotosBatchBody,
+} from '@/lib/photos/batchUpdatePhotoDetailsClient';
 import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import { supabase } from '@/utils/supabase/client';
 import type { QueryClient } from '@tanstack/react-query';
@@ -111,26 +117,10 @@ export function useReorderAlbumPhotos(
     mutationFn: async (photos: PhotoWithAlbums[]) => {
       if (!albumId) throw new Error('Album ID required');
 
-      const updates = photos
-        .filter((photo) => photo.album_photo_id)
-        .map((photo, index) => ({
-          id: photo.album_photo_id!,
-          sort_order: index,
-        }));
+      const updates = reorderAlbumPhotosBatchBody(photos);
 
       if (updates.length > 0) {
-        const { error } = await supabase.rpc('batch_update_album_photos', { photo_updates: updates });
-        if (error) {
-          throw new Error(error.message || 'Failed to reorder album photos');
-        }
-
-        const album = userId ? findAlbumInCache(queryClient, userId, albumId) : undefined;
-
-        if (album?.event_id) {
-          await revalidateEventAlbum(album.event_id, album.event_slug);
-        } else if (nickname && album?.slug) {
-          await revalidateAlbumBySlug(nickname, album.slug);
-        }
+        await patchAlbumPhotosBatch(albumId, updates);
       }
 
       return { photos };
@@ -383,118 +373,12 @@ export function useBulkUpdateAlbumPhotos(
         });
       });
 
-      // Update album_photos titles if provided
-      if (data.title !== null) {
-        const albumPhotoIds =
-          previousPhotos
-            ?.filter((p) => photoIds.includes(p.id))
-            .map((p) => p.album_photo_id)
-            .filter((id): id is string => !!id) || [];
+      const batchResult = await patchPhotoDetailsBatch(
+        bulkPhotoDetailsBatchBody(photoIds, data, albumId),
+      );
 
-        if (albumPhotoIds.length > 0) {
-          await supabase.from('album_photos').update({ title: data.title }).in('id', albumPhotoIds);
-        }
-      }
-
-      // Update photos table
-      const updates = photoIds.map((id) => ({
-        id,
-        ...(data.title !== null && { title: data.title }),
-        ...(data.description !== null && { description: data.description }),
-        ...(data.is_public !== null && { is_public: data.is_public }),
-      }));
-
-      if (updates.length > 0) {
-        const { error } = await supabase.rpc('batch_update_photos', {
-          photo_updates: updates,
-        });
-
-        if (error) {
-          throw new Error(error.message || 'Failed to update photos');
-        }
-      }
-
-      // Sync tags: add missing tags and remove only tags that were explicitly removed
       if (data.tags !== undefined) {
-        const desiredTags = new Set(data.tags.map((t) => t.toLowerCase()));
-        // Original common tags - only these were in the form, so only these can be "removed"
-        const originalCommonTags = new Set(
-          (data.originalCommonTags || []).map((t) => t.toLowerCase()),
-        );
-        // Tags that user explicitly removed = originalCommonTags - desiredTags
-        const explicitlyRemovedTags = new Set(
-          [...originalCommonTags].filter((tag) => !desiredTags.has(tag)),
-        );
-
-        // Fetch existing tags for these photos
-        const { data: existingTags } = await supabase
-          .from('photo_tags')
-          .select('photo_id, tag')
-          .in('photo_id', photoIds);
-
-        const tagsByPhoto = new Map<string, Set<string>>();
-        existingTags?.forEach(({ photo_id, tag }) => {
-          if (!tagsByPhoto.has(photo_id)) {
-            tagsByPhoto.set(photo_id, new Set());
-          }
-          tagsByPhoto.get(photo_id)!.add(tag.toLowerCase());
-        });
-
-        // Determine which tags to add and which to remove
-        const tagInserts: { photo_id: string; tag: string }[] = [];
-        const tagDeletes: { photo_id: string; tag: string }[] = [];
-
-        photoIds.forEach((photoId) => {
-          const existing = tagsByPhoto.get(photoId) || new Set();
-
-          // Add tags that are in desired list but not in existing
-          desiredTags.forEach((tag) => {
-            if (
-              !existing.has(tag) &&
-              existing.size + tagInserts.filter((t) => t.photo_id === photoId).length < 5
-            ) {
-              tagInserts.push({ photo_id: photoId, tag });
-            }
-          });
-
-          // Remove only tags that were explicitly removed by the user
-          // (i.e., were in originalCommonTags but no longer in desiredTags)
-          // This preserves partial tags that the user never had control over
-          existing.forEach((tag) => {
-            if (explicitlyRemovedTags.has(tag)) {
-              tagDeletes.push({ photo_id: photoId, tag });
-            }
-          });
-        });
-
-        // Delete tags that need to be removed
-        if (tagDeletes.length > 0) {
-          for (const { photo_id, tag } of tagDeletes) {
-            const { error: deleteError } = await supabase
-              .from('photo_tags')
-              .delete()
-              .eq('photo_id', photo_id)
-              .eq('tag', tag);
-            if (deleteError) {
-              throw new Error(deleteError.message || 'Failed to remove tags');
-            }
-          }
-        }
-
-        // Add tags that need to be added
-        if (tagInserts.length > 0) {
-          const { error: tagError } = await supabase.from('photo_tags').insert(tagInserts);
-          if (tagError) {
-            throw new Error(tagError.message || 'Failed to add tags');
-          }
-        }
-
-        // Invalidate global tags cache
         queryClient.invalidateQueries({ queryKey: ['global-tags'] });
-
-        const { revalidateTagPhotos } = await import('@/app/actions/revalidate');
-        const allAffectedTags = new Set([...desiredTags, ...explicitlyRemovedTags]);
-        await Promise.all([...allAffectedTags].map((tag) => revalidateTagPhotos(tag)));
       }
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
@@ -517,28 +401,8 @@ export function useBulkUpdateAlbumPhotos(
         queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'private') });
       }
 
-      // Revalidate album page
-      if (nickname && albumSlug) {
-        await revalidateAlbum(nickname, albumSlug);
-      }
-
-      // Revalidate gallery and home when visibility changed (affects public listings)
-      if (data.is_public !== null) {
-        const anyVisibilityChanged = previousPhotos?.some(
-          (p) => photoIds.includes(p.id) && p.is_public !== data.is_public,
-        );
-        if (anyVisibilityChanged) {
-          await revalidateGalleryData(nickname);
-        }
-      }
-
-      if (data.is_public === true) {
-        const newlyPublicIds = previousPhotos
-          ?.filter((p) => photoIds.includes(p.id) && !p.is_public)
-          .map((p) => p.id) ?? [];
-        if (newlyPublicIds.length > 0) {
-          await notifyFollowersOfUpload(newlyPublicIds);
-        }
+      if (batchResult.newlyPublicPhotoIds.length > 0) {
+        await notifyFollowersOfUpload(batchResult.newlyPublicPhotoIds);
       }
 
       return { photoIds, data, previousPhotos };

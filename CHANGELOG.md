@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.45.0](https://github.com/mmousawy/cpg-website/compare/v1.44.0...v1.45.0) (2026-10-22)
+
+
+### ✨ Features
+
+* add Leaflet library for map functionality in PhotoExifModal ([d1999ae](https://github.com/mmousawy/cpg-website/commit/d1999ae1b5b704a445a5a39832de7b6363b96632))
+* enhance photo management and deployment documentation ([4231aaa](https://github.com/mmousawy/cpg-website/commit/4231aaa2703143b9bff67890ead65d447082ae32))
+
+
+### 🐛 Bug Fixes
+
+* improve Dockerfile pnpm installation process ([cfbc30d](https://github.com/mmousawy/cpg-website/commit/cfbc30d7a77d57b9d43654c87fe12c73ed42143b))
+
+
+### 🔧 Maintenance
+
+* Update logs ([0085b9f](https://github.com/mmousawy/cpg-website/commit/0085b9f349d5fc5f6752a83231a3b6248bad9dc5))
+
 ## [1.44.0](https://github.com/mmousawy/cpg-website/compare/v1.43.1...v1.44.0) (2026-10-21)
 
 

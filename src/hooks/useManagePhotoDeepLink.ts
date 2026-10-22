@@ -6,6 +6,7 @@ import {
   seedPhotosThroughIndex,
   setPhotosInfiniteQueryData,
 } from '@/hooks/managePhotosFetch';
+import { EMPTY_PHOTO_LIBRARY_FILTERS } from '@/hooks/photoLibraryFilters';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { useQueryClient } from '@tanstack/react-query';
@@ -67,7 +68,8 @@ export function useManagePhotoDeepLink({
 
         setPendingPhoto(photo);
 
-        const filter: PhotoFilter = 'all';
+        const libraryFilters = EMPTY_PHOTO_LIBRARY_FILTERS;
+        const filter: PhotoFilter = libraryFilters.visibility;
         const indexBefore = await countLibraryPhotosBefore(
           userId,
           filter,
@@ -79,14 +81,14 @@ export function useManagePhotoDeepLink({
         const activePageSize = pageSizeRef.current;
         const { data, found } = await seedPhotosThroughIndex(
           userId,
-          filter,
+          libraryFilters,
           activePageSize,
           photoId,
           indexBefore,
         );
         if (cancelled) return;
 
-        setPhotosInfiniteQueryData(queryClient, userId, filter, activePageSize, data);
+        setPhotosInfiniteQueryData(queryClient, userId, libraryFilters, activePageSize, data);
 
         if (!found) {
           setPendingPhoto(null);
