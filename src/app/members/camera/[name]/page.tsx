@@ -1,6 +1,5 @@
 import ScrappyCameraIllustration from '@/components/gear/ScrappyCameraIllustration';
 import PageContainer from '@/components/layout/PageContainer';
-import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import PageHeading from '@/components/layout/PageHeading';
 import DailyDriverDiscoveryCloud from '@/components/members/DailyDriverDiscoveryCloud';
 import MemberCard from '@/components/shared/MemberCard';
@@ -67,14 +66,11 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
     notFound();
   }
 
-  // Temporary layout mock: repeat the real results so the grid can be reviewed.
-  const listedMembers = Array.from({ length: 20 }, () => members).flat();
-
   const memberCountLine = (
     <>
-      {listedMembers.length}
+      {members.length}
       {' '}
-      {listedMembers.length === 1 ? 'member' : 'members'}
+      {members.length === 1 ? 'member' : 'members'}
       {' '}
       with this camera body
     </>
@@ -160,9 +156,9 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
         <div
           className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
         >
-          {listedMembers.map((member, index) => (
+          {members.map((member) => (
             <MemberCard
-              key={`${member.id}-${index}`}
+              key={member.id}
               member={member}
             />
           ))}

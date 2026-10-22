@@ -193,7 +193,7 @@ export function createPhotosManageTourSteps(): DriveStep[] {
       popover: {
         title: 'Filter your library',
         description:
-          'Switch between All, Public, and Private to find uploads quickly.',
+          'Open Filter to narrow your library, change sort order, and find photos faster.',
         side: 'bottom',
         align: 'end',
         doneBtnText: 'Finish',

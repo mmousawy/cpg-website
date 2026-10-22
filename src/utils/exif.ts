@@ -4,6 +4,7 @@
  */
 
 import { EVENT_TIMEZONE } from '@/lib/events/status';
+import { exifBrandFromLeadingToken } from '@/lib/gear/normalizeExifBrand';
 
 export interface ExifData {
   // Camera info
@@ -31,8 +32,8 @@ export interface ExifData {
 
 /** Values for the capture-details edit modal (all strings for form inputs). */
 export interface ExifEditFormValues {
-  make: string;
-  model: string;
+  /** Display camera line (maps to EXIF Make + Model on save). */
+  camera: string;
   lensModel: string;
   iso: string;
   aperture: string;
@@ -45,8 +46,7 @@ export interface ExifEditFormValues {
 
 export function emptyExifEditFormValues(): ExifEditFormValues {
   return {
-    make: '',
-    model: '',
+    camera: '',
     lensModel: '',
     iso: '',
     aperture: '',
@@ -314,11 +314,92 @@ function lensModelContainsFocalLength(lensModel: string): boolean {
 /**
  * True when the model already identifies the make (e.g. "iPhone" implies Apple).
  */
-function makeIsImpliedByModel(make: string, model: string): boolean {
+export function makeIsImpliedByModel(make: string, model: string): boolean {
   const makeLower = make.toLowerCase();
   const modelLower = model.toLowerCase();
   if (modelLower.includes(makeLower)) return true;
   return makeLower === 'apple' && /iphone|ipad|ipod/.test(modelLower);
+}
+
+/** Map a single “Camera” form value to EXIF Make + Model. */
+export function splitCameraFieldToMakeModel(camera: string): { make: string; model: string } {
+  const trimmed = camera.trim();
+  if (!trimmed) return { make: '', model: '' };
+
+  const parts = trimmed.split(/\s+/);
+  const brand = exifBrandFromLeadingToken(parts[0] ?? '');
+  if (brand) {
+    const model = parts.slice(1).join(' ');
+    if (!model) {
+      return { make: brand, model: '' };
+    }
+    if (makeIsImpliedByModel(brand, model)) {
+      return { make: brand, model };
+    }
+    return { make: brand, model };
+  }
+
+  if (/^iphone|^ipad|^ipod/i.test(trimmed)) {
+    return { make: 'Apple', model: trimmed };
+  }
+
+  return { make: '', model: trimmed };
+}
+
+function quotePostgrestExifValue(value: string): string {
+  return `"${value.replace(/"/g, '\\"')}"`;
+}
+
+/**
+ * PostgREST `or` filter matching photos whose EXIF resolves to a camera display line.
+ * Covers make+model pairs and model-only strings that share the same label.
+ */
+export function buildCameraDisplayOrFilter(displayLabel: string): string {
+  const trimmed = displayLabel.trim();
+  if (!trimmed) return 'id.is.null';
+
+  const { make, model } = splitCameraFieldToMakeModel(trimmed);
+  const clauses = new Set<string>();
+
+  const addMakeModelPair = (m: string, mod: string) => {
+    if (!m || !mod) return;
+    clauses.add(
+      `and(exif_data->>Make.eq.${quotePostgrestExifValue(m)},exif_data->>Model.eq.${quotePostgrestExifValue(mod)})`,
+    );
+  };
+
+  addMakeModelPair(make, model);
+  if (make) {
+    addMakeModelPair(make, trimmed);
+  }
+
+  clauses.add(`and(exif_data->>Make.is.null,exif_data->>Model.eq.${quotePostgrestExifValue(trimmed)})`);
+  clauses.add(`and(exif_data->>Make.eq.,exif_data->>Model.eq.${quotePostgrestExifValue(trimmed)})`);
+
+  if (model && model !== trimmed) {
+    clauses.add(`and(exif_data->>Make.is.null,exif_data->>Model.eq.${quotePostgrestExifValue(model)})`);
+    clauses.add(`and(exif_data->>Make.eq.,exif_data->>Model.eq.${quotePostgrestExifValue(model)})`);
+  }
+
+  return [...clauses].join(',');
+}
+
+function applyCameraFormToExif(
+  target: Record<string, unknown>,
+  camera: string,
+  mode: 'replace' | 'partial',
+) {
+  const trimmed = camera.trim();
+  if (mode === 'partial' && !trimmed) return;
+
+  const { make, model } = splitCameraFieldToMakeModel(camera);
+  if (mode === 'replace') {
+    setOrDeleteString(target, 'Make', make);
+    setOrDeleteString(target, 'Model', model);
+  } else {
+    if (make) target.Make = make;
+    if (model) target.Model = model;
+  }
 }
 
 /**
@@ -591,17 +672,22 @@ export function exifToFormValues(
 
   const parsed = parseExifData(rawExif);
   if (!parsed) {
+    const make = trimToString(rawExif.Make);
+    const model = trimToString(rawExif.Model);
+    const camera =
+      formatExifData({
+        make: make || undefined,
+        model: model || undefined,
+      })?.camera ?? '';
     return {
       ...empty,
-      make: trimToString(rawExif.Make),
-      model: trimToString(rawExif.Model),
+      camera,
       lensModel: trimToString(rawExif.LensModel),
     };
   }
 
   return {
-    make: parsed.make ?? '',
-    model: parsed.model ?? '',
+    camera: formatExifData(parsed)?.camera ?? '',
     lensModel: parsed.lensModel ?? '',
     iso: parsed.iso != null && Number.isFinite(parsed.iso) ? String(Math.round(parsed.iso)) : '',
     aperture: parsed.aperture != null && Number.isFinite(parsed.aperture)
@@ -698,8 +784,7 @@ export function mergeExifEditsPartial(
     if (Number.isFinite(n)) merged[key] = n;
   };
 
-  applyString('Make', form.make);
-  applyString('Model', form.model);
+  applyCameraFormToExif(merged, form.camera, 'partial');
   applyString('LensModel', form.lensModel);
   applyNumber('ISO', form.iso);
   applyNumber('FNumber', form.aperture);
@@ -753,8 +838,7 @@ export function mergeExifEdits(
   const merged: Record<string, unknown> =
     existing && typeof existing === 'object' ? { ...existing } : {};
 
-  setOrDeleteString(merged, 'Make', form.make);
-  setOrDeleteString(merged, 'Model', form.model);
+  applyCameraFormToExif(merged, form.camera, 'replace');
   setOrDeleteString(merged, 'LensModel', form.lensModel);
   setOrDeleteNumber(merged, 'ISO', form.iso);
   setOrDeleteNumber(merged, 'FNumber', form.aperture);

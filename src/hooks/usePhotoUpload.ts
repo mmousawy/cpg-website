@@ -2,6 +2,7 @@
 
 import type { Photo } from '@/types/photos';
 import { validateImageFile, validateImageResolution } from '@/utils/imageValidation';
+import { patchPhotoDetailsBatch, reorderPhotosBatchBody } from '@/lib/photos/batchUpdatePhotoDetailsClient';
 import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -324,18 +325,13 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
       // rest back, so a batch ends up reversed (last file first). Rewrite the
       // batch to upload order while it is still at the front of the library.
       if (results.length > 1) {
-        const { error: orderError } = await supabase.rpc('batch_update_photos', {
-          photo_updates: results.map((photo, index) => ({
-            id: photo.id,
-            sort_order: index,
-          })),
-        });
-        if (orderError) {
-          console.error('Failed to preserve upload order:', orderError);
-        } else {
+        try {
+          await patchPhotoDetailsBatch(reorderPhotosBatchBody(results));
           results.forEach((photo, index) => {
             photo.sort_order = index;
           });
+        } catch (orderError) {
+          console.error('Failed to preserve upload order:', orderError);
         }
       }
 

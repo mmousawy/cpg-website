@@ -1,4 +1,12 @@
-export type SearchEntityType = 'albums' | 'photos' | 'members' | 'events' | 'tags' | 'scene-events' | 'challenges';
+export type SearchEntityType =
+  | 'albums'
+  | 'photos'
+  | 'members'
+  | 'events'
+  | 'tags'
+  | 'scene-events'
+  | 'challenges'
+  | 'gear';
 
 export type SearchResult = {
   entity_type: SearchEntityType;

@@ -5,6 +5,8 @@ export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /** Error state - adds error border styling */
   error?: boolean;
+  /** Stronger border when the field has a value (helps distinguish from placeholder text) */
+  filled?: boolean;
   /** Left addon element (e.g., @ symbol, icon) */
   leftAddon?: React.ReactNode;
   /** Right addon element (e.g., validation icon, button) */
@@ -43,6 +45,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       className,
       type = 'text',
       error = false,
+      filled = false,
       leftAddon,
       rightAddon,
       mono = false,
@@ -56,8 +59,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     const inputClasses = clsx(
       // Base styles
-      'rounded border border-border-color-strong bg-background-medium text-sm transition-colors',
+      'rounded border bg-background-medium text-sm transition-colors',
       'focus-visible:border-primary focus-visible:outline-none',
+      !filled && 'placeholder:text-foreground/45',
       // Padding - adjusted when addons are present
       hasAddons ? 'py-2' : 'px-3 py-2',
       leftAddon && 'pl-8',
@@ -67,7 +71,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       // Width
       fullWidth && 'w-full',
       // Border color
-      error ? 'border-red-500' : 'border-border-color',
+      error
+        ? 'border-red-500'
+        : filled
+          ? 'border-foreground/35 bg-background-light'
+          : 'border-border-color',
       // Disabled state
       disabled && 'bg-background/50 text-foreground/50 cursor-not-allowed',
       // Monospace font

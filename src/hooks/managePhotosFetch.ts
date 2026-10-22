@@ -1,5 +1,23 @@
 import type { Tables } from '@/database.types';
 import {
+  decodeCameraDisplayFilterKey,
+  decodeCameraFilterKey,
+  EMPTY_PHOTO_LIBRARY_FILTERS,
+  escapeIlikePattern,
+  isCameraDisplayFilterKey,
+  NO_CAMERA_RECORDED,
+  NO_LENS_RECORDED,
+  NO_TAGS,
+  NOT_IN_ANY_ALBUM,
+  NOT_IN_ANY_CHALLENGE,
+  type PhotoLibraryFilters,
+  type PhotoLibraryMetaFilters,
+  type PhotoLibrarySort,
+  uploadedPresetToIsoMin,
+  UNTITLED_PHOTO_TITLE,
+} from '@/hooks/photoLibraryFilters';
+import { buildCameraDisplayOrFilter } from '@/utils/exif';
+import {
   type PhotoFilter,
   type PhotosInfiniteData,
   type PhotosInfinitePage,
@@ -9,10 +27,7 @@ import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { supabase } from '@/utils/supabase/client';
 import type { QueryClient } from '@tanstack/react-query';
 
-const PHOTOS_SELECT = `
-  *,
-  photo_tags(tag),
-  album_photos!album_photos_photo_id_fkey(
+const ALBUM_EMBED = `
     album:albums(
       id,
       title,
@@ -23,9 +38,30 @@ const PHOTOS_SELECT = `
       album_photos_active(count),
       event:events!albums_event_id_fkey(slug, cover_image)
     )
+`;
+
+function buildPhotosSelect(meta: PhotoLibraryMetaFilters): string {
+  const photoTagsJoin = meta.tag && meta.tag !== NO_TAGS ? 'photo_tags!inner' : 'photo_tags';
+  const needsAlbumInner = meta.albumId != null && meta.albumId !== NOT_IN_ANY_ALBUM;
+  const albumPhotosJoin = needsAlbumInner
+    ? 'album_photos!inner'
+    : 'album_photos!album_photos_photo_id_fkey';
+  const needsChallengeInner =
+    meta.challengeId != null && meta.challengeId !== NOT_IN_ANY_CHALLENGE;
+  const challengeJoin = needsChallengeInner
+    ? 'challenge_submissions!inner'
+    : 'challenge_submissions!challenge_submissions_photo_id_fkey';
+
+  return `
+  *,
+  ${photoTagsJoin}(tag),
+  ${albumPhotosJoin}(
+    album_id,
+    ${ALBUM_EMBED}
   ),
-  challenge_submissions!challenge_submissions_photo_id_fkey(
+  ${challengeJoin}(
     status,
+    challenge_id,
     challenge:challenges(
       id,
       title,
@@ -34,6 +70,9 @@ const PHOTOS_SELECT = `
     )
   )
 `;
+}
+
+const PHOTOS_SELECT = buildPhotosSelect(EMPTY_PHOTO_LIBRARY_FILTERS.meta);
 
 type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'slug' | 'cover_image_url' | 'deleted_at'>;
 type ProfileRow = Pick<Tables<'profiles'>, 'nickname'>;
@@ -105,6 +144,198 @@ function applyLibraryPhotoFilters<Q extends { eq: Function; is: Function; not: F
   return q;
 }
 
+type MetaFilterableQuery = {
+  eq: (column: string, value: string | boolean) => MetaFilterableQuery;
+  or: (filters: string) => MetaFilterableQuery;
+  filter: (column: string, operator: string, value: string) => MetaFilterableQuery;
+  ilike: (column: string, pattern: string) => MetaFilterableQuery;
+  gte: (column: string, value: string) => MetaFilterableQuery;
+  not: (column: string, operator: string, value: string) => MetaFilterableQuery;
+  order: (
+    column: string,
+    options: { ascending: boolean; nullsFirst?: boolean },
+  ) => MetaFilterableQuery;
+};
+
+async function fetchPhotoIdsWithTags(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('photo_tags')
+    .select('photo_id, photos!inner(user_id, deleted_at, storage_path)')
+    .eq('photos.user_id', userId)
+    .is('photos.deleted_at', null)
+    .not('photos.storage_path', 'like', 'events/%');
+
+  if (error) {
+    throw new Error(error.message || 'Failed to load tagged photos');
+  }
+
+  const ids = new Set<string>();
+  for (const row of data ?? []) {
+    if (row.photo_id) ids.add(row.photo_id);
+  }
+  return [...ids];
+}
+
+async function fetchPhotoIdsWithChallengeSubmissions(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('challenge_submissions')
+    .select('photo_id, photos!inner(user_id, deleted_at, storage_path)')
+    .eq('photos.user_id', userId)
+    .is('photos.deleted_at', null)
+    .not('photos.storage_path', 'like', 'events/%');
+
+  if (error) {
+    throw new Error(error.message || 'Failed to load challenge submissions');
+  }
+
+  const ids = new Set<string>();
+  for (const row of data ?? []) {
+    if (row.photo_id) ids.add(row.photo_id);
+  }
+  return [...ids];
+}
+
+async function collectExcludePhotoIdSets(
+  userId: string,
+  meta: PhotoLibraryMetaFilters,
+): Promise<string[][]> {
+  const sets: string[][] = [];
+
+  if (meta.albumId === NOT_IN_ANY_ALBUM) {
+    const ids = await fetchPhotoIdsInActiveAlbums(userId);
+    if (ids.length > 0) sets.push(ids);
+  }
+  if (meta.tag === NO_TAGS) {
+    const ids = await fetchPhotoIdsWithTags(userId);
+    if (ids.length > 0) sets.push(ids);
+  }
+  if (meta.challengeId === NOT_IN_ANY_CHALLENGE) {
+    const ids = await fetchPhotoIdsWithChallengeSubmissions(userId);
+    if (ids.length > 0) sets.push(ids);
+  }
+
+  return sets;
+}
+
+async function fetchPhotoIdsInActiveAlbums(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('album_photos')
+    .select('photo_id, albums!inner(user_id, deleted_at)')
+    .eq('albums.user_id', userId)
+    .is('albums.deleted_at', null);
+
+  if (error) {
+    throw new Error(error.message || 'Failed to load album membership');
+  }
+
+  const ids = new Set<string>();
+  for (const row of data ?? []) {
+    if (row.photo_id) ids.add(row.photo_id);
+  }
+  return [...ids];
+}
+
+function formatUuidInList(ids: string[]): string {
+  return `(${ids.map((id) => `"${id}"`).join(',')})`;
+}
+
+const NO_CAMERA_EXIF_OR_FILTER =
+  'exif_data.is.null,'
+  + 'and(exif_data->>Make.is.null,exif_data->>Model.is.null),'
+  + 'and(exif_data->>Make.eq.,exif_data->>Model.eq.),'
+  + 'and(exif_data->>Make.eq.,exif_data->>Model.is.null),'
+  + 'and(exif_data->>Make.is.null,exif_data->>Model.eq.)';
+
+const NO_LENS_EXIF_OR_FILTER =
+  'exif_data.is.null,exif_data->>LensModel.is.null,exif_data->>LensModel.eq.';
+
+function applyPhotoLibraryMetaFilters<Q extends MetaFilterableQuery>(
+  query: Q,
+  meta: PhotoLibraryMetaFilters,
+  excludePhotoIdSets: string[][],
+): Q {
+  let q = query;
+
+  if (meta.title === UNTITLED_PHOTO_TITLE) {
+    q = q.or('title.is.null,title.eq.') as Q;
+  } else if (meta.title) {
+    const pattern = `%${escapeIlikePattern(meta.title)}%`;
+    q = q.ilike('title', pattern) as Q;
+  }
+
+  if (meta.cameraKey === NO_CAMERA_RECORDED) {
+    q = q.or(NO_CAMERA_EXIF_OR_FILTER) as Q;
+  } else if (meta.cameraKey && isCameraDisplayFilterKey(meta.cameraKey)) {
+    const displayLabel = decodeCameraDisplayFilterKey(meta.cameraKey);
+    if (displayLabel) {
+      q = q.or(buildCameraDisplayOrFilter(displayLabel)) as Q;
+    }
+  } else if (meta.cameraKey) {
+    const { make, model } = decodeCameraFilterKey(meta.cameraKey);
+    if (make) {
+      q = q.filter('exif_data->>Make', 'eq', make) as Q;
+    }
+    if (model) {
+      q = q.filter('exif_data->>Model', 'eq', model) as Q;
+    }
+  }
+
+  if (meta.lens === NO_LENS_RECORDED) {
+    q = q.or(NO_LENS_EXIF_OR_FILTER) as Q;
+  } else if (meta.lens) {
+    q = q.filter('exif_data->>LensModel', 'eq', meta.lens) as Q;
+  }
+
+  if (meta.albumId && meta.albumId !== NOT_IN_ANY_ALBUM) {
+    q = q.eq('album_photos.album_id', meta.albumId) as Q;
+  }
+
+  for (const ids of excludePhotoIdSets) {
+    if (ids.length > 0) {
+      q = q.not('id', 'in', formatUuidInList(ids)) as Q;
+    }
+  }
+
+  if (meta.tag && meta.tag !== NO_TAGS) {
+    q = q.eq('photo_tags.tag', meta.tag) as Q;
+  }
+
+  if (meta.license) {
+    q = q.eq('license', meta.license) as Q;
+  }
+
+  if (meta.uploaded) {
+    q = q.gte('created_at', uploadedPresetToIsoMin(meta.uploaded)) as Q;
+  }
+
+  if (meta.challengeId && meta.challengeId !== NOT_IN_ANY_CHALLENGE) {
+    q = q.eq('challenge_submissions.challenge_id', meta.challengeId) as Q;
+    if (meta.challengeStatus) {
+      q = q.eq('challenge_submissions.status', meta.challengeStatus) as Q;
+    }
+  }
+
+  return q;
+}
+
+function applyPhotoLibrarySort<Q extends MetaFilterableQuery>(query: Q, sort: PhotoLibrarySort): Q {
+  switch (sort) {
+    case 'uploaded_newest':
+      return query.order('created_at', { ascending: false }) as Q;
+    case 'uploaded_oldest':
+      return query.order('created_at', { ascending: true }) as Q;
+    case 'title_asc':
+      return query.order('title', { ascending: true, nullsFirst: false }) as Q;
+    case 'title_desc':
+      return query.order('title', { ascending: false, nullsFirst: false }) as Q;
+    case 'manual':
+    default:
+      return query
+        .order('sort_order', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false }) as Q;
+  }
+}
+
 function quotePostgrestValue(value: string): string {
   return `"${value.replace(/"/g, '\\"')}"`;
 }
@@ -153,7 +384,7 @@ export async function fetchManagePhotoById(
 
   if (!data) return null;
 
-  const row = data as PhotoQueryResult;
+  const row = data as unknown as PhotoQueryResult;
   if (!isManageLibraryPhoto(row)) return null;
 
   return mapPhotoQueryRow(row);
@@ -179,16 +410,28 @@ export async function countLibraryPhotosBefore(
 
 export async function fetchPhotosPage(
   userId: string,
-  filter: PhotoFilter,
+  libraryFilters: PhotoLibraryFilters,
   offset: number,
   pageSize: number,
 ): Promise<PhotosInfinitePage> {
+  const { visibility: filter, meta, sort } = libraryFilters;
   const fetchLimit = pageSize + 1;
+  const select = buildPhotosSelect(meta);
 
-  let query = applyLibraryPhotoFilters(supabase.from('photos').select(PHOTOS_SELECT), userId, filter)
-    .order('sort_order', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: false })
-    .range(offset, offset + fetchLimit - 1);
+  const excludePhotoIdSets = await collectExcludePhotoIdSets(userId, meta);
+
+  let query = applyLibraryPhotoFilters(
+    supabase.from('photos').select(select as typeof PHOTOS_SELECT),
+    userId,
+    filter,
+  );
+  query = applyPhotoLibraryMetaFilters(
+    query as MetaFilterableQuery,
+    meta,
+    excludePhotoIdSets,
+  ) as typeof query;
+  query = applyPhotoLibrarySort(query as MetaFilterableQuery, sort) as typeof query;
+  query = query.range(offset, offset + fetchLimit - 1);
 
   const { data, error } = await query;
 
@@ -196,7 +439,7 @@ export async function fetchPhotosPage(
     throw new Error(error.message || 'Failed to fetch photos');
   }
 
-  const rows = (data || []) as PhotoQueryResult[];
+  const rows = (data || []) as unknown as PhotoQueryResult[];
   const hasMore = rows.length > pageSize;
   const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
   const photosWithAlbums = pageRows.map(mapPhotoQueryRow);
@@ -241,7 +484,7 @@ export type SeedPhotosThroughIndexResult = {
 /** Load manage-grid pages from offset 0 through the page that contains `photoId`. */
 export async function seedPhotosThroughIndex(
   userId: string,
-  filter: PhotoFilter,
+  libraryFilters: PhotoLibraryFilters,
   pageSize: number,
   photoId: string,
   indexBefore: number,
@@ -252,7 +495,7 @@ export async function seedPhotosThroughIndex(
   let lastPageHasMore = false;
 
   while (flatPhotos.length < minCount) {
-    const page = await fetchPhotosPage(userId, filter, offset, pageSize);
+    const page = await fetchPhotosPage(userId, libraryFilters, offset, pageSize);
     flatPhotos.push(...page.photos);
     lastPageHasMore = page.hasMore;
     if (!page.hasMore || page.photos.length === 0) break;
@@ -262,7 +505,7 @@ export async function seedPhotosThroughIndex(
   let found = flatPhotos.some((p) => p.id === photoId);
 
   if (!found && lastPageHasMore) {
-    const page = await fetchPhotosPage(userId, filter, offset, pageSize);
+    const page = await fetchPhotosPage(userId, libraryFilters, offset, pageSize);
     flatPhotos.push(...page.photos);
     lastPageHasMore = page.hasMore;
     found = flatPhotos.some((p) => p.id === photoId);
@@ -277,9 +520,9 @@ export async function seedPhotosThroughIndex(
 export function setPhotosInfiniteQueryData(
   queryClient: QueryClient,
   userId: string,
-  filter: PhotoFilter,
+  libraryFilters: PhotoLibraryFilters,
   pageSize: number,
   data: PhotosInfiniteData,
 ) {
-  queryClient.setQueryData(photosQueryKey(userId, filter, pageSize), data);
+  queryClient.setQueryData(photosQueryKey(userId, pageSize, libraryFilters), data);
 }
