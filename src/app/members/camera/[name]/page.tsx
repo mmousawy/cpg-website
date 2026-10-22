@@ -1,6 +1,7 @@
 import ScrappyCameraIllustration from '@/components/gear/ScrappyCameraIllustration';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import DailyDriverDiscoveryCloud from '@/components/members/DailyDriverDiscoveryCloud';
 import MemberCard from '@/components/shared/MemberCard';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
@@ -136,15 +137,11 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
           <div
             className="mb-8 sm:mb-10"
           >
-            <div
-              className="max-sm:sticky max-sm:z-20 max-sm:-mx-3 max-sm:px-3 max-sm:py-2 max-sm:top-[calc(var(--sticky-page-heading-height,0px)-1px)] max-sm:backdrop-blur-sm max-sm:bg-background/80 max-sm:border-b max-sm:transition-[border-color] max-sm:border-transparent mb-2 sm:mb-4 mb-3 sm:mb-3"
+            <StickySectionHeading
+              stickyClassName="mb-3 sm:mb-3"
             >
-              <h2
-                className="min-w-0 text-xl font-semibold font-heading"
-              >
-                Browse by camera body
-              </h2>
-            </div>
+              Browse by camera body
+            </StickySectionHeading>
             <DailyDriverDiscoveryCloud
               groups={popularCameras}
               kind="camera"

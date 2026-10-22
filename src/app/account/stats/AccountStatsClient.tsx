@@ -177,26 +177,30 @@ export default function AccountStatsClient() {
           )}
         </StatsSection>
 
-        <div
-          className="grid gap-8 lg:grid-cols-2"
+        <StatsSection
+          title="Top content"
         >
-          <StatsRankedList
-            title="Top photos by views"
-            items={detail.topPhotosByViews}
-            valueLabel="Views"
-          />
-          <StatsRankedList
-            title="Top photos by likes"
-            items={detail.topPhotosByLikes}
-            valueLabel="Likes"
-          />
-          <StatsRankedList
-            title="Largest files"
-            items={detail.largestPhotos}
-            valueLabel="Size"
-            formatValue={formatBytesRanked}
-          />
-        </div>
+          <div
+            className="grid gap-8 lg:grid-cols-2"
+          >
+            <StatsRankedList
+              title="Top photos by views"
+              items={detail.topPhotosByViews}
+              valueLabel="Views"
+            />
+            <StatsRankedList
+              title="Top photos by likes"
+              items={detail.topPhotosByLikes}
+              valueLabel="Likes"
+            />
+            <StatsRankedList
+              title="Largest files"
+              items={detail.largestPhotos}
+              valueLabel="Size"
+              formatValue={formatBytesRanked}
+            />
+          </div>
+        </StatsSection>
 
         {(detail.mimeTypes.length > 0 || detail.licenses.length > 0 || detail.topTags.length > 0) && (
           <StatsSection

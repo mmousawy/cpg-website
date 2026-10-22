@@ -8,6 +8,7 @@ import Button from '@/components/shared/Button';
 import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 
 type Member = Pick<
@@ -49,6 +50,7 @@ export default function MemberConfirmDialog({
   const [isVisible, setIsVisible] = useState(false);
 
   useBodyScrollLock(true);
+  useDialogVisualViewport(modalRef, true);
 
   useEffect(() => {
     showDialogWithoutScrolling(modalRef.current);
@@ -84,7 +86,7 @@ export default function MemberConfirmDialog({
       >
         <div
           className={clsx(
-            'w-full max-w-md relative m-auto rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-6 shadow-xl shadow-black/25 transition-[scale] duration-200 ease-out',
+            'w-full max-w-md relative m-auto max-h-full min-h-0 overflow-y-auto rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-6 shadow-xl shadow-black/25 transition-[scale] duration-200 ease-out',
             isVisible ? 'scale-100' : 'scale-95',
           )}
         >

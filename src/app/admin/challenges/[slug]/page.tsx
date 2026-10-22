@@ -10,6 +10,7 @@ import AnnounceChallengeModal from '@/components/admin/AnnounceChallengeModal';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -381,379 +382,380 @@ function AdminChallengeForm() {
               Loading challenge...
             </p>
           </Container>
-      ) : (
-        <div
-          className="space-y-6"
-        >
-          <form
-            id="challenge-form"
-            onSubmit={handleSave}
+        ) : (
+          <div
+            className="space-y-6"
           >
-            <Container>
-              <h2
-                className="mb-6 text-xl font-semibold"
-              >
-                Challenge details
-              </h2>
-              <div
-                className="space-y-6"
-              >
-                {/* Title */}
-                <div
-                  className="flex flex-col gap-2"
+            <form
+              id="challenge-form"
+              onSubmit={handleSave}
+            >
+              <Container>
+                <h2
+                  className="mb-6 text-xl font-semibold"
                 >
-                  <label
-                    htmlFor="title"
-                    className="text-sm font-medium"
-                  >
-                    Title *
-                  </label>
-                  <Input
-                    id="title"
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={handleTitleBlur}
-                    required
-                    placeholder="e.g., Golden Hour Challenge"
-                  />
-                </div>
-
-                {/* Slug */}
+                  Challenge details
+                </h2>
                 <div
-                  className="flex flex-col gap-2"
+                  className="space-y-6"
                 >
-                  <label
-                    htmlFor="slug"
-                    className="text-sm font-medium"
-                  >
-                    URL slug *
-                  </label>
-                  <Input
-                    id="slug"
-                    type="text"
-                    value={slug}
-                    onChange={(e) => handleSlugChange(e.target.value)}
-                    required
-                    pattern="[a-z0-9-]+"
-                    mono
-                    placeholder="golden-hour-challenge"
-                  />
-                  <p
-                    className="text-xs text-muted-foreground"
-                  >
-                    Used in the URL: /challenges/
-                    {slug || 'your-slug-here'}
-                  </p>
-                </div>
-
-                {/* Prompt */}
-                <RichTextDescriptionField
-                  label="Prompt / description"
-                  id="prompt"
-                  value={prompt}
-                  onChange={setPrompt}
-                  required
-                  placeholder="Describe the theme and what kind of photos you're looking for..."
-                />
-
-                {/* Dates */}
-                <div
-                  className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-                >
+                  {/* Title */}
                   <div
                     className="flex flex-col gap-2"
                   >
                     <label
-                      htmlFor="startsAt"
+                      htmlFor="title"
                       className="text-sm font-medium"
                     >
-                      Starts at
+                      Title *
                     </label>
                     <Input
-                      id="startsAt"
-                      type="date"
-                      value={startsAt}
-                      onChange={(e) => setStartsAt(e.target.value)}
+                      id="title"
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onBlur={handleTitleBlur}
+                      required
+                      placeholder="e.g., Golden Hour Challenge"
                     />
                   </div>
+
+                  {/* Slug */}
                   <div
                     className="flex flex-col gap-2"
                   >
                     <label
-                      htmlFor="endsAt"
+                      htmlFor="slug"
                       className="text-sm font-medium"
                     >
-                      Ends at
+                      URL slug *
                     </label>
                     <Input
-                      id="endsAt"
-                      type="date"
-                      value={endsAt}
-                      onChange={(e) => setEndsAt(e.target.value)}
+                      id="slug"
+                      type="text"
+                      value={slug}
+                      onChange={(e) => handleSlugChange(e.target.value)}
+                      required
+                      pattern="[a-z0-9-]+"
+                      mono
+                      placeholder="golden-hour-challenge"
                     />
                     <p
                       className="text-xs text-muted-foreground"
                     >
-                      Leave empty for no deadline
+                      Used in the URL: /challenges/
+                      {slug || 'your-slug-here'}
                     </p>
                   </div>
-                </div>
 
-                {/* Active Toggle */}
-                <div
-                  className="flex items-center gap-3"
-                >
-                  <Checkbox
-                    id="isActive"
-                    checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
-                    label="Active (accepting submissions)"
-                    labelClassName="flex items-center gap-3 cursor-pointer"
+                  {/* Prompt */}
+                  <RichTextDescriptionField
+                    label="Prompt / description"
+                    id="prompt"
+                    value={prompt}
+                    onChange={setPrompt}
+                    required
+                    placeholder="Describe the theme and what kind of photos you're looking for..."
                   />
-                </div>
 
-                {/* Color Draw Toggle */}
-                <div
-                  className="flex flex-col gap-1"
-                >
+                  {/* Dates */}
                   <div
-                    className="flex items-center gap-3"
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
                   >
-                    <Checkbox
-                      id="hasColorDraw"
-                      checked={hasColorDraw}
-                      onChange={(e) => setHasColorDraw(e.target.checked)}
-                      label="Enable color draw"
-                      labelClassName="flex items-center gap-3 cursor-pointer"
-                    />
-                  </div>
-                  <p
-                    className="text-xs text-muted-foreground"
-                  >
-                    Let participants draw a random color for this challenge
-                  </p>
-                  {hasColorDraw && (
                     <div
-                      className="mt-2 flex flex-col gap-1"
+                      className="flex flex-col gap-2"
                     >
                       <label
-                        htmlFor="colorDrawGuestKey"
+                        htmlFor="startsAt"
                         className="text-sm font-medium"
                       >
-                        Guest invite key
+                        Starts at
                       </label>
                       <Input
-                        id="colorDrawGuestKey"
-                        type="text"
-                        value={colorDrawGuestKey}
-                        onChange={(e) => setColorDrawGuestKey(e.target.value)}
-                        placeholder="e.g. meetup2025"
-                        className="max-w-xs"
+                        id="startsAt"
+                        type="date"
+                        value={startsAt}
+                        onChange={(e) => setStartsAt(e.target.value)}
+                      />
+                    </div>
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        htmlFor="endsAt"
+                        className="text-sm font-medium"
+                      >
+                        Ends at
+                      </label>
+                      <Input
+                        id="endsAt"
+                        type="date"
+                        value={endsAt}
+                        onChange={(e) => setEndsAt(e.target.value)}
                       />
                       <p
                         className="text-xs text-muted-foreground"
                       >
-                        Share the URL with
-                        {' '}
-                        <code
-                          className="rounded bg-muted px-1 py-0.5 font-mono text-xs"
-                        >
-                          ?guest=
-                        </code>
-                        {' '}
-                        this value. Leave empty to allow only logged-in users.
+                        Leave empty for no deadline
                       </p>
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                {/* Max Photos Per User */}
-                <div
-                  className="flex flex-col gap-2"
-                >
-                  <label
-                    htmlFor="maxPhotosPerUser"
-                    className="text-sm font-medium"
+                  {/* Active Toggle */}
+                  <div
+                    className="flex items-center gap-3"
                   >
-                    Max photos per user
-                  </label>
-                  <Input
-                    id="maxPhotosPerUser"
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={maxPhotosPerUser}
-                    onChange={(e) => setMaxPhotosPerUser(e.target.value)}
-                    placeholder="Unlimited"
-                    className="max-w-32"
-                  />
-                  <p
-                    className="text-xs text-muted-foreground"
-                  >
-                    Leave empty for unlimited submissions
-                  </p>
-                </div>
+                    <Checkbox
+                      id="isActive"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      label="Active (accepting submissions)"
+                      labelClassName="flex items-center gap-3 cursor-pointer"
+                    />
+                  </div>
 
-                {/* Cover Image */}
-                <div
-                  className="flex flex-col gap-2"
-                >
-                  <label
-                    className="text-sm font-medium"
+                  {/* Color Draw Toggle */}
+                  <div
+                    className="flex flex-col gap-1"
                   >
-                    Cover image
-                  </label>
-                  {coverImagePreview ? (
                     <div
-                      className="space-y-3"
+                      className="flex items-center gap-3"
                     >
+                      <Checkbox
+                        id="hasColorDraw"
+                        checked={hasColorDraw}
+                        onChange={(e) => setHasColorDraw(e.target.checked)}
+                        label="Enable color draw"
+                        labelClassName="flex items-center gap-3 cursor-pointer"
+                      />
+                    </div>
+                    <p
+                      className="text-xs text-muted-foreground"
+                    >
+                      Let participants draw a random color for this challenge
+                    </p>
+                    {hasColorDraw && (
                       <div
-                        className="relative aspect-video w-full overflow-hidden rounded-lg border border-border-color"
+                        className="mt-2 flex flex-col gap-1"
                       >
-                        <Image
-                          src={coverImagePreview}
-                          alt="Cover preview"
-                          fill
-                          className="object-cover"
+                        <label
+                          htmlFor="colorDrawGuestKey"
+                          className="text-sm font-medium"
+                        >
+                          Guest invite key
+                        </label>
+                        <Input
+                          id="colorDrawGuestKey"
+                          type="text"
+                          value={colorDrawGuestKey}
+                          onChange={(e) => setColorDrawGuestKey(e.target.value)}
+                          placeholder="e.g. meetup2025"
+                          className="max-w-xs"
                         />
+                        <p
+                          className="text-xs text-muted-foreground"
+                        >
+                          Share the URL with
+                          {' '}
+                          <code
+                            className="rounded bg-muted px-1 py-0.5 font-mono text-xs"
+                          >
+                            ?guest=
+                          </code>
+                          {' '}
+                          this value. Leave empty to allow only logged-in users.
+                        </p>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Max Photos Per User */}
+                  <div
+                    className="flex flex-col gap-2"
+                  >
+                    <label
+                      htmlFor="maxPhotosPerUser"
+                      className="text-sm font-medium"
+                    >
+                      Max photos per user
+                    </label>
+                    <Input
+                      id="maxPhotosPerUser"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={maxPhotosPerUser}
+                      onChange={(e) => setMaxPhotosPerUser(e.target.value)}
+                      placeholder="Unlimited"
+                      className="max-w-32"
+                    />
+                    <p
+                      className="text-xs text-muted-foreground"
+                    >
+                      Leave empty for unlimited submissions
+                    </p>
+                  </div>
+
+                  {/* Cover Image */}
+                  <div
+                    className="flex flex-col gap-2"
+                  >
+                    <label
+                      className="text-sm font-medium"
+                    >
+                      Cover image
+                    </label>
+                    {coverImagePreview ? (
                       <div
-                        className="flex gap-2"
+                        className="space-y-3"
                       >
+                        <div
+                          className="relative aspect-video w-full overflow-hidden rounded-lg border border-border-color"
+                        >
+                          <Image
+                            src={coverImagePreview}
+                            alt="Cover preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div
+                          className="flex gap-2"
+                        >
+                          <Button
+                            type="button"
+                            onClick={() => coverImageInputRef.current?.click()}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            Change image
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleCoverImageRemove}
+                            variant="secondary"
+                            size="sm"
+                            icon={<TrashSVG
+                              className="h-4 w-4"
+                            />}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="rounded-lg border-2 border-dashed border-border-color p-8 text-center"
+                      >
+                        <p
+                          className="mb-3 text-sm text-foreground/80"
+                        >
+                          No cover image selected (optional)
+                        </p>
                         <Button
                           type="button"
                           onClick={() => coverImageInputRef.current?.click()}
                           variant="secondary"
                           size="sm"
                         >
-                          Change image
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={handleCoverImageRemove}
-                          variant="secondary"
-                          size="sm"
-                          icon={<TrashSVG
-                            className="h-4 w-4"
-                          />}
-                        >
-                          Remove
+                          Select image
                         </Button>
                       </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="rounded-lg border-2 border-dashed border-border-color p-8 text-center"
-                    >
-                      <p
-                        className="mb-3 text-sm text-foreground/80"
-                      >
-                        No cover image selected (optional)
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={() => coverImageInputRef.current?.click()}
-                        variant="secondary"
-                        size="sm"
-                      >
-                        Select image
-                      </Button>
-                    </div>
-                  )}
-                  <input
-                    ref={coverImageInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleCoverImageChange}
-                    className="hidden"
-                  />
-                </div>
-              </div>
-
-            </Container>
-          </form>
-
-          {/* Notifications Section - Only for existing challenges */}
-          {!isNewChallenge && existingChallenge && (
-            <Container>
-              <h2
-                className="mb-6 text-xl font-semibold"
-              >
-                Notifications
-              </h2>
-              <div
-                className="space-y-4"
-              >
-                <div>
-                  <div
-                    className="mb-2 flex items-center justify-between"
-                  >
-                    <div>
-                      <h3
-                        className="text-sm font-semibold"
-                      >
-                        Announce challenge
-                      </h3>
-                      <p
-                        className="text-xs text-foreground/80"
-                      >
-                        Send a one-time announcement to all members who are opted in
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleAnnounce}
-                    variant="primary"
-                  >
-                    <MegaphoneSVG
-                      className="size-5"
+                    )}
+                    <input
+                      ref={coverImageInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleCoverImageChange}
+                      className="hidden"
                     />
-                    Announce challenge
-                  </Button>
-                  {existingChallenge.announced_at && (
-                    <p
-                      className="mt-2 text-xs text-foreground/60"
-                    >
-                      Previously announced on
-                      {' '}
-                      {new Date(existingChallenge.announced_at).toLocaleDateString()}
-                    </p>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </Container>
-          )}
 
-          {/* Danger Zone - Only for existing challenges */}
-          {!isNewChallenge && (
-            <Container
-              className="border-red-500/30 bg-red-500/5"
-            >
-              <h3
-                className="mb-2 font-semibold text-red-600"
+              </Container>
+            </form>
+
+            {/* Notifications Section - Only for existing challenges */}
+            {!isNewChallenge && existingChallenge && (
+              <Container>
+                <h2
+                  className="mb-6 text-xl font-semibold"
+                >
+                  Notifications
+                </h2>
+                <div
+                  className="space-y-4"
+                >
+                  <div>
+                    <div
+                      className="mb-2 flex items-center justify-between"
+                    >
+                      <div>
+                        <h3
+                          className="text-sm font-semibold"
+                        >
+                          Announce challenge
+                        </h3>
+                        <p
+                          className="text-xs text-foreground/80"
+                        >
+                          Send a one-time announcement to all members who are opted in
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleAnnounce}
+                      variant="primary"
+                    >
+                      <MegaphoneSVG
+                        className="size-5"
+                      />
+                      Announce challenge
+                    </Button>
+                    {existingChallenge.announced_at && (
+                      <p
+                        className="mt-2 text-xs text-foreground/60"
+                      >
+                        Previously announced on
+                        {' '}
+                        {new Date(existingChallenge.announced_at).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Container>
+            )}
+
+            {/* Danger Zone - Only for existing challenges */}
+            {!isNewChallenge && (
+              <Container
+                className="border-red-500/30 bg-red-500/5"
               >
-                Danger zone
-              </h3>
-              <p
-                className="mb-4 text-sm text-foreground/80"
-              >
-                Once you delete a challenge, there is no going back. This will permanently
-                delete the challenge and all associated submissions.
-              </p>
-              <Button
-                onClick={handleDelete}
-                variant="danger"
-                icon={<TrashSVG
-                  className="h-4 w-4"
-                />}
-              >
-                Delete challenge
-              </Button>
-            </Container>
-          )}
-        </div>
-      )}
+                <StickySectionHeading
+                  className="text-red-600 sm:text-lg dark:text-red-500"
+                  stickyClassName="mb-2 sm:mb-2"
+                >
+                  Danger zone
+                </StickySectionHeading>
+                <p
+                  className="mb-4 text-sm text-foreground/80"
+                >
+                  Once you delete a challenge, there is no going back. This will permanently
+                  delete the challenge and all associated submissions.
+                </p>
+                <Button
+                  onClick={handleDelete}
+                  variant="danger"
+                  icon={<TrashSVG
+                    className="h-4 w-4"
+                  />}
+                >
+                  Delete challenge
+                </Button>
+              </Container>
+            )}
+          </div>
+        )}
       </PageContainer>
 
       {/* Sticky Save Bar */}

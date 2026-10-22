@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
+import { beginOverlayClose, cancelOverlayClose } from '@/hooks/useDialogVisualViewport';
 import { subscribeRouteChange } from '@/lib/routeChange';
 
 export type ModalSize = 'small' | 'default' | 'medium' | 'large' | 'fullscreen';
@@ -49,7 +50,10 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const handleSetIsOpen = useCallback((open: boolean) => {
-    if (!open) beforeCloseCheckRef.current = null;
+    if (!open) {
+      beginOverlayClose();
+      beforeCloseCheckRef.current = null;
+    }
     setIsOpen(open);
     if (open) {
       if (resetTimeoutRef.current) {
@@ -67,10 +71,14 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const requestClose = useCallback(async () => {
+    beginOverlayClose();
     const check = beforeCloseCheckRef.current;
     if (check) {
       const ok = await Promise.resolve(check());
-      if (!ok) return;
+      if (!ok) {
+        cancelOverlayClose();
+        return;
+      }
     }
     handleSetIsOpen(false);
   }, [handleSetIsOpen]);

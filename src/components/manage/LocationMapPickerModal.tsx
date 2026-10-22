@@ -3,6 +3,7 @@
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useDebounce } from '@/hooks/useDebounce';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import {
@@ -221,7 +222,8 @@ function LocationMapPickerBody({
       className={clsx(
         'scale-100 modal-panel-in',
         'flex w-full max-w-[42rem] min-w-0 flex-col',
-        'relative max-h-[calc(var(--vv-height,100vh)-2rem)]',
+        'relative max-h-full min-h-0',
+        'flex flex-col',
         'rounded-xl sm:rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
       )}
     >
@@ -323,7 +325,7 @@ function LocationMapPickerBody({
       </div>
 
       <div
-        className="relative min-h-[20rem] flex-1"
+        className="relative min-h-0 flex-1"
       >
         <div
           ref={mapContainerRef}
@@ -382,6 +384,7 @@ export default function LocationMapPickerModal({
   const [isTrapped, setIsTrapped] = useState(false);
 
   useBodyScrollLock(isOpen);
+  useDialogVisualViewport(dialogRef, isOpen);
 
   useLayoutEffect(() => {
     if (!isOpen) return;
@@ -408,7 +411,7 @@ export default function LocationMapPickerModal({
       className={clsx(
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-[70] overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none flex-col items-center justify-center p-3 max-sm:p-4',
+        'flex size-full max-h-none max-w-none p-3 max-sm:p-4',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',
       )}
@@ -424,7 +427,7 @@ export default function LocationMapPickerModal({
         }}
       >
         <div
-          className="flex w-full min-w-0 justify-center"
+          className="flex w-full min-h-0 min-w-0 max-h-full m-auto"
         >
           {isOpen ? (
             <LocationMapPickerBody

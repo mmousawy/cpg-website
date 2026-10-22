@@ -234,27 +234,36 @@ export default function AdminStatsClient() {
             </div>
           </StatsSection>
 
-          <div
-            className="grid gap-8 lg:grid-cols-2"
+          <StatsSection
+            title="Top photos"
+          >
+            <div
+              className="grid gap-8 lg:grid-cols-2"
+            >
+              <StatsRankedList
+                title="Most viewed photos"
+                items={overview.topPhotosByViews}
+                valueLabel="Views"
+              />
+              <StatsRankedList
+                title="Most liked photos"
+                items={overview.topPhotosByLikes}
+                valueLabel="Likes"
+              />
+            </div>
+          </StatsSection>
+
+          <StatsSection
+            title="Storage by member"
           >
             <StatsRankedList
-              title="Most viewed photos"
-              items={overview.topPhotosByViews}
-              valueLabel="Views"
+              title="Storage by member"
+              items={formatStorageTableRows(overview.storageByMember)}
+              valueLabel="Storage"
+              formatValue={formatBytesRanked}
+              showTitle={false}
             />
-            <StatsRankedList
-              title="Most liked photos"
-              items={overview.topPhotosByLikes}
-              valueLabel="Likes"
-            />
-          </div>
-
-          <StatsRankedList
-            title="Storage by member"
-            items={formatStorageTableRows(overview.storageByMember)}
-            valueLabel="Storage"
-            formatValue={formatBytesRanked}
-          />
+          </StatsSection>
         </div>
       )}
 
