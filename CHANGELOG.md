@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.45.1](https://github.com/mmousawy/cpg-website/compare/v1.45.0...v1.45.1) (2026-10-22)
+
+
+### ♻️ Refactoring
+
+* enhance UI components and improve accessibility ([8ff6399](https://github.com/mmousawy/cpg-website/commit/8ff6399cca6a132f55020bf43dfaec6fc056011b))
+
+
+### 🔧 Maintenance
+
+* streamline E2E workflow by removing redundant steps ([c81fef3](https://github.com/mmousawy/cpg-website/commit/c81fef3f625bc10f0984ec69861ed39c0d9b5177))
+
 ## [1.45.0](https://github.com/mmousawy/cpg-website/compare/v1.44.0...v1.45.0) (2026-10-22)
 
 
