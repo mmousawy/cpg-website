@@ -3,6 +3,7 @@
 import type { SearchResult } from '@/types/search';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import SearchResultItem from './SearchResultItem';
+import { SEARCH_RESULT_TYPE_ORDER } from './searchResultOrder';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -24,16 +25,6 @@ const groupResultsByType = (results: SearchResult[]): Record<string, SearchResul
   return grouped;
 };
 
-const typeOrder: SearchResult['entity_type'][] = [
-  'members',
-  'gear',
-  'events',
-  'scene-events',
-  'challenges',
-  'albums',
-  'photos',
-  'tags',
-];
 const typeLabels: Record<SearchResult['entity_type'], string> = {
   members: 'Members',
   gear: 'Gear',
@@ -118,7 +109,7 @@ export default function SearchResults({
     <div
       className="space-y-6"
     >
-      {typeOrder.map((type) => {
+      {SEARCH_RESULT_TYPE_ORDER.map((type) => {
         const typeResults = grouped[type];
         if (!typeResults || typeResults.length === 0) {
           return null;

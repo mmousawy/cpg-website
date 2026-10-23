@@ -51,7 +51,7 @@ export default function ProfileSection({
             className="flex flex-col gap-2"
           >
             <label
-              htmlFor="email"
+              htmlFor="profile-email"
               className="text-sm font-medium"
             >
               Email
@@ -67,7 +67,7 @@ export default function ProfileSection({
               className="flex gap-2"
             >
               <Input
-                id="email"
+                id="profile-email"
                 type="email"
                 value={profile?.email || userEmail || ''}
                 disabled
