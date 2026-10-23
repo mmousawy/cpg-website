@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.45.2](https://github.com/mmousawy/cpg-website/compare/v1.45.1...v1.45.2) (2026-10-23)
+
+
+### ♻️ Refactoring
+
+* enhance modal components with improved z-index management and mounting logic ([1a6ba79](https://github.com/mmousawy/cpg-website/commit/1a6ba792591f7b00e2df234356b4ca9d7315e2e6))
+* enhance scraping scripts and improve event fetching logic ([d8f149c](https://github.com/mmousawy/cpg-website/commit/d8f149c1693a6a365f03940f9445ced2aa193734))
+
+
+### 🔧 Maintenance
+
+* **main:** release 1.45.1 ([9a04362](https://github.com/mmousawy/cpg-website/commit/9a043622879b2f0e94ebd28f638218e81b1b957c))
+* **staging:** release 1.45.1 ([62c1399](https://github.com/mmousawy/cpg-website/commit/62c1399967fdd14afc187978dd37bfc4dedb1233))
+
 ## [1.45.1](https://github.com/mmousawy/cpg-website/compare/v1.45.0...v1.45.1) (2026-10-22)
 
 
