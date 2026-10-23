@@ -7,6 +7,7 @@ import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import CloseSVG from 'public/icons/close.svg';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
+import { modalOverlayZClassName } from '@/components/layout/mobileChrome';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
@@ -87,7 +88,8 @@ export default function Modal() {
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-60 overflow-auto overscroll-contain',
+        'fixed inset-0 overflow-auto overscroll-contain',
+        modalOverlayZClassName,
         'flex size-full max-h-none max-w-none p-3 sm:p-6',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',
