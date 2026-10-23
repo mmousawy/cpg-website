@@ -1,5 +1,6 @@
 'use client';
 
+import { modalOverlayZClassName } from '@/components/layout/mobileChrome';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
@@ -237,7 +238,8 @@ export default function BottomSheet({
     <div
       ref={overlayRef}
       className={clsx(
-        'overlay-keyboard-root fixed inset-0 z-50',
+        'overlay-keyboard-root fixed inset-0',
+        modalOverlayZClassName,
         isAnimatedOpen ? 'pointer-events-auto' : 'pointer-events-none',
       )}
     >

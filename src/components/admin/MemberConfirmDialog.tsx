@@ -3,12 +3,15 @@
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
+import { modalOverlayZClassName } from '@/components/layout/mobileChrome';
 import Button from '@/components/shared/Button';
 import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
+import { useMounted } from '@/hooks/useMounted';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 
 type Member = Pick<
@@ -48,11 +51,13 @@ export default function MemberConfirmDialog({
   const modalRef = useRef<HTMLDialogElement>(null);
   const [isTrapped, setIsTrapped] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const mounted = useMounted();
 
   useBodyScrollLock(true);
   useDialogVisualViewport(modalRef, true);
 
   useEffect(() => {
+    if (!mounted) return;
     showDialogWithoutScrolling(modalRef.current);
     const visibilityTimer = requestAnimationFrame(() => setIsVisible(true));
     const trapTimerId = setTimeout(() => setIsTrapped(true), 16);
@@ -61,14 +66,17 @@ export default function MemberConfirmDialog({
       cancelAnimationFrame(visibilityTimer);
       clearTimeout(trapTimerId);
     };
-  }, []);
+  }, [mounted]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <dialog
       ref={modalRef}
       className={clsx([
         isVisible ? 'visible opacity-100' : 'invisible opacity-0',
-        'fixed inset-0 z-60 overflow-auto overscroll-contain',
+        'fixed inset-0 overflow-auto overscroll-contain',
+        modalOverlayZClassName,
         'flex size-full max-h-none max-w-none p-3',
         'bg-black/40',
         'transition-[visibility,opacity] duration-200 ease-out',
@@ -189,6 +197,7 @@ export default function MemberConfirmDialog({
           </div>
         </div>
       </FocusTrap>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }

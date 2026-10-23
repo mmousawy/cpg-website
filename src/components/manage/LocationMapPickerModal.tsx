@@ -1,5 +1,6 @@
 'use client';
 
+import { nestedModalOverlayZClassName } from '@/components/layout/mobileChrome';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -414,7 +415,8 @@ export default function LocationMapPickerModal({
       ref={dialogRef}
       className={clsx(
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-[70] overflow-auto overscroll-contain',
+        'fixed inset-0 overflow-auto overscroll-contain',
+        nestedModalOverlayZClassName,
         'flex size-full max-h-none max-w-none p-3 max-sm:p-4',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',
