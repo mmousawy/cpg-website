@@ -1,5 +1,6 @@
 'use client';
 
+import { modalOverlayZClassName } from '@/components/layout/mobileChrome';
 import SearchInput from '@/components/search/SearchInput';
 import SearchResultItem from '@/components/search/SearchResultItem';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -7,6 +8,7 @@ import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useFollowList } from '@/hooks/useFollowList';
+import { useMounted } from '@/hooks/useMounted';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import type { FollowListType } from '@/types/follows';
 import type { SearchResult } from '@/types/search';
@@ -14,6 +16,7 @@ import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import CloseSVG from 'public/icons/close.svg';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type FollowListModalProps = {
   isOpen: boolean;
@@ -50,6 +53,7 @@ export default function FollowListModal({
   const modalRef = useRef<HTMLDialogElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isTrapped, setIsTrapped] = useState(false);
+  const mounted = useMounted();
 
   const {
     query,
@@ -130,12 +134,16 @@ export default function FollowListModal({
     return () => observer.disconnect();
   }, [hasMore, isLoading, isLoadingMore, loadMore, members.length]);
 
-  return (
+  if (!mounted) return null;
+
+  // Portal past the profile hero (z-10). Sticky headings are z-20 and would cover a nested dialog.
+  return createPortal(
     <dialog
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-50 overflow-auto overscroll-contain',
+        'fixed inset-0 overflow-auto overscroll-contain',
+        modalOverlayZClassName,
         'flex size-full max-h-none max-w-none p-3 max-sm:p-2',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',
@@ -242,6 +250,7 @@ export default function FollowListModal({
           </div>
         </div>
       </FocusTrap>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }

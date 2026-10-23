@@ -126,7 +126,7 @@ export default function StickySectionHeading({
 
   const stickyPositionClasses = pinDesktop
     ? clsx(
-      // z-20: below sticky page title (z-30), above card overlays (z-10)
+      // z-20: below sticky page title (z-30) and full-screen overlays (z-60), above card overlays (z-10)
       'sticky z-20 -mx-3 px-3 py-2 sm:mx-0 sm:px-0',
       'top-[calc(var(--sticky-page-heading-height,0px)-1px)] sm:top-[calc(var(--app-header-height,4.5625rem)-1px)]',
     )

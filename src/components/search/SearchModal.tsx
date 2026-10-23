@@ -1,5 +1,6 @@
 'use client';
 
+import { modalOverlayZClassName } from '@/components/layout/mobileChrome';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useSearch } from '@/hooks/useSearch';
@@ -122,7 +123,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-50 overflow-auto overscroll-contain',
+        'fixed inset-0 overflow-auto overscroll-contain',
+        modalOverlayZClassName,
         'flex size-full max-h-none max-w-none p-3 max-sm:p-2',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',
