@@ -6,10 +6,10 @@
  *   --dry-run          Preview without inserting
  *   --delay N          Delay between requests in ms (default: 1000)
  *   --no-cache         Always hit DB for duplicate checks (cache file still updated at end)
- *   --no-detail-images Skip fetching event detail pages for hero/masonry images (use overview thumbnails only)
+ *   --detail-images  Fetch event detail pages for hero/masonry images (default: overview thumbnails)
  */
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import {
   createScraperSupabase,
   decodeHtmlEntities,
@@ -23,7 +23,7 @@ import {
 } from './scraper-utils';
 
 const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 const BASE_URL = 'https://www.cameranu.nl';
 const OVERVIEW_URL = `${BASE_URL}/events/overzicht`;
@@ -208,16 +208,55 @@ function parseEventsFromHtml(html: string): ScrapedEvent[] {
 
 const CURL_MAX_TIME = 30; // seconds per request
 
+/** Browser-like headers. A user-agent alone is stopped by Cloudflare with a challenge page. */
+const CURL_HEADERS = [
+  'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'Accept-Language: nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7',
+  'Upgrade-Insecure-Requests: 1',
+  'Sec-Fetch-Dest: document',
+  'Sec-Fetch-Mode: navigate',
+  'Sec-Fetch-Site: none',
+  'Sec-Fetch-User: ?1',
+  'sec-ch-ua: "Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+  'sec-ch-ua-mobile: ?0',
+  'sec-ch-ua-platform: "Windows"',
+];
+
 function fetchWithCurl(url: string): string {
+  const args = [
+    '-sL',
+    '--max-time',
+    String(CURL_MAX_TIME),
+    '--connect-timeout',
+    '10',
+    '-A',
+    USER_AGENT,
+    ...CURL_HEADERS.flatMap((header) => ['-H', header]),
+    '-w',
+    '\n__HTTP_STATUS__:%{http_code}',
+    url,
+  ];
+
+  let output: string;
   try {
-    return execSync(
-      `curl -sL --max-time ${CURL_MAX_TIME} --connect-timeout 10 -H "User-Agent: ${USER_AGENT.replace(/"/g, '\\"')}" "${url}"`,
-      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
-    );
+    output = execFileSync('curl', args, {
+      encoding: 'utf8',
+      maxBuffer: 10 * 1024 * 1024,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     throw new Error(`Curl fetch failed for ${url}: ${msg}`);
   }
+
+  const marker = '\n__HTTP_STATUS__:';
+  const markerAt = output.lastIndexOf(marker);
+  const html = markerAt >= 0 ? output.slice(0, markerAt) : output;
+  const status = markerAt >= 0 ? Number(output.slice(markerAt + marker.length).trim()) : 0;
+  const title = html.match(/<title>([^<]*)<\/title>/i)?.[1] ?? '';
+  if (status !== 200 || /just a moment/i.test(title) || html.includes('challenges.cloudflare.com')) {
+    throw new Error(`Cameranu blocked the request (HTTP ${status || 'unknown'}) for ${url}`);
+  }
+  return html;
 }
 
 async function fetchPage(page: number): Promise<string> {

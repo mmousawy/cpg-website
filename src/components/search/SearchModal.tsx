@@ -8,9 +8,10 @@ import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useRouter } from 'next/navigation';
 import CloseSVG from 'public/icons/close.svg';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import SearchInput from './SearchInput';
 import SearchResults from './SearchResults';
+import { orderSearchResultsForDisplay } from './searchResultOrder';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -26,6 +27,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     debounceMs: 300,
     minQueryLength: 2,
   });
+  const orderedResults = useMemo(
+    () => orderSearchResultsForDisplay(results),
+    [results],
+  );
 
   // Wrap setQuery to reset selection when query changes
   const handleQueryChange = useCallback((newQuery: string) => {
@@ -66,14 +71,14 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   // Navigate to selected result
   const navigateToResult = useCallback((index: number) => {
-    if (index >= 0 && index < results.length) {
-      const result = results[index];
+    if (index >= 0 && index < orderedResults.length) {
+      const result = orderedResults[index];
       if (result.url) {
         onClose();
         router.push(result.url);
       }
     }
-  }, [results, onClose, router]);
+  }, [orderedResults, onClose, router]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -87,7 +92,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         case 'ArrowDown':
           e.preventDefault();
           setSelectedIndex((prev) =>
-            prev < results.length - 1 ? prev + 1 : prev,
+            prev < orderedResults.length - 1 ? prev + 1 : prev,
           );
           break;
         case 'ArrowUp':
@@ -105,7 +110,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, results.length, selectedIndex, navigateToResult]);
+  }, [isOpen, onClose, orderedResults.length, selectedIndex, navigateToResult]);
 
   const handleResultSelect = () => {
     // Close modal when a result is selected
@@ -192,7 +197,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               </div>
             ) : (
               <SearchResults
-                results={results}
+                results={orderedResults}
                 isLoading={isLoading}
                 isEmpty={isEmpty}
                 query={query}

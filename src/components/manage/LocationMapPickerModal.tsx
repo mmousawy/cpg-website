@@ -113,6 +113,8 @@ function LocationMapPickerBody({
     }).addTo(map);
 
     const syncCenter = () => {
+      const size = map.getSize();
+      if (!size.x || !size.y) return;
       const c = map.getCenter();
       setCenter({ lat: c.lat, lng: c.lng });
     };
@@ -121,12 +123,14 @@ function LocationMapPickerBody({
     map.on('moveend', syncCenter);
 
     mapRef.current = map;
-    requestAnimationFrame(() => {
+    const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
       syncCenter();
     });
+    resizeObserver.observe(mapContainerRef.current);
 
     return () => {
+      resizeObserver.disconnect();
       map.off('move', syncCenter);
       map.off('moveend', syncCenter);
       map.remove();
@@ -325,7 +329,7 @@ function LocationMapPickerBody({
       </div>
 
       <div
-        className="relative min-h-0 flex-1"
+        className="relative h-80 w-full shrink-0"
       >
         <div
           ref={mapContainerRef}

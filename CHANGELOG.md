@@ -5,6 +5,7 @@
 
 ### ♻️ Refactoring
 
+* enhance scraping scripts and improve event fetching logic ([d8f149c](https://github.com/mmousawy/cpg-website/commit/d8f149c1693a6a365f03940f9445ced2aa193734))
 * enhance UI components and improve accessibility ([8ff6399](https://github.com/mmousawy/cpg-website/commit/8ff6399cca6a132f55020bf43dfaec6fc056011b))
 
 
