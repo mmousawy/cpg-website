@@ -149,6 +149,7 @@ export function useAccountForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [linkPublishNotice, setLinkPublishNotice] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [themeMounted, setThemeMounted] = useState(false);
@@ -805,6 +806,7 @@ export function useAccountForm() {
 
     setIsSaving(true);
     setSubmitError(null);
+    setLinkPublishNotice(null);
     setSuccess(false);
 
     try {
@@ -864,6 +866,38 @@ export function useAccountForm() {
       const validSocialLinks = data.socialLinks.filter(
         (link) => link.label.trim() && link.url.trim(),
       );
+
+      const linkSaveResponse = await fetch('/api/account/profile-links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          website: data.website || '',
+          bio: data.bio || '',
+          socialLinks: validSocialLinks,
+        }),
+      });
+      const linkSavePayload = (await linkSaveResponse.json()) as {
+        message?: string;
+        blocked?: {
+          website?: string;
+          bio?: string;
+          social?: Record<string, string>;
+        };
+      };
+
+      if (!linkSaveResponse.ok) {
+        setSubmitError(linkSavePayload.message || 'Failed to verify profile links');
+        setIsSaving(false);
+        return;
+      }
+
+      const blockedMessages: string[] = [];
+      if (linkSavePayload.blocked?.website) blockedMessages.push(linkSavePayload.blocked.website);
+      if (linkSavePayload.blocked?.bio) blockedMessages.push(linkSavePayload.blocked.bio);
+      if (linkSavePayload.blocked?.social) {
+        blockedMessages.push(...Object.values(linkSavePayload.blocked.social));
+      }
+      const linkNotice = blockedMessages.length > 0 ? blockedMessages.join(' ') : null;
 
       // Sync interests: get current interests, delete removed ones, insert new ones
       const { data: currentInterests } = await supabase
@@ -930,9 +964,6 @@ export function useAccountForm() {
         .from('profiles')
         .update({
           full_name: data.fullName || null,
-          bio: data.bio || null,
-          website: data.website || null,
-          social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
           album_card_style: data.albumCardStyle,
           photo_grid_style: data.photoGridStyle,
           photo_grid_density: data.photoGridDensity,
@@ -962,9 +993,6 @@ export function useAccountForm() {
           .from('profiles')
           .update({
             full_name: data.fullName || null,
-            bio: data.bio || null,
-            website: data.website || null,
-            social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
             album_card_style: data.albumCardStyle,
             photo_grid_style: data.photoGridStyle,
             photo_grid_density: data.photoGridDensity,
@@ -1093,6 +1121,7 @@ export function useAccountForm() {
         }
 
         setSuccess(true);
+        setLinkPublishNotice(linkNotice);
         setTimeout(() => setSuccess(false), 3000);
         refreshAuthProfile();
       }
@@ -1140,6 +1169,7 @@ export function useAccountForm() {
     isSaving,
     success,
     submitError,
+    linkPublishNotice,
     avatarError,
     bannerError,
     themeMounted,

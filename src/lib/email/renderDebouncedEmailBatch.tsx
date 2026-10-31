@@ -195,8 +195,11 @@ export async function renderDebouncedEmailBatch(
       const parsed = parseItems<QueuedReportNotificationItem>(items);
       if (parsed.length === 1) {
         const item = parsed[0];
+        const subject = item.isAutomated
+          ? `Automated check flagged ${item.entityTitle}`
+          : `New Report: ${item.reporterName} reported ${item.entityTitle}`;
         return {
-          subject: `New Report: ${item.reporterName} reported ${item.entityTitle}`,
+          subject,
           html: await render(
             ReportNotificationEmail({
               adminName: context.recipientName,
@@ -219,9 +222,23 @@ export async function renderDebouncedEmailBatch(
                 style={emailCalloutStyle}
               >
                 <EmailText>
-                  <strong>{item.reporterName}</strong>
-                  {' '}
-                  reported {item.entityTitle} ({item.reason})
+                  {item.isAutomated ? (
+                    <>
+                      Automated check flagged
+                      {' '}
+                      <strong>{item.entityTitle}</strong>
+                      {' '}
+                      (
+                      {item.reason}
+                      ). No member submitted this report.
+                    </>
+                  ) : (
+                    <>
+                      <strong>{item.reporterName}</strong>
+                      {' '}
+                      reported {item.entityTitle} ({item.reason})
+                    </>
+                  )}
                 </EmailText>
               </Section>
             ))}

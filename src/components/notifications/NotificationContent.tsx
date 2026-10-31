@@ -127,7 +127,11 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
       : 'Your submission was not accepted';
   },
   admin_message: () => 'Admin message',
-  report_submitted: () => 'Report submitted',
+  report_submitted: (_, data) => (
+    data?.isAutomated
+      ? 'Automated check flagged a profile for review'
+      : 'Report submitted'
+  ),
   report_resolved: (_, data) => {
     const title = data?.title as string | undefined;
     return title
