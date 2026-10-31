@@ -25,6 +25,7 @@ export type ProfileData = Pick<Tables<'profiles'>,
 > & {
   social_links: SocialLink[] | null;
   interests?: Interest[] | null;
+  link_publish_state?: unknown;
 };
 
 /**
@@ -145,25 +146,39 @@ export async function getProfileByNickname(nickname: string, includeTestContent 
 
   const supabase = createPublicClient();
 
-  let { data: profile, error } = await supabase
+  let { data: profileRow, error } = await supabase
     .from('profiles')
-    .select('id, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, created_at')
+    .select('id, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, link_publish_state, created_at')
     .eq('nickname', nickname)
     .is('suspended_at', null)
     .is('deletion_scheduled_at', null)
     .single();
 
+  let profile = profileRow;
+
+  if (error?.message?.includes('link_publish_state')) {
+    const retryLinks = await supabase
+      .from('profiles')
+      .select('id, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, created_at')
+      .eq('nickname', nickname)
+      .is('suspended_at', null)
+      .is('deletion_scheduled_at', null)
+      .single();
+    profile = retryLinks.data ? { ...retryLinks.data, link_publish_state: null } : null;
+    error = retryLinks.error;
+  }
+
   if (error?.message?.includes('banner_blurhash')) {
     const retry = await supabase
       .from('profiles')
-      .select('id, full_name, nickname, avatar_url, banner_url, bio, website, social_links, created_at')
+      .select('id, full_name, nickname, avatar_url, banner_url, bio, website, social_links, link_publish_state, created_at')
       .eq('nickname', nickname)
       .is('suspended_at', null)
       .is('deletion_scheduled_at', null)
       .single();
 
     profile = retry.data
-      ? { ...retry.data, banner_blurhash: null }
+      ? { ...retry.data, banner_blurhash: null, link_publish_state: retry.data.link_publish_state ?? null }
       : null;
     error = retry.error;
   }

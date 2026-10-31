@@ -55,6 +55,17 @@ let patched = source.replace(
   '$1: string | null',
 );
 
+if (!patched.includes('link_publish_state:')) {
+  patched = patched.replace(
+    /(\s+suspended_reason: string \| null\r?\n)(\s+terms_accepted_at: string \| null\r?\n)(\s+theme: string \| null\r?\n)(\s+tours: Json\r?\n)/,
+    '$1          link_publish_state: Json | null\n$2$3$4',
+  );
+  patched = patched.replace(
+    /(\s+suspended_reason\?: string \| null\r?\n)(\s+terms_accepted_at\?: string \| null\r?\n)(\s+theme\?: string \| null\r?\n)(\s+tours\?: Json\r?\n)(\s+updated_at\?: string \| null\r?\n)(\s+view_count\?: number\r?\n)(\s+watermark_enabled\?: boolean\r?\n)(\s+watermark_style\?: string \| null\r?\n)(\s+watermark_text\?: string \| null\r?\n)(\s+website\?: string \| null\r?\n)(\s+\}\r?\n)(\s+Relationships: \[\]\r?\n)(\s+\}\r?\n)(\s+reports:)/,
+    '$1          link_publish_state?: Json | null\n$2$3$4$5$6$7$8$9$10$11$12$13$14',
+  );
+}
+
 if (!patched.includes('batch_update_photo_exif:')) {
   patched = patched.replace(
     /(\s+batch_update_photos: \{ Args: \{ photo_updates: Json \}; Returns: undefined \})/,

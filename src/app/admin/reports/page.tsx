@@ -26,6 +26,7 @@ import {
 } from '@/hooks/useReports';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import type { ReportForReview, ReportStatus } from '@/types/reports';
+import { isAutomatedProfileReport } from '@/lib/profileUrl/fileProfileLinkReport';
 import { supabase } from '@/utils/supabase/client';
 
 import CancelSVG from 'public/icons/cancel.svg';
@@ -697,7 +698,8 @@ export default function ReportsPage() {
                 const entityPreview = getEntityPreview(report);
                 const entityLink = getEntityLink(report);
                 const isSelected = selectedIds.has(report.id);
-                const isAnonymous = !report.reporter_id;
+                const isAutomated = isAutomatedProfileReport(report);
+                const isAnonymous = !report.reporter_id && !isAutomated;
 
                 return (
                   <div
@@ -755,7 +757,38 @@ export default function ReportsPage() {
                         <div
                           className="flex items-center gap-3"
                         >
-                          {isAnonymous ? (
+                          {isAutomated ? (
+                            <>
+                              <div
+                                className="size-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0"
+                              >
+                                <span
+                                  className="text-primary text-xs font-semibold"
+                                >
+                                  Auto
+                                </span>
+                              </div>
+                              <div
+                                className="flex-1 min-w-0"
+                              >
+                                <p
+                                  className="text-sm font-medium truncate"
+                                >
+                                  Automated check
+                                </p>
+                                <p
+                                  className="text-xs text-foreground/60"
+                                >
+                                  Filed by the profile link check. No member submitted this report.
+                                </p>
+                                <span
+                                  className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                                >
+                                  Automated
+                                </span>
+                              </div>
+                            </>
+                          ) : isAnonymous ? (
                             <>
                               <div
                                 className="size-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0"

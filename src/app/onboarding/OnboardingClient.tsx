@@ -710,6 +710,20 @@ export default function OnboardingClient() {
           console.error('Error saving gear profile during onboarding:', gearErr);
         }
       }
+      try {
+        await fetch('/api/account/profile-links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            website: '',
+            bio: data.bio || '',
+            socialLinks: [],
+          }),
+          keepalive: true,
+        });
+      } catch (err) {
+        console.error('Error checking profile links during onboarding:', err);
+      }
       // Notify admins of the new member before navigating
       try {
         await fetch('/api/onboarding/notify', {
