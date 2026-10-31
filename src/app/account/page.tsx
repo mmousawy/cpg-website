@@ -52,6 +52,7 @@ function AccountPageContent() {
     isSaving,
     success,
     submitError,
+    linkPublishNotice,
     avatarError,
     bannerError,
     themeMounted,
@@ -140,6 +141,14 @@ function AccountPageContent() {
           >
             {submitError}
           </ErrorMessage>
+        )}
+        {linkPublishNotice && (
+          <p
+            className="py-1.5 text-sm text-amber-700 dark:text-amber-300"
+            role="status"
+          >
+            {linkPublishNotice}
+          </p>
         )}
         {success && (
           <SuccessMessage

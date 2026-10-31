@@ -11,7 +11,8 @@ import ProfileGearSummary from '@/components/profile/ProfileGearSummary';
 import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadgesWrapper';
-import { notFound } from 'next/navigation';
+import { getPublishedProfileFields } from '@/lib/profileUrl/linkPublishState';
+import { isKnownSocialHost } from '@/lib/profileUrl/socialHosts';
 
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
@@ -21,6 +22,7 @@ import { getUserGearByNickname } from '@/lib/data/gear';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import { EMPTY_GEAR_PROFILE } from '@/lib/gear/types';
 import type { StreamPhoto } from '@/lib/data/gallery';
+import type { ProfileData } from '@/lib/data/profiles';
 import {
   getAllProfileNicknames,
   getProfileByNickname,
@@ -35,6 +37,7 @@ import {
   PROFILE_PHOTOSTREAM_LIMIT_COMPACT,
 } from '@/utils/displayPreferences';
 import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
+import { notFound } from 'next/navigation';
 
 // Pre-render all public profiles at build time for optimal caching
 export async function generateStaticParams() {
@@ -76,7 +79,8 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   }
 
   const profileTitle = formatProfileDisplayName(profile.full_name, profile.nickname);
-  const profileDescription = profile.bio || `View the profile and photo albums of @${profile.nickname}`;
+  const published = getPublishedProfileFields(profile);
+  const profileDescription = published.bio || `View the profile and photo albums of @${profile.nickname}`;
 
   return createMetadata({
     title: `${profileTitle}'s profile`,
@@ -112,11 +116,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
 async function ProfileContent({ nickname }: { nickname: string }) {
   const includeTestContent = await getIncludeTestContent();
-  const profile = await getProfileByNickname(nickname, includeTestContent);
+  const loadedProfile = await getProfileByNickname(nickname, includeTestContent);
 
-  if (!profile) {
+  if (!loadedProfile) {
     notFound();
   }
+
+  const profile: ProfileData = loadedProfile;
 
   const [albums, publicPhotos, totalPhotos, followCounts, gearProfile] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname),
@@ -136,6 +142,10 @@ async function ProfileContent({ nickname }: { nickname: string }) {
   );
 
   const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);
+  const published = getPublishedProfileFields(profile);
+  const sameAs = published.socialLinks
+    .filter((l) => isKnownSocialHost(l.url))
+    .map((l) => l.url);
   const profileJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ProfilePage',
@@ -143,9 +153,9 @@ async function ProfileContent({ nickname }: { nickname: string }) {
       '@type': 'Person',
       name: profile.full_name || `@${profile.nickname}`,
       url: profileUrl,
-      ...(profile.bio && { description: profile.bio }),
+      ...(published.bio && { description: published.bio }),
       ...(profile.avatar_url && { image: profile.avatar_url }),
-      ...((profile.social_links?.length ?? 0) > 0 && { sameAs: (profile.social_links || []).map((l) => l.url) }),
+      ...(sameAs.length > 0 && { sameAs }),
     },
   };
 
@@ -171,11 +181,11 @@ async function ProfileContent({ nickname }: { nickname: string }) {
             profile={profile}
           />
 
-          {profile.bio && (
+          {published.bio && (
             <div
               className="sm:text-lg text-base mb-4 whitespace-pre-line max-w-[50ch]"
             >
-              {profile.bio}
+              {published.bio}
             </div>
           )}
 

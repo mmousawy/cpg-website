@@ -25,6 +25,7 @@ export type ProfileHeaderProfile = {
   banner_blurhash?: string | null;
   website: string | null;
   social_links?: SocialLink[] | null;
+  link_publish_state?: unknown;
 };
 
 type ProfileHeaderProps = {

@@ -32,6 +32,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
     full_name: null,
     is_admin: null,
     last_logged_in: null,
+    link_publish_state: null,
     newsletter_opt_in: false,
     nickname: null,
     nickname_changed_at: null,

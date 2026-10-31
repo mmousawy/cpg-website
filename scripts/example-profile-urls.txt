@@ -1,0 +1,11 @@
+# Example URLs for pnpm check:urls
+# Format: URL<TAB>optional member full name for portfolio matching
+
+https://murtada.nl	Murtada al Mousawy
+https://karsten.photo/
+https://www.clean-hoouse.com/
+https://super-ksa.com/
+https://meja-sekolah.com/
+https://www.greattibettour.com/
+https://www.lawessaypros.co.uk/law-dissertation
+https://www.instagram.com/example
