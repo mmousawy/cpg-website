@@ -26,7 +26,7 @@ import {
 } from '@/hooks/useReports';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import type { ReportForReview, ReportStatus } from '@/types/reports';
-import { isAutomatedProfileReport } from '@/lib/profileUrl/fileProfileLinkReport';
+import { isAutomatedProfileReport } from '@/lib/profileUrl/automatedProfileReport';
 import { supabase } from '@/utils/supabase/client';
 
 import CancelSVG from 'public/icons/cancel.svg';

@@ -1,21 +1,11 @@
 import type { ProfileUrlCheckResult } from '@/lib/profileUrl/checkProfileUrl';
+import {
+  LINK_CHECK_REPORTER_NAME,
+  LINK_CHECK_REPORTER_NAMES,
+} from '@/lib/profileUrl/automatedProfileReport';
 import { notifyAdminsOfReport } from '@/lib/notifications/notifyAdminsOfReport';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { adminSupabase } from '@/utils/supabase/admin';
-
-/** Shown as the reporter on automatic profile reports. */
-export const LINK_CHECK_REPORTER_NAME = 'Automated check';
-
-/** Earlier name, still recognized so existing reports stay labeled as automated. */
-const LINK_CHECK_REPORTER_NAMES = [LINK_CHECK_REPORTER_NAME, 'Link check'] as const;
-
-export function isAutomatedProfileReport(report: {
-  reporter_id: string | null;
-  reporter_name: string | null;
-}): boolean {
-  return !report.reporter_id
-    && LINK_CHECK_REPORTER_NAMES.includes(report.reporter_name as (typeof LINK_CHECK_REPORTER_NAMES)[number]);
-}
 
 function reportReason(checks: ProfileUrlCheckResult[]): string {
   if (checks.some((check) => check.reason === 'safe_browsing')) {

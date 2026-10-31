@@ -1,5 +1,5 @@
 import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
-import { isAutomatedProfileReport } from '@/lib/profileUrl/fileProfileLinkReport';
+import { isAutomatedProfileReport } from '@/lib/profileUrl/automatedProfileReport';
 import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { createNotification } from '@/lib/notifications/create';
 import { enqueueDebouncedNotificationEmail } from '@/lib/notifications/emailQueue';
