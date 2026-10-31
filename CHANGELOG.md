@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.45.3](https://github.com/mmousawy/cpg-website/compare/v1.45.2...v1.45.3) (2026-10-31)
+
+
+### ♻️ Refactoring
+
+* rename fileProfileLinkReport to automatedProfileReport ([b176f26](https://github.com/mmousawy/cpg-website/commit/b176f26fd2ec6c7f94d5ff851aed8cd5c4de64f7))
+
+
+### 🔧 Maintenance
+
+* add link publish state management and profile link validation ([ba0d24d](https://github.com/mmousawy/cpg-website/commit/ba0d24d48dc9e33d95c562ab5603474ec18f79a4))
+
 ## [1.45.2](https://github.com/mmousawy/cpg-website/compare/v1.45.1...v1.45.2) (2026-10-23)
 
 

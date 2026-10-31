@@ -1,4 +1,5 @@
 import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
+import { isAutomatedProfileReport } from '@/lib/profileUrl/automatedProfileReport';
 import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { createNotification } from '@/lib/notifications/create';
 import { enqueueDebouncedNotificationEmail } from '@/lib/notifications/emailQueue';
@@ -38,9 +39,13 @@ export async function notifyAdminsOfReport(reportId: string): Promise<void> {
       reporterAvatarUrl = reporterProfile.avatar_url;
       reporterProfileLink = reporterNickname ? `/@${reporterNickname}` : null;
     }
+  } else if (isAutomatedProfileReport(report)) {
+    reporterName = 'Automated check';
   } else {
     reporterName = report.reporter_name || 'Anonymous User';
   }
+
+  const isAutomated = isAutomatedProfileReport(report);
 
   let entityTitle = report.entity_type;
   let entityThumbnail: string | null = null;
@@ -121,7 +126,8 @@ export async function notifyAdminsOfReport(reportId: string): Promise<void> {
     reason: report.reason,
     details: report.details,
     reviewLink: reviewLinkFull,
-    isAnonymous: !report.reporter_id,
+    isAnonymous: !report.reporter_id && !isAutomated,
+    isAutomated,
   };
 
   const { data: admins, error: adminsError } = await adminSupabase
@@ -151,7 +157,8 @@ export async function notifyAdminsOfReport(reportId: string): Promise<void> {
         actorAvatar: reporterAvatarUrl,
         entityType: report.entity_type,
         reason: report.reason,
-        isAnonymous: !report.reporter_id,
+        isAnonymous: !report.reporter_id && !isAutomated,
+        isAutomated,
       },
     });
 

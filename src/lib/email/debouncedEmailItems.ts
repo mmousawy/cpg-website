@@ -39,6 +39,7 @@ export type QueuedReportNotificationItem = {
   details: string | null;
   reviewLink: string;
   isAnonymous: boolean;
+  isAutomated?: boolean;
 };
 
 export type QueuedFeedbackNotificationItem = {

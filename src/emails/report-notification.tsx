@@ -44,6 +44,7 @@ export const ReportNotificationEmail = ({
   details,
   reviewLink,
   isAnonymous,
+  isAutomated = false,
 }: {
   preview?: boolean;
   adminName: string;
@@ -61,6 +62,7 @@ export const ReportNotificationEmail = ({
   details: string | null;
   reviewLink: string;
   isAnonymous: boolean;
+  isAutomated?: boolean;
 }) => {
   const data = preview
     ? {
@@ -70,17 +72,18 @@ export const ReportNotificationEmail = ({
       reporterNickname: 'johnsmith' as string | null,
       reporterEmail: 'john@example.com' as string | null,
       reporterAvatarUrl:
-          'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg',
+        'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg',
       reporterProfileLink: `${baseUrl}/@johnsmith`,
       entityType: 'photo' as const,
       entityTitle: 'Sunset Over Mountains',
       entityThumbnail:
-          'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+        'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
       entityLink: `${baseUrl}/@johnsmith/photo/abc123`,
       reason: 'Inappropriate or explicit content',
       details: 'This photo contains inappropriate content that violates community guidelines.',
       reviewLink: `${baseUrl}/admin/reports`,
       isAnonymous: false,
+      isAutomated: false,
     }
     : {
       adminName,
@@ -98,9 +101,12 @@ export const ReportNotificationEmail = ({
       details,
       reviewLink,
       isAnonymous,
+      isAutomated,
     };
 
-  const previewText = `${data.reporterName} reported ${data.entityTitle}`;
+  const previewText = data.isAutomated
+    ? `Automated check flagged ${data.entityTitle}`
+    : `${data.reporterName} reported ${data.entityTitle}`;
 
   const entityTypeLabel = {
     photo: 'Photo',
@@ -255,7 +261,13 @@ export const ReportNotificationEmail = ({
                 {data.reporterName}
               </Text>
             )}
-            {data.isAnonymous && (
+            {data.isAutomated ? (
+              <Text
+                style={{ ...emailMutedTextStyle, marginBottom: '4px', lineHeight: '16px' }}
+              >
+                Filed automatically by the profile link check. No member submitted this report.
+              </Text>
+            ) : data.isAnonymous && (
               <Text
                 style={{ ...emailMutedTextStyle, marginBottom: '4px', lineHeight: '16px' }}
               >

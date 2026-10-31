@@ -200,7 +200,7 @@ export const accountFAQ: FAQSection = {
       title: 'Social links and website',
       content: (
         <p>
-          On your public profile, you can add a website URL and up to 3 social links. Icons are auto-detected for common platforms. These appear on your profile so others can connect with you elsewhere.
+          On your public profile, you can add a website URL and up to 3 social links. Icons are auto-detected for common platforms. Each link is checked before it appears publicly: personal portfolios and social profiles are allowed; sites that look like advertisements or unsafe links are not published. Allowed links show the domain or platform name, not the custom label you type.
         </p>
       ),
     },
