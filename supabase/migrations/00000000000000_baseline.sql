@@ -2718,6 +2718,35 @@ COMMENT ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_e
 
 
 
+CREATE OR REPLACE FUNCTION "public"."invalidate_link_publish_state_on_profile_link_change"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.website IS DISTINCT FROM OLD.website
+     OR NEW.social_links IS DISTINCT FROM OLD.social_links
+     OR NEW.bio IS DISTINCT FROM OLD.bio THEN
+    NEW.link_publish_state := jsonb_build_object(
+      'websiteAllowed', false,
+      'socialByUrl', '{}'::jsonb,
+      'bioPublic', false,
+      'reasons', jsonb_build_object('website', 'pending_recheck'),
+      'checkedAt', (now() AT TIME ZONE 'utc')::text
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."invalidate_link_publish_state_on_profile_link_change"() OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -4343,6 +4372,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "motion" "text" DEFAULT 'system'::"text",
     "tours" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "view_count" integer DEFAULT 0 NOT NULL,
+    "link_publish_state" "jsonb",
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_motion_check" CHECK ((("motion" IS NULL) OR ("motion" = ANY (ARRAY['system'::"text", 'reduce'::"text"])))),
@@ -4372,6 +4402,10 @@ COMMENT ON COLUMN "public"."profiles"."onboarding_reminder_sent_at" IS 'When the
 
 
 COMMENT ON COLUMN "public"."profiles"."tours" IS 'Product tour state keyed by tour id (e.g. photos, photos-edit) with dismissed_at and finished_at';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."link_publish_state" IS 'Server-checked publish flags for website, social URLs, and bio. NULL = grandfathered (show saved links).';
 
 
 
@@ -5915,6 +5949,10 @@ CREATE INDEX "user_gear_items_user_id_sort_idx" ON "public"."user_gear_items" US
 
 
 CREATE OR REPLACE TRIGGER "handle_profile_nickname_change_trigger" BEFORE UPDATE OF "nickname" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."handle_profile_nickname_change"();
+
+
+
+CREATE OR REPLACE TRIGGER "invalidate_link_publish_state_trigger" BEFORE UPDATE OF "website", "social_links", "bio" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."invalidate_link_publish_state_on_profile_link_change"();
 
 
 
@@ -7664,6 +7702,13 @@ GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p
 
 
 
+GRANT ALL ON FUNCTION "public"."invalidate_link_publish_state_on_profile_link_change"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."invalidate_link_publish_state_on_profile_link_change"() TO "anon";
+GRANT ALL ON FUNCTION "public"."invalidate_link_publish_state_on_profile_link_change"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."invalidate_link_publish_state_on_profile_link_change"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) TO "postgres";
 GRANT ALL ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) TO "service_role";
@@ -8114,6 +8159,11 @@ GRANT SELECT("banner_blurhash") ON TABLE "public"."profiles" TO "authenticated";
 
 GRANT SELECT("nickname_changed_at") ON TABLE "public"."profiles" TO "anon";
 GRANT SELECT("nickname_changed_at") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("link_publish_state") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("link_publish_state") ON TABLE "public"."profiles" TO "authenticated";
 
 
 
