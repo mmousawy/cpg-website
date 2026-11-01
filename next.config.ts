@@ -73,6 +73,8 @@ const nextConfig: NextConfig = {
   },
   // Memory optimization for Webpack builds (production)
   experimental: {
+    // Security-advisory upgrade reminders during next dev and next build.
+    agentUpgrade: 'security',
     // TypeScript 7 dropped the compiler API Next used to load; use the tsc CLI instead.
     useTypeScriptCli: true,
     webpackMemoryOptimizations: true,

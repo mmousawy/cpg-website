@@ -1,6 +1,6 @@
 {
   "name": "cpg-website",
-  "version": "1.45.3",
+  "version": "1.45.4",
   "private": true,
   "packageManager": "pnpm@11.28.5",
   "engines": {
@@ -59,7 +59,7 @@
     "image-size": "^2.0.4",
     "leaflet": "^1.9.4",
     "nanoid": "^6.0.2",
-    "next": "16.4.0",
+    "next": "16.4.3",
     "photoswipe": "^5.4.4",
     "piexifjs": "^1.0.6",
     "react": "^19.3.0",
@@ -81,7 +81,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@next/bundle-analyzer": "16.4.0",
+    "@next/bundle-analyzer": "16.4.3",
     "@playwright/test": "^1.63.0",
     "@svgr/webpack": "^8.1.0",
     "@testing-library/jest-dom": "^7.0.1",
@@ -96,7 +96,7 @@
     "critters": "^0.0.25",
     "cross-env": "^10.1.0",
     "eslint": "^10.12.0",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "16.4.3",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "postcss": "^8",

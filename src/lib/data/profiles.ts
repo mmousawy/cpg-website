@@ -156,7 +156,12 @@ export async function getProfileByNickname(nickname: string, includeTestContent 
 
   let profile = profileRow;
 
-  if (error?.message?.includes('link_publish_state')) {
+  const linkPublishStateUnavailable =
+    error &&
+    (error.code === '42501'
+      || /link_publish_state|permission denied/i.test(error.message ?? ''));
+
+  if (linkPublishStateUnavailable) {
     const retryLinks = await supabase
       .from('profiles')
       .select('id, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, created_at')
@@ -171,14 +176,14 @@ export async function getProfileByNickname(nickname: string, includeTestContent 
   if (error?.message?.includes('banner_blurhash')) {
     const retry = await supabase
       .from('profiles')
-      .select('id, full_name, nickname, avatar_url, banner_url, bio, website, social_links, link_publish_state, created_at')
+      .select('id, full_name, nickname, avatar_url, banner_url, bio, website, social_links, created_at')
       .eq('nickname', nickname)
       .is('suspended_at', null)
       .is('deletion_scheduled_at', null)
       .single();
 
     profile = retry.data
-      ? { ...retry.data, banner_blurhash: null, link_publish_state: retry.data.link_publish_state ?? null }
+      ? { ...retry.data, banner_blurhash: null, link_publish_state: null }
       : null;
     error = retry.error;
   }
