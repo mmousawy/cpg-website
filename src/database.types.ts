@@ -1552,6 +1552,7 @@ export type Database = {
           id: string
           is_admin: boolean | null
           last_logged_in: string | null
+          link_publish_state: Json | null
           motion: string | null
           newsletter_opt_in: boolean
           nickname: string | null
@@ -1564,7 +1565,6 @@ export type Database = {
           social_links: Json | null
           suspended_at: string | null
           suspended_reason: string | null
-          link_publish_state: Json | null
           terms_accepted_at: string | null
           theme: string | null
           tours: Json
@@ -1592,6 +1592,7 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           last_logged_in?: string | null
+          link_publish_state?: Json | null
           motion?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
@@ -1604,7 +1605,6 @@ export type Database = {
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
-          link_publish_state?: Json | null
           terms_accepted_at?: string | null
           theme?: string | null
           tours?: Json
@@ -1632,6 +1632,7 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           last_logged_in?: string | null
+          link_publish_state?: Json | null
           motion?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
@@ -1644,7 +1645,6 @@ export type Database = {
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
-          link_publish_state?: Json | null
           terms_accepted_at?: string | null
           theme?: string | null
           tours?: Json
@@ -2274,29 +2274,29 @@ export type Database = {
       create_event_album: { Args: { p_event_id: number }; Returns: string }
       delete_album: { Args: { p_album_id: string }; Returns: boolean }
       enqueue_notification_email_batch:
-      | {
-        Args: {
-          p_batch_key: string
-          p_debounce_minutes?: number
-          p_email_type?: string
-          p_item: Json
-          p_notification_id?: string
-          p_recipient_user_id: string
-        }
-        Returns: string
-      }
-      | {
-        Args: {
-          p_batch_key: string
-          p_debounce_minutes?: number
-          p_email_type?: string
-          p_item: Json
-          p_notification_id?: string
-          p_recipient_user_id: string
-          p_template_key?: string
-        }
-        Returns: string
-      }
+        | {
+            Args: {
+              p_batch_key: string
+              p_debounce_minutes?: number
+              p_email_type?: string
+              p_item: Json
+              p_notification_id?: string
+              p_recipient_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_batch_key: string
+              p_debounce_minutes?: number
+              p_email_type?: string
+              p_item: Json
+              p_notification_id?: string
+              p_recipient_user_id: string
+              p_template_key?: string
+            }
+            Returns: string
+          }
       generate_short_id: { Args: { size?: number }; Returns: string }
       get_admin_member_stats: {
         Args: {
@@ -2421,35 +2421,35 @@ export type Database = {
     }
     Enums: {
       gear_catalog_category:
-      | 'camera_body'
-      | 'lens'
-      | 'film'
-      | 'phone'
-      | 'lighting'
-      | 'support'
-      | 'accessories'
-      | 'other'
+        | 'camera_body'
+        | 'lens'
+        | 'film'
+        | 'phone'
+        | 'lighting'
+        | 'support'
+        | 'accessories'
+        | 'other'
       gear_catalog_source:
-      | 'lensfun'
-      | 'wikidata'
-      | 'curated'
-      | 'exif'
-      | 'camerawiki'
+        | 'lensfun'
+        | 'wikidata'
+        | 'curated'
+        | 'exif'
+        | 'camerawiki'
       license_type:
-      | 'all-rights-reserved'
-      | 'cc-by-nc-nd-4.0'
-      | 'cc-by-nc-4.0'
-      | 'cc-by-4.0'
-      | 'cc0'
+        | 'all-rights-reserved'
+        | 'cc-by-nc-nd-4.0'
+        | 'cc-by-nc-4.0'
+        | 'cc-by-4.0'
+        | 'cc0'
       shooting_format:
-      | 'digital'
-      | 'analog'
-      | 'phone'
-      | 'instant'
-      | 'drone'
-      | 'video'
-      | 'lofi'
-      | 'other'
+        | 'digital'
+        | 'analog'
+        | 'phone'
+        | 'instant'
+        | 'drone'
+        | 'video'
+        | 'lofi'
+        | 'other'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2463,116 +2463,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-    DefaultSchema['Views'])
-  ? (DefaultSchema['Tables'] &
-    DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema['Enums']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-  ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema['CompositeTypes']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-  ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
