@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.45.4](https://github.com/mmousawy/cpg-website/compare/v1.45.3...v1.45.4) (2026-11-01)
+
+
+### 🐛 Bug Fixes
+
+* improve error handling for profile retrieval ([e557379](https://github.com/mmousawy/cpg-website/commit/e557379c68f6be2cd2a3c2ba4bd6916ec7add5c8))
+* upgrade Next.js from 16.4.0 to 16.4.3 ([f62d4ef](https://github.com/mmousawy/cpg-website/commit/f62d4ef70f7898a1e2530b31e415736066b2ba12))
+
+
+### 🔧 Maintenance
+
+* implement link publish state management for profile updates ([77ba283](https://github.com/mmousawy/cpg-website/commit/77ba2831b7928f39d43cc532ad5c90c022caa530))
+
 ## [1.45.3](https://github.com/mmousawy/cpg-website/compare/v1.45.2...v1.45.3) (2026-10-31)
 
 
