@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.45.5](https://github.com/mmousawy/cpg-website/compare/v1.45.4...v1.45.5) (2026-11-03)
+
+
+### 🔧 Maintenance
+
+* update dependencies and improve profile section UI ([9d78563](https://github.com/mmousawy/cpg-website/commit/9d785632cffbc9f5d2715a2ce7b8f9af1f5bd68b))
+
 ## [1.45.4](https://github.com/mmousawy/cpg-website/compare/v1.45.3...v1.45.4) (2026-11-01)
 
 

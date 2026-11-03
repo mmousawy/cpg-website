@@ -63,11 +63,6 @@ export default function PublicProfileSection({
           isSaving={isSaving}
           heroVariant="account"
         />
-        <p
-          className="text-foreground/80 mb-4 text-sm"
-        >
-          This information will be visible on your public profile page. Website and social links are checked before they are published. Links show the site or platform name, not custom labels. If a site looks like an advertisement or is flagged as unsafe, it stays off your public profile even though it is saved here.
-        </p>
         <div
           className="space-y-4"
         >
