@@ -144,19 +144,10 @@ export default function ProfileSection({
             <p
               className="text-foreground/50 text-xs"
             >
-              Used in your profile and gallery URLs. Confirm changes via email. You can change
-              your nickname once every 60 days; old links redirect for one year.
-              {nicknameOnCooldown && nicknameChangeCooldownEnd && (
-                <>
-                  <br />
-                  You can change your nickname again on
-                  {' '}
-                  {formatNicknameCooldownDate(nicknameChangeCooldownEnd)}
-                  .
-                </>
-              )}
+              Used in your profile and gallery URLs.
+
               <br />
-              URL:
+              Your profile URL:
               {' '}
               <span
                 className="wrap-break-word"
@@ -167,6 +158,18 @@ export default function ProfileSection({
                   return url;
                 })()}
               </span>
+
+              {nicknameOnCooldown && nicknameChangeCooldownEnd && (
+                <>
+                  <br />
+                  <br />
+                  You can change your nickname again on
+                  {' '}
+                  {formatNicknameCooldownDate(nicknameChangeCooldownEnd)}
+                  .
+                  <br />
+                </>
+              )}
             </p>
           </div>
         </div>

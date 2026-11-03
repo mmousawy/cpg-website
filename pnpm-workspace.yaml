@@ -8,25 +8,3 @@ allowBuilds:
   # Optional native addons for the local SSH sync script. The JS fallback works without them.
   ssh2: false
   cpu-features: false
-
-minimumReleaseAgeExclude:
-  - '@hookform/resolvers@5.5.7 || 5.9.0'
-  - '@next/bundle-analyzer@16.3.0-preview.10'
-  - '@next/env@16.3.0-preview.10'
-  - '@next/eslint-plugin-next@16.3.0-preview.10'
-  - '@next/swc-darwin-arm64@16.3.0-preview.10'
-  - '@next/swc-darwin-x64@16.3.0-preview.10'
-  - '@next/swc-linux-arm64-gnu@16.3.0-preview.10'
-  - '@next/swc-linux-arm64-musl@16.3.0-preview.10'
-  - '@next/swc-linux-x64-gnu@16.3.0-preview.10'
-  - '@next/swc-linux-x64-musl@16.3.0-preview.10'
-  - '@next/swc-win32-arm64-msvc@16.3.0-preview.10'
-  - '@next/swc-win32-x64-msvc@16.3.0-preview.10'
-  - eslint-config-next@16.3.0-preview.10
-  - next@16.3.0-preview.10
-  - '@supabase/auth-js@2.117.1 || 2.117.3'
-  - '@supabase/functions-js@2.117.1 || 2.117.3'
-  - '@supabase/postgrest-js@2.117.1 || 2.117.3'
-  - '@supabase/realtime-js@2.117.1 || 2.117.3'
-  - '@supabase/storage-js@2.117.1 || 2.117.3'
-  - '@supabase/supabase-js@2.117.1 || 2.117.3'
