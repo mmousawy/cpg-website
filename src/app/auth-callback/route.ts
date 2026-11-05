@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { NextResponse, after, type NextRequest } from 'next/server';
 
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
+import { isIpBlocked, upsertSignupSignal } from '@/lib/memberReview/ipBlocking';
+import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import {
   applyOnboardingCookie,
@@ -45,6 +47,7 @@ export async function GET(request: NextRequest) {
   const siteUrl = getRequestSiteUrl(request);
   const code = searchParams.get('code');
   const redirectToParam = searchParams.get('redirectTo');
+  const clientMeta = getRequestClientMeta(request);
 
   if (code) {
     const cookieStore = await cookies();
@@ -71,6 +74,14 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      if (clientMeta.ip && await isIpBlocked(clientMeta.ip)) {
+        await supabase.auth.signOut();
+        const blocked = NextResponse.redirect(`${siteUrl}/network-blocked`);
+        applyCookies(blocked, cookiesToSet);
+        clearOnboardingCookie(blocked);
+        return blocked;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       let dest = getPostLoginRedirect(redirectToParam);
 
@@ -87,6 +98,8 @@ export async function GET(request: NextRequest) {
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
           });
+
+          await upsertSignupSignal(user.id, clientMeta, 'oauth_callback');
 
           after(() => {
             if (shouldSkipNotificationsAndEmails(user.email)) return;

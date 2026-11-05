@@ -21,6 +21,8 @@ import {
   needsProxyOwnProfile,
 } from '@/utils/proxyAuth';
 import { isStagingDeployment } from '@/utils/siteEnvironment';
+import { isIpBlocked } from '@/lib/memberReview/ipBlocking';
+import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
 import { expireLegacyHostedSupabaseAuthCookies, hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseClientGlobalOptions } from '@/utils/supabase/fetchWithFriendlyErrors';
@@ -46,7 +48,7 @@ const KNOWN_ROUTES = new Set([
   'account', 'account-deleted', 'actions', 'admin', 'api', 'auth', 'auth-callback', 'auth-error',
   'cancel', 'challenges', 'changelog', 'confirm', 'contact', 'email', 'events',
   'forgot-password', 'gallery', 'help', 'login', 'members', 'onboarding',
-  'privacy', 'providers', 'reset-password', 'scene', 'signup', 'terms', 'unsubscribe',
+  'privacy', 'providers', 'reset-password', 'scene', 'signup', 'terms', 'under-review', 'network-blocked', 'unsubscribe',
   '_next',
 ]);
 
@@ -87,6 +89,21 @@ export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const firstSegment = pathname.split('/')[1];
   const matchesRoute = (path: string) => matchesPath(pathname, path);
+
+  const clientMeta = getRequestClientMeta(request);
+  if (
+    clientMeta.ip
+    && await isIpBlocked(clientMeta.ip)
+    && !matchesRoute('/network-blocked')
+    && !matchesRoute('/help')
+    && !matchesRoute('/terms')
+    && !matchesRoute('/privacy')
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/network-blocked';
+    url.search = '';
+    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
+  }
 
   // 301 from old @-nickname URLs to the member's current nickname
   if (firstSegment?.startsWith('@')) {
@@ -230,6 +247,7 @@ export default async function proxy(request: NextRequest) {
   let profile: {
     deletion_scheduled_at: string | null;
     suspended_at: string | null;
+    under_review_at: string | null;
     email: string | null;
     full_name: string | null;
     nickname: string | null;
@@ -239,6 +257,7 @@ export default async function proxy(request: NextRequest) {
   const shouldLoadProfile = user && (
     needsProxyOwnProfile(pathname)
     || needsOnboardingClassify
+    || (!isPublicApiRoute && !matchesRoute('/under-review') && pathname.startsWith('/'))
   );
 
   if (shouldLoadProfile) {
@@ -248,6 +267,7 @@ export default async function proxy(request: NextRequest) {
       profile = {
         deletion_scheduled_at: (ownProfile.deletion_scheduled_at as string | null) ?? null,
         suspended_at: (ownProfile.suspended_at as string | null) ?? null,
+        under_review_at: (ownProfile.under_review_at as string | null) ?? null,
         email: (ownProfile.email as string | null) ?? null,
         full_name: (ownProfile.full_name as string | null) ?? null,
         nickname: (ownProfile.nickname as string | null) ?? null,
@@ -281,7 +301,9 @@ export default async function proxy(request: NextRequest) {
 
   // Block suspended users from account/admin areas and write APIs
   const isSuspended = !!user && !!profile?.suspended_at;
+  const isUnderReview = !!user && !!profile?.under_review_at && !profile?.suspended_at;
   const suspendedAllowedPaths = ['/login', '/logout', '/contact', '/help', '/terms', '/privacy', '/account-deleted'];
+  const underReviewAllowedPaths = ['/under-review', '/logout', '/contact', '/help', '/terms', '/privacy', '/login'];
   if (
     isSuspended
     && !suspendedAllowedPaths.some((path) => matchesRoute(path))
@@ -295,6 +317,26 @@ export default async function proxy(request: NextRequest) {
     copyResponseCookies(supabaseResponse, redirect);
     clearOnboardingCookie(redirect);
     return withLegacyAuthCookieCleanup(request, redirect);
+  }
+
+  if (isUnderReview) {
+    const allowed = underReviewAllowedPaths.some((path) => matchesRoute(path));
+    if (pathname.startsWith('/api/') && !isPublicApiRoute) {
+      const allowUnderReviewApi = matchesRoute('/api/onboarding/revalidate');
+      if (!allowUnderReviewApi) {
+        const blocked = NextResponse.json({ error: 'Account under review' }, { status: 403 });
+        copyResponseCookies(supabaseResponse, blocked);
+        return withLegacyAuthCookieCleanup(request, blocked);
+      }
+    }
+    if (!allowed && !pathname.startsWith('/api/')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/under-review';
+      url.search = '';
+      const redirect = NextResponse.redirect(url);
+      copyResponseCookies(supabaseResponse, redirect);
+      return withLegacyAuthCookieCleanup(request, redirect);
+    }
   }
 
   // Force profile completion on gated routes. Public pages skip this so
@@ -333,7 +375,11 @@ export default async function proxy(request: NextRequest) {
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/account/events';
+    if (profile?.under_review_at && !profile.suspended_at) {
+      url.pathname = '/under-review';
+    } else {
+      url.pathname = '/account/events';
+    }
     return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
   }
 

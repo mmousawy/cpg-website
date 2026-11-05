@@ -18,12 +18,16 @@ export async function POST() {
 
   const { data: profile, error: profileError } = await adminSupabase
     .from('profiles')
-    .select('id, email, full_name, nickname, terms_accepted_at')
+    .select('id, email, full_name, nickname, terms_accepted_at, suspended_at, under_review_at')
     .eq('id', user.id)
     .single();
 
   if (profileError || !profile) {
     return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+  }
+
+  if (profile.suspended_at || profile.under_review_at) {
+    return NextResponse.json({ success: true, skipped: true });
   }
 
   if (!isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {

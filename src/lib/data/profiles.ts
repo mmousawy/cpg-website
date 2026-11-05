@@ -42,6 +42,7 @@ export async function getAllProfileNicknames() {
     .select('nickname')
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null);
 
   const nicknames = (data || [])
@@ -68,6 +69,7 @@ export async function getOrganizers(limit = 5) {
     .select('id, full_name, nickname, avatar_url, bio')
     .eq('is_admin', true)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .limit(limit);
 
@@ -90,6 +92,7 @@ export async function getRecentMembers(limit = 8, includeTestContent = false) {
     .select('id, full_name, nickname, avatar_url', { count: 'exact' })
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -151,6 +154,7 @@ export async function getProfileByNickname(nickname: string, includeTestContent 
     .select('id, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, link_publish_state, created_at')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .single();
 
@@ -167,6 +171,7 @@ export async function getProfileByNickname(nickname: string, includeTestContent 
       .select('id, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, created_at')
       .eq('nickname', nickname)
       .is('suspended_at', null)
+      .is('under_review_at', null)
       .is('deletion_scheduled_at', null)
       .single();
     profile = retryLinks.data ? { ...retryLinks.data, link_publish_state: null } : null;
@@ -179,6 +184,7 @@ export async function getProfileByNickname(nickname: string, includeTestContent 
       .select('id, full_name, nickname, avatar_url, banner_url, bio, website, social_links, created_at')
       .eq('nickname', nickname)
       .is('suspended_at', null)
+      .is('under_review_at', null)
       .is('deletion_scheduled_at', null)
       .single();
 
@@ -320,6 +326,7 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
     .select('id')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .single();
 
@@ -394,6 +401,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .select('id, full_name, nickname, avatar_url')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .single();
 
@@ -476,6 +484,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
         .select('id, full_name, nickname, avatar_url')
         .eq('id', photo.user_id)
         .is('suspended_at', null)
+        .is('under_review_at', null)
         .is('deletion_scheduled_at', null)
         .single()
       : Promise.resolve({ data: null }),
@@ -617,6 +626,7 @@ export async function getPhotoByShortId(
     .select('id, full_name, nickname, avatar_url')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .single();
 

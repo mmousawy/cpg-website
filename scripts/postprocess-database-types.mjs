@@ -66,6 +66,111 @@ if (!patched.includes('link_publish_state:')) {
   );
 }
 
+if (!patched.includes('under_review_at:')) {
+  patched = patched.replace(
+    /(\s+updated_at: string \| null\r?\n)(\s+view_count: number\r?\n)/,
+    '$1          under_review_at: string | null\n$2',
+  );
+}
+
+if (!patched.includes('under_review_at?:')) {
+  patched = patched.replace(
+    /(\s+tours\?: Json\r?\n)(\s+updated_at\?: string \| null\r?\n)(\s+view_count\?: number\r?\n)(\s+watermark_enabled\?: boolean\r?\n)(\s+watermark_style\?: string \| null\r?\n)(\s+watermark_text\?: string \| null\r?\n)(\s+website\?: string \| null\r?\n)(\s+\}\r?\n)(\s+Update: \{\r?\n)/,
+    '$1$2          under_review_at?: string | null\n$3$4$5$6$7$8$9',
+  );
+  patched = patched.replace(
+    /(\s+tours\?: Json\r?\n)(\s+updated_at\?: string \| null\r?\n)(\s+under_review_at\?: string \| null\r?\n)(\s+view_count\?: number\r?\n)(\s+watermark_enabled\?: boolean\r?\n)(\s+watermark_style\?: string \| null\r?\n)(\s+watermark_text\?: string \| null\r?\n)(\s+website\?: string \| null\r?\n)(\s+\}\r?\n)(\s+Relationships: \[\]\r?\n)(\s+\}\r?\n)(\s+reports:)/,
+    '$1$2$3$4$5$6$7$8$9$10$11$12',
+  );
+}
+
+if (!patched.includes('p_under_review_at')) {
+  patched = patched.replace(
+    /profile_is_public_member: \{\r?\n        Args: \{\r?\n          p_deletion_scheduled_at: string\r?\n          p_nickname: string\r?\n          p_suspended_at: string\r?\n        \}/,
+    `profile_is_public_member: {
+        Args: {
+          p_deletion_scheduled_at: string
+          p_nickname: string
+          p_suspended_at: string
+          p_under_review_at?: string
+        }`,
+  );
+}
+
+if (!patched.includes('signup_signals:')) {
+  patched = patched.replace(
+    /(\s+reports: \{[\s\S]*?\n      \}\n)(      scene_event_comments:)/,
+    `$1      signup_signals: {
+        Row: {
+          accept_language: string | null
+          created_at: string
+          ip_address: string | null
+          profile_id: string
+          source: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          accept_language?: string | null
+          created_at?: string
+          ip_address?: string | null
+          profile_id: string
+          source: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          accept_language?: string | null
+          created_at?: string
+          ip_address?: string | null
+          profile_id?: string
+          source?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'signup_signals_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: true
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      blocked_ips: {
+        Row: {
+          blocked_at: string
+          ip_address: string
+          profile_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          blocked_at?: string
+          ip_address: string
+          profile_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          blocked_at?: string
+          ip_address?: string
+          profile_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'blocked_ips_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+$2`,
+  );
+}
+
 if (!patched.includes('batch_update_photo_exif:')) {
   patched = patched.replace(
     /(\s+batch_update_photos: \{ Args: \{ photo_updates: Json \}; Returns: undefined \})/,
