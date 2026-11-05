@@ -95,6 +95,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .select('nickname, updated_at')
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null);
 
   type ProfileRow = Pick<Tables<'profiles'>, 'nickname' | 'updated_at'>;

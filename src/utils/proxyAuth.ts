@@ -10,6 +10,7 @@ const PROXY_SESSION_PATHS = [
   '/onboarding',
   '/auth-callback',
   '/account-deleted',
+  '/under-review',
   '/members',
   '/cancel',
   '/confirm',
@@ -22,6 +23,7 @@ const PROXY_PROFILE_PATHS = [
   '/admin',
   '/onboarding',
   '/account-deleted',
+  '/under-review',
   '/api',
 ] as const;
 

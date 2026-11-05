@@ -46,6 +46,7 @@ async function loadUserGearByNickname(
     .select('id')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .maybeSingle();
 

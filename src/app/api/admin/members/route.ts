@@ -6,6 +6,10 @@ import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { buildPostgrestIlikeOr } from '@/lib/search/fuzzyQuery';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
+import {
+  blockClientIpsForProfile,
+  unblockClientIpsForProfile,
+} from '@/lib/memberReview/ipBlocking';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
@@ -141,6 +145,8 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to suspend user' }, { status: 500 });
       }
 
+      await blockClientIpsForProfile(userId, reason || null);
+
       // Revalidate all pages (suspended users affect homepage, profiles, galleries, etc.)
       await revalidateAll();
 
@@ -159,6 +165,8 @@ export async function PATCH(request: NextRequest) {
         console.error('Error unsuspending user:', updateError);
         return NextResponse.json({ error: 'Failed to unsuspend user' }, { status: 500 });
       }
+
+      await unblockClientIpsForProfile(userId);
 
       // Revalidate all pages (unsuspended users affect homepage, profiles, galleries, etc.)
       await revalidateAll();

@@ -92,6 +92,7 @@ async function getMembersByInterestCached(interest: string) {
     .in('id', profileIds)
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .order('full_name', { ascending: true, nullsFirst: false })
     .order('nickname', { ascending: true });
@@ -127,6 +128,7 @@ async function loadMembersByInterestLive(interest: string, interestData: Interes
     .in('id', profileIds)
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .order('full_name', { ascending: true, nullsFirst: false })
     .order('nickname', { ascending: true });

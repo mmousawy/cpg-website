@@ -205,6 +205,27 @@ export const accountFAQ: FAQSection = {
       ),
     },
     {
+      id: 'account-review',
+      title: 'Profile review after signup',
+      content: (
+        <>
+          <p
+            className="mb-4"
+          >
+            When you finish onboarding, we check your links and profile text. If everything looks like a normal photographer profile, your page goes public right away.
+          </p>
+          <p
+            className="mb-4"
+          >
+            If a link needs a closer look, your account stays signed in but your profile is not public yet. You will see an under review message until a moderator approves you. You can still sign out or read our terms and privacy policy.
+          </p>
+          <p>
+            Accounts that look like spam or advertising, or that closely match a suspended account, are not allowed on the site. If access from your network was blocked after a suspension, contact us through the Contact page and we can help.
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'interests-profile',
       title: 'Interests on your profile',
       content: (
