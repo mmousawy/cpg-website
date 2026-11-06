@@ -56,3 +56,6 @@ next-env.d.ts
 .release-pr-body.md
 .release-pr-title.txt
 release-notes.md
+
+# local database dumps (may contain auth data)
+supabase/full-backup.sql
