@@ -66,7 +66,18 @@ function isBusinessListing(signals: PageSignals): boolean {
 
 function isServiceOffer(signals: PageSignals): boolean {
   const text = combinedText(signals);
-  return SERVICE_OFFER_PATTERNS.some((re) => re.test(text));
+  return isServiceOfferText(text);
+}
+
+/** True when free text (display name, bio) looks like a service pitch. */
+export function isServiceOfferText(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (SERVICE_OFFER_PATTERNS.some((re) => re.test(trimmed))) return true;
+  const lower = trimmed.toLowerCase();
+  const hasCert = /\b(certification|recertification)\b/i.test(lower);
+  const hasTraining = /\b(training|course)\b/i.test(lower);
+  return hasCert && hasTraining;
 }
 
 /** Classify fetched page content (not for known social hosts). */

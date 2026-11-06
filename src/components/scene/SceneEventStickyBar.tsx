@@ -10,7 +10,9 @@ import {
   useToggleSceneEventInterest,
   type SceneEventInterest,
 } from '@/hooks/useSceneEvents';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import type { SceneEvent } from '@/types/scene';
 import clsx from 'clsx';
 import StarFilledIcon from 'public/icons/star-filled.svg';
@@ -22,7 +24,10 @@ type SceneEventStickyBarProps = {
   event: SceneEvent;
 };
 
-function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
+function SceneEventStickyBarGuest({
+  event,
+  locked = false,
+}: SceneEventStickyBarProps & { locked?: boolean }) {
   const showAuthPrompt = useAuthPrompt();
   const count = event.interest_count ?? 0;
 
@@ -33,7 +38,12 @@ function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
       >
         <button
           type="button"
-          onClick={() => showAuthPrompt({ feature: 'show interest in Scene events' })}
+          onClick={() => {
+            if (locked) return;
+            showAuthPrompt({ feature: 'show interest in Scene events' });
+          }}
+          disabled={locked}
+          title={locked ? UNDER_REVIEW_INTERACTION_HINT : undefined}
           className={clsx(
             'group flex items-center justify-center gap-2 shrink-0',
             'h-9 rounded-full',
@@ -41,6 +51,7 @@ function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
             'border border-border-color-strong',
             'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
             'bg-background-light hover:bg-background-medium',
+            locked && 'cursor-not-allowed opacity-60',
           )}
           aria-label="I'm interested"
         >
@@ -242,13 +253,19 @@ function SceneEventStickyBarAuthenticated({ event }: SceneEventStickyBarProps) {
 
 export default function SceneEventStickyBar(props: SceneEventStickyBarProps) {
   const { isLoggedIn } = useSession();
+  const { canInteract } = useCanInteract();
 
   return (
     <StickyActionBar
       constrainWidth
       overlaysContent
     >
-      {isLoggedIn ? (
+      {isLoggedIn && !canInteract ? (
+        <SceneEventStickyBarGuest
+          {...props}
+          locked
+        />
+      ) : isLoggedIn ? (
         <SceneEventStickyBarAuthenticated
           {...props}
         />

@@ -9,6 +9,7 @@ import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
 import { subscribeRouteChange } from '@/lib/routeChange';
 import { scrollContainerTo } from '@/utils/scrollContainer';
+import { isNetworkBlockedPath } from '@/utils/networkBlockedPath';
 import { isOnboardingPath } from '@/utils/onboardingPath';
 import MobileAccountMenu from './MobileAccountMenu';
 import TabBarPopoverBackdrop from './TabBarPopoverBackdrop';
@@ -113,7 +114,7 @@ function matchesPath(pathname: string, href: string) {
 /** Must stay inside `<Suspense>` — `usePathname()` is a blocking client hook. */
 export default function MobileTabBar() {
   const pathname = usePathname();
-  const hidden = isOnboardingPath(pathname);
+  const hidden = isOnboardingPath(pathname) || isNetworkBlockedPath(pathname);
   const { profile } = useSession();
   const containerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);

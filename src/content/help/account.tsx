@@ -205,6 +205,27 @@ export const accountFAQ: FAQSection = {
       ),
     },
     {
+      id: 'account-review',
+      title: 'Profile review after signup',
+      content: (
+        <>
+          <p
+            className="mb-4"
+          >
+            When you finish onboarding, we check your links and profile text. If everything looks like a normal photographer profile, your page goes public right away.
+          </p>
+          <p
+            className="mb-4"
+          >
+            If a link needs a closer look, you stay signed in and can browse the site, but likes, comments, follows, and other interactions stay locked. Your profile is not public yet and account pages stay locked until a moderator approves you.
+          </p>
+          <p>
+            Accounts that look like spam or advertising, or that closely match a suspended account, are not allowed on the site. If access from your network was blocked after a suspension, contact us through the Contact page and we can help.
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'interests-profile',
       title: 'Interests on your profile',
       content: (

@@ -3,7 +3,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useAlbumLikes, usePhotoLikes } from '@/hooks/useLikes';
-import { useSession } from '@/hooks/useSession';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { queueLike } from '@/lib/sync';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
@@ -25,10 +25,12 @@ function DetailLikesSectionReadOnly({
   entityType,
   className,
   initialCount = 0,
-}: DetailLikesSectionProps) {
+  locked = false,
+}: DetailLikesSectionProps & { locked?: boolean }) {
   const showAuthPrompt = useAuthPrompt();
 
   const handleLikeClick = () => {
+    if (locked) return;
     showAuthPrompt({
       feature: entityType === 'photo' ? 'like photos' : 'like albums',
     });
@@ -40,6 +42,8 @@ function DetailLikesSectionReadOnly({
     >
       <button
         onClick={handleLikeClick}
+        disabled={locked}
+        title={locked ? 'Unavailable while your account is under review' : undefined}
         className={clsx(
           'group relative z-10',
           'inline-flex items-center justify-center',
@@ -49,6 +53,7 @@ function DetailLikesSectionReadOnly({
           'border border-border-color-strong',
           'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
           'bg-background-light hover:bg-background-medium focus-visible:bg-background-medium',
+          locked && 'cursor-not-allowed opacity-60',
         )}
         aria-label="Like"
       >
@@ -111,14 +116,14 @@ function DetailLikesSectionInteractive({
       }
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setLiked(likesQuery.data.userHasLiked);
     setCount(likesQuery.data.count);
   }, [likesQuery.data, liked, count]);
 
   useEffect(() => {
     if (liked && !previousLikedRef.current) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setIsAnimating(true);
       setTimeout(() => setIsAnimating(false), 1000);
     }
@@ -221,12 +226,13 @@ function DetailLikesSectionInteractive({
 }
 
 export default function DetailLikesSection(props: DetailLikesSectionProps) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
-  if (!isLoggedIn) {
+  if (!isLoggedIn || !canInteract) {
     return (
       <DetailLikesSectionReadOnly
         {...props}
+        locked={isLoggedIn && !canInteract}
       />
     );
   }

@@ -9,6 +9,7 @@ import { dispatchRouteChange } from '@/lib/routeChange';
 import { isManagePagePath } from '@/utils/managePage';
 import { isMobilePinnedShellPath } from '@/utils/mobilePinnedShell';
 import { isMobileTerminalStickySettlePath } from '@/utils/mobileTerminalStickySettle';
+import { isNetworkBlockedPath } from '@/utils/networkBlockedPath';
 import { isOnboardingPath } from '@/utils/onboardingPath';
 import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 import {
@@ -37,6 +38,7 @@ export default function DocumentRouteState() {
     const isManage = isManagePagePath(pathname);
     document.documentElement.classList.toggle('manage-page', isManage);
     document.documentElement.classList.toggle('onboarding-page', isOnboardingPath(pathname));
+    document.documentElement.classList.toggle('network-blocked-page', isNetworkBlockedPath(pathname));
     document.documentElement.classList.toggle('mobile-pinned-shell', pinnedMobileShell);
     document.documentElement.classList.toggle(
       'mobile-terminal-sticky-settle',

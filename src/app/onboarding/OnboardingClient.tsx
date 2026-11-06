@@ -70,7 +70,7 @@ function applyMotionPreference(motion: MotionPreference) {
   window.dispatchEvent(new Event('display-preferences-changed'));
 }
 export default function OnboardingClient() {
-  const { user, profile, isLoading, refreshProfile } = useAuth();
+  const { user, profile, isLoading, refreshProfile, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useSupabase();
@@ -588,65 +588,6 @@ export default function OnboardingClient() {
         bannerBlurhash = pendingBannerBlurhash
           ?? await generateBlurhash(pendingBannerFile, 4, 3);
       }
-      const updateData: {
-        nickname: string;
-        full_name: string | null;
-        email?: string;
-        bio: string | null;
-        avatar_url: string | null;
-        banner_url: string | null;
-        banner_blurhash: string | null;
-        newsletter_opt_in: boolean;
-        terms_accepted_at: string;
-        theme: AppThemeSelection;
-        motion: MotionPreference;
-      } = {
-        nickname: data.nickname,
-        full_name: data.fullName || null,
-        bio: data.bio || null,
-        avatar_url: avatarUrl,
-        banner_url: bannerUrl,
-        banner_blurhash: bannerBlurhash,
-        newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
-        terms_accepted_at: new Date().toISOString(),
-        theme: themeSelection,
-        motion: motionPreference,
-      };
-      // Only update email if OAuth user and email is provided
-      if (isOAuthUser && data.email) {
-        updateData.email = data.email.toLowerCase();
-      }
-      const { error: profileError } = await supabase.from('profiles').update(updateData).eq('id', user.id);
-      let saveError = profileError;
-      if (saveError?.message?.includes('banner_blurhash')) {
-        const { banner_blurhash: _blurhash, ...updateWithoutBlurhash } = updateData;
-        const retry = await supabase.from('profiles').update(updateWithoutBlurhash).eq('id', user.id);
-        saveError = retry.error;
-      } else if (saveError?.message?.includes('banner_url')) {
-        const {
-          banner_url: _bannerUrl,
-          banner_blurhash: _blurhash,
-          ...updateWithoutBanner
-        } = updateData;
-        const retry = await supabase.from('profiles').update(updateWithoutBanner).eq('id', user.id);
-        saveError = retry.error;
-      }
-      if (saveError) {
-        if (saveError.code === '23505') {
-          // Unique constraint violation
-          setError('nickname', { message: 'This nickname is already taken' });
-          setStep(1);
-        } else if (saveError.code === '23514') {
-          // Check constraint violation
-          setError('nickname', { message: 'Invalid nickname format' });
-          setStep(1);
-        } else {
-          setSubmitError(saveError.message);
-        }
-        setIsSaving(false);
-        return;
-      }
-      // Update email preferences in batch
       const preferenceUpdates = emailTypes.map((type) => {
         const isOptedIn = data.emailPreferences[type.type_key] ?? true;
         return {
@@ -660,23 +601,17 @@ export default function OnboardingClient() {
         setIsSaving(false);
         return;
       }
-      // Save interests
       const interestsToSave = data.interests ?? [];
       if (interestsToSave.length > 0) {
         const normalizedInterests = interestsToSave.map((i) => i.toLowerCase().trim()).filter(Boolean);
-        // Insert interests (database will handle duplicates via unique constraint)
         const { error: interestsError } = await supabase.from('profile_interests').insert(
           normalizedInterests.map((interest) => ({
             profile_id: user.id,
             interest,
           })),
         );
-        if (interestsError) {
-          // Ignore duplicate key errors (23505) - user might have already added some
-          if (interestsError.code !== '23505') {
-            console.error('Error saving interests:', interestsError);
-            // Don't fail the whole onboarding if interests fail
-          }
+        if (interestsError && interestsError.code !== '23505') {
+          console.error('Error saving interests:', interestsError);
         }
       }
       const shootingFormats = data.shootingFormats ?? [];
@@ -710,33 +645,61 @@ export default function OnboardingClient() {
           console.error('Error saving gear profile during onboarding:', gearErr);
         }
       }
-      try {
-        await fetch('/api/account/profile-links', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            website: '',
-            bio: data.bio || '',
-            socialLinks: [],
-          }),
-          keepalive: true,
-        });
-      } catch (err) {
-        console.error('Error checking profile links during onboarding:', err);
+      const completeBody: Record<string, unknown> = {
+        nickname: data.nickname,
+        fullName: data.fullName || null,
+        bio: data.bio || '',
+        website: '',
+        socialLinks: [],
+        avatarUrl: avatarUrl,
+        bannerUrl: bannerUrl,
+        bannerBlurhash: bannerBlurhash,
+        newsletterOptIn: data.emailPreferences['newsletter'] ?? true,
+        theme: themeSelection,
+        motion: motionPreference,
+      };
+      if (isOAuthUser && data.email) {
+        completeBody.email = data.email.toLowerCase();
       }
-      // Notify admins of the new member before navigating
-      try {
-        await fetch('/api/onboarding/notify', {
-          method: 'POST',
-          keepalive: true,
-        });
-      } catch (err) {
-        console.error('Error notifying admins of new member:', err);
+      const completeResponse = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(completeBody),
+      });
+      const completeJson = await completeResponse.json().catch(() => ({})) as {
+        error?: string;
+        outcome?: 'publish' | 'under_review' | 'suspend';
+      };
+      if (!completeResponse.ok) {
+        if (completeResponse.status === 409) {
+          setError('nickname', { message: 'This nickname is already taken' });
+          setStep(1);
+        } else {
+          setSubmitError(completeJson.error || 'Failed to complete onboarding');
+        }
+        setIsSaving(false);
+        return;
       }
-      // Refresh profile in auth context
       await refreshProfile();
-      // Expire homepage/members caches before navigating. A server action
-      // revalidateTag() would also call refresh() and fight router.push.
+      const outcome = completeJson.outcome ?? 'publish';
+      if (outcome === 'suspend') {
+        try {
+          await signOut();
+        } catch (signOutErr) {
+          console.error('Error signing out suspended account:', signOutErr);
+        }
+        window.location.href = '/login?error=suspended';
+        return;
+      }
+      if (outcome === 'under_review') {
+        try {
+          await fetch('/api/onboarding/revalidate', { method: 'POST', keepalive: true });
+        } catch (err) {
+          console.error('Error revalidating after onboarding:', err);
+        }
+        router.push('/under-review');
+        return;
+      }
       try {
         const revalidateResponse = await fetch('/api/onboarding/revalidate', {
           method: 'POST',
@@ -748,7 +711,6 @@ export default function OnboardingClient() {
         router.push(postOnboardingRedirect);
       } catch (err) {
         console.error('Error revalidating after onboarding:', err);
-        // Gated /account hop sets the complete cookie if the revalidate response did not.
         router.push('/account/events');
       }
     } catch (err) {

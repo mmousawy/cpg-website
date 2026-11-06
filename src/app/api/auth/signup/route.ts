@@ -6,6 +6,8 @@ import { revalidateProfiles } from '@/app/actions/revalidate';
 import VerifyEmailTemplate from '@/emails/auth/verify-email';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
+import { isIpBlocked, upsertSignupSignal } from '@/lib/memberReview/ipBlocking';
+import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
 import { isStagingDeployment } from '@/utils/siteEnvironment';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
@@ -83,6 +85,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const clientMeta = getRequestClientMeta(request);
+    if (clientMeta.ip && await isIpBlocked(clientMeta.ip)) {
+      return NextResponse.json(
+        { message: 'Signup is not available from this network.' },
+        { status: 403 },
+      );
+    }
+
     // Check if email already exists
     const { data: existingProfile } = await supabase
       .from('profiles')
@@ -152,6 +162,8 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.error('Error creating profile:', profileError);
       // Non-fatal - profile can be created later
+    } else {
+      await upsertSignupSignal(userData.user.id, clientMeta, 'email_signup');
     }
 
     // Revalidate profiles cache so new member appears in listings

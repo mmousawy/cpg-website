@@ -374,6 +374,7 @@ export async function getChallengePhotoByShortId(
     .select('id, full_name, nickname, avatar_url')
     .eq('id', photo.user_id)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .single();
 

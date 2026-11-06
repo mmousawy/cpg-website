@@ -170,3 +170,28 @@ export function useBulkResolveReports() {
     },
   });
 }
+
+export function useApproveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reportId: string) => {
+      const res = await fetch('/api/admin/reports/approve-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId }),
+      });
+      const body = await res.json().catch(() => ({})) as { message?: string };
+      if (!res.ok) {
+        throw new Error(body.message || 'Failed to approve member');
+      }
+      return reportId;
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
+      queryClient.invalidateQueries({ queryKey: ['report-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await revalidateReports();
+    },
+  });
+}

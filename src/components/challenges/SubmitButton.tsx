@@ -5,7 +5,8 @@ import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useMySubmissionsForChallenge } from '@/hooks/useChallengeSubmissions';
-import { useSession } from '@/hooks/useSession';
+import { useCanInteract } from '@/hooks/useCanInteract';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useContext } from 'react';
@@ -146,13 +147,24 @@ function SubmitButtonAuthenticated({
 }
 
 export default function SubmitButton(props: SubmitButtonProps) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
   if (!isLoggedIn) {
     return (
       <SubmitButtonGuest
         {...props}
       />
+    );
+  }
+
+  if (!canInteract) {
+    return (
+      <Button
+        disabled
+        title={UNDER_REVIEW_INTERACTION_HINT}
+      >
+        Submit photos
+      </Button>
     );
   }
 

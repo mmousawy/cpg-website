@@ -13,6 +13,7 @@ function toServerProfile(profile: Profile): ServerProfile {
     nickname: profile.nickname,
     avatar_url: profile.avatar_url,
     terms_accepted_at: profile.terms_accepted_at,
+    under_review_at: profile.under_review_at,
     is_admin: !!profile.is_admin,
   };
 }
@@ -98,7 +99,7 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
     const updateLastLoggedIn = (userId: string): void => {
       if (lastLoggedInUpdatedRef.current === userId) return;
       lastLoggedInUpdatedRef.current = userId;
-      supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => {});
+      supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => { });
     };
 
     const forceProfileRefresh = !initialAuth?.profile;
