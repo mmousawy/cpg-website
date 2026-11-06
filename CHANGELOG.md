@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.47.0](https://github.com/mmousawy/cpg-website/compare/v1.46.1...v1.47.0) (2026-11-06)
+
+
+### ✨ Features
+
+* enhance admin member management with new activity tracking and filtering ([88c496b](https://github.com/mmousawy/cpg-website/commit/88c496b2d3286b549c47f70c27d2d51c4c87e08b))
+
 ## [1.46.1](https://github.com/mmousawy/cpg-website/compare/v1.46.0...v1.46.1) (2026-11-06)
 
 
