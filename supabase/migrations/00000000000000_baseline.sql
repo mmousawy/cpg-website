@@ -3193,6 +3193,10 @@ BEGIN
     RAISE EXCEPTION 'Cannot modify deletion_scheduled_at';
   END IF;
 
+  IF NEW.under_review_at IS DISTINCT FROM OLD.under_review_at THEN
+    RAISE EXCEPTION 'Cannot modify under_review_at';
+  END IF;
+
   IF NEW.onboarding_reminder_sent_at IS DISTINCT FROM OLD.onboarding_reminder_sent_at THEN
     RAISE EXCEPTION 'Cannot modify onboarding_reminder_sent_at';
   END IF;
@@ -3232,6 +3236,10 @@ BEGIN
 
   IF NEW.deletion_scheduled_at IS NOT NULL THEN
     RAISE EXCEPTION 'Cannot set deletion_scheduled_at';
+  END IF;
+
+  IF NEW.under_review_at IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot set under_review_at';
   END IF;
 
   IF NEW.onboarding_reminder_sent_at IS NOT NULL THEN
@@ -7010,7 +7018,7 @@ CREATE POLICY "View photo comment links" ON "public"."photo_comments" FOR SELECT
 
 
 
-CREATE POLICY "View profiles" ON "public"."profiles" FOR SELECT USING (("public"."is_admin"() OR ("id" = ( SELECT "auth"."uid"() AS "uid")) OR (("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL))));
+CREATE POLICY "View profiles" ON "public"."profiles" FOR SELECT USING (("public"."is_admin"() OR ("id" = ( SELECT "auth"."uid"() AS "uid")) OR (("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL) AND ("under_review_at" IS NULL))));
 
 
 
@@ -8281,6 +8289,11 @@ GRANT SELECT("nickname_changed_at") ON TABLE "public"."profiles" TO "authenticat
 
 GRANT SELECT("link_publish_state") ON TABLE "public"."profiles" TO "anon";
 GRANT SELECT("link_publish_state") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("under_review_at") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("under_review_at") ON TABLE "public"."profiles" TO "authenticated";
 
 
 

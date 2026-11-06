@@ -3,7 +3,8 @@
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useSession } from '@/hooks/useSession';
+import { useCanInteract } from '@/hooks/useCanInteract';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import {
   useSceneEventInterest,
   useToggleSceneEventInterest,
@@ -23,7 +24,8 @@ interface SceneEventInterestSectionProps {
 function SceneEventInterestSectionGuest({
   initialCount = 0,
   className,
-}: SceneEventInterestSectionProps) {
+  locked = false,
+}: SceneEventInterestSectionProps & { locked?: boolean }) {
   const showAuthPrompt = useAuthPrompt();
 
   return (
@@ -32,7 +34,12 @@ function SceneEventInterestSectionGuest({
     >
       <button
         type="button"
-        onClick={() => showAuthPrompt({ feature: 'show interest in Scene events' })}
+        disabled={locked}
+        title={locked ? UNDER_REVIEW_INTERACTION_HINT : undefined}
+        onClick={() => {
+          if (locked) return;
+          showAuthPrompt({ feature: 'show interest in Scene events' });
+        }}
         className={clsx(
           'group relative z-10',
           'inline-flex items-center justify-center gap-2',
@@ -184,12 +191,13 @@ function SceneEventInterestSectionAuthenticated({
 }
 
 export default function SceneEventInterestSection(props: SceneEventInterestSectionProps) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
-  if (!isLoggedIn) {
+  if (!isLoggedIn || !canInteract) {
     return (
       <SceneEventInterestSectionGuest
         {...props}
+        locked={isLoggedIn && !canInteract}
       />
     );
   }

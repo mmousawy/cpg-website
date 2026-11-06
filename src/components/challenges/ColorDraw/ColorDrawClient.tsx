@@ -4,7 +4,9 @@ import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
 import { useAuth } from '@/hooks/useAuth';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { getColorLabel } from '@/lib/colorDraw';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ColorFullscreen from './ColorFullscreen';
@@ -23,6 +25,7 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, profile } = useAuth();
+  const { canInteract } = useCanInteract();
   const [draws, setDraws] = useState<ColorDrawParticipant[]>(initialDraws);
 
   // Guest join is only allowed when the URL has ?guest=KEY (key must match server env)
@@ -44,8 +47,8 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
       (!user && d.guest_nickname && d.guest_nickname === guestNickname.trim()),
   );
 
-  const canDraw = !myDraw && !isEnded;
-  const canSwap = myDraw && !myDraw.swapped_at && !isEnded;
+  const canDraw = !myDraw && !isEnded && (!user || canInteract);
+  const canSwap = Boolean(myDraw && !myDraw.swapped_at && !isEnded && (!user || canInteract));
 
   const fetchDraws = useCallback(async () => {
     const res = await fetch(
@@ -60,6 +63,9 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
 
   const handleDraw = useCallback(async () => {
     setError(null);
+    if (user && !canInteract) {
+      return;
+    }
     if (user) {
       setIsDrawing(true);
       try {
@@ -108,10 +114,11 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
     } finally {
       setIsDrawing(false);
     }
-  }, [challengeId, user, guestNickname, guestKey, fetchDraws, router]);
+  }, [canInteract, challengeId, user, guestNickname, guestKey, fetchDraws, router]);
 
   const handleSwap = useCallback(async () => {
     if (!myDraw || myDraw.swapped_at) return;
+    if (user && !canInteract) return;
     setError(null);
     setIsDrawing(true);
     try {
@@ -137,7 +144,7 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
     } finally {
       setIsDrawing(false);
     }
-  }, [challengeId, user, guestNickname, guestKey, myDraw, fetchDraws, router]);
+  }, [canInteract, challengeId, user, guestNickname, guestKey, myDraw, fetchDraws, router]);
 
   return (
     <div
@@ -148,6 +155,14 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
         isOpen={!!fullscreenColor}
         onClose={() => setFullscreenColor(null)}
       />
+
+      {user && !canInteract && !myDraw && !isEnded && (
+        <p
+          className="text-sm text-foreground/80"
+        >
+          {UNDER_REVIEW_INTERACTION_HINT}
+        </p>
+      )}
 
       {canDraw && (
         <div

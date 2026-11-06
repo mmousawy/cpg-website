@@ -8,3 +8,10 @@ allowBuilds:
   # Optional native addons for the local SSH sync script. The JS fallback works without them.
   ssh2: false
   cpu-features: false
+
+minimumReleaseAgeExclude:
+  - '@playwright/test@1.65.0'
+  - '@tanstack/query-core@5.106.1'
+  - '@tanstack/react-query@5.106.1'
+  - playwright-core@1.65.0
+  - playwright@1.65.0

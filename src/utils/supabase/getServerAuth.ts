@@ -6,7 +6,7 @@ import { asSupabaseUser, getUserFromClaims, type ServerUser } from '@/utils/supa
 
 export type { ServerUser };
 
-export type ServerProfile = Pick<Tables<'profiles'>, 'id' | 'email' | 'full_name' | 'nickname' | 'avatar_url' | 'terms_accepted_at'> & {
+export type ServerProfile = Pick<Tables<'profiles'>, 'id' | 'email' | 'full_name' | 'nickname' | 'avatar_url' | 'terms_accepted_at' | 'under_review_at'> & {
   is_admin: boolean  // is_admin can be null in DB but we default to false
 }
 

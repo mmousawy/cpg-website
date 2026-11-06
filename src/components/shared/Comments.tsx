@@ -3,6 +3,7 @@
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import type { Tables } from '@/database.types';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
@@ -721,6 +722,7 @@ export default function Comments({
   sceneEventId,
 }: CommentsProps) {
   const { user, isAdmin, profile } = useSession();
+  const { canInteract } = useCanInteract();
   const confirm = useConfirm();
   const supabase = useSupabase();
   const showAuthPrompt = useAuthPrompt();
@@ -1310,7 +1312,7 @@ export default function Comments({
                 onDeleteComment={handleDeleteComment}
                 onEditComment={handleEditComment}
                 formatDateFn={formatDate}
-                user={user}
+                user={canInteract ? user : null}
                 currentUserProfile={currentUserProfile}
                 isAdmin={isAdmin}
                 isSubmitting={isSubmitting}
@@ -1321,7 +1323,7 @@ export default function Comments({
         )}
       </div>
 
-      {!replyingTo && (
+      {!replyingTo && canInteract && (
         <CommentComposer
           profile={currentUserProfile}
           commentText={commentText}
@@ -1331,6 +1333,13 @@ export default function Comments({
           user={user}
           showAuthPrompt={stableShowAuthPrompt}
         />
+      )}
+      {!replyingTo && user && !canInteract && (
+        <p
+          className="mt-4 text-sm text-foreground/60"
+        >
+          Commenting is unavailable while your account is under review.
+        </p>
       )}
     </div>
   );

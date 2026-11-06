@@ -3,6 +3,7 @@
 import CommentActionsMenu, { getCommentActionsVisibility } from '@/components/shared/CommentActionsMenu';
 import Popover from '@/components/shared/Popover';
 import { useAuth } from '@/context/AuthContext';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useState } from 'react';
 
 type CommentActionsPopoverProps = {
@@ -21,6 +22,7 @@ export default function CommentActionsPopover({
   onEdit,
 }: CommentActionsPopoverProps) {
   const { user } = useAuth();
+  const { isUnderReview } = useCanInteract();
   const [isOpen, setIsOpen] = useState(false);
   const { canDelete, canEdit, hasActions } = getCommentActionsVisibility({
     userId: user?.id,
@@ -28,7 +30,7 @@ export default function CommentActionsPopover({
     isAdmin,
   });
 
-  if (!hasActions) {
+  if (isUnderReview || !hasActions) {
     return null;
   }
 

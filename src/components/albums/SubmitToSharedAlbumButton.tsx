@@ -4,7 +4,8 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useSession } from '@/hooks/useSession';
+import { useCanInteract } from '@/hooks/useCanInteract';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import { useMyPhotoCountInAlbum } from '@/hooks/useSharedAlbumSubmissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -163,13 +164,28 @@ function SubmitToSharedAlbumButtonAuthenticated(props: SubmitToSharedAlbumButton
 }
 
 export default function SubmitToSharedAlbumButton(props: SubmitToSharedAlbumButtonProps) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
   if (!isLoggedIn) {
     return (
       <SubmitToSharedAlbumButtonGuest
         {...props}
       />
+    );
+  }
+
+  if (!canInteract) {
+    if (!props.canAddPhotos) {
+      return null;
+    }
+
+    return (
+      <Button
+        disabled
+        title={UNDER_REVIEW_INTERACTION_HINT}
+      >
+        Add photos
+      </Button>
     );
   }
 

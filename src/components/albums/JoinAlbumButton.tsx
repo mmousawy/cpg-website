@@ -3,7 +3,8 @@
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useSession } from '@/hooks/useSession';
+import { useCanInteract } from '@/hooks/useCanInteract';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import {
   useAcceptAlbumInvite,
   useJoinSharedAlbum,
@@ -171,13 +172,28 @@ function JoinAlbumButtonAuthenticated(props: JoinAlbumButtonProps) {
 }
 
 export default function JoinAlbumButton(props: JoinAlbumButtonProps) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
   if (!isLoggedIn) {
     return (
       <JoinAlbumButtonGuest
         {...props}
       />
+    );
+  }
+
+  if (!canInteract) {
+    if (props.isEventAlbum || !props.joinPolicy) {
+      return null;
+    }
+
+    return (
+      <Button
+        disabled
+        title={UNDER_REVIEW_INTERACTION_HINT}
+      >
+        {props.joinPolicy === 'open' ? 'Join album' : 'Request to join'}
+      </Button>
     );
   }
 
