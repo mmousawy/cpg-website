@@ -13,6 +13,30 @@ const PERSON_TYPES = new Set(['Person', 'ProfilePage']);
 
 const PORTFOLIO_WORDS = /\b(portfolio|photograph(y|er|ers|ic)?|photo\s+by|art\s+photography)\b/i;
 
+/** Weaker than a service pitch: enough to hold a profile, not enough to suspend. */
+const COMMERCIAL_PROFILE_PATTERNS: RegExp[] = [
+  /\btours?\b/i,
+  /\btravel\b/i,
+  /\bcertification\b/i,
+  /\brecertification\b/i,
+  /\blifeguard\b/i,
+  /\bdissertation\b/i,
+  /\bassignment help\b/i,
+  /\bcoursework\b/i,
+  /\bvisa\b/i,
+  /\bagency\b/i,
+  /\bcompany\b/i,
+  /\bofficial\b/i,
+  /\bwholesale\b/i,
+  /\bseo\b/i,
+  /\bmarketing\b/i,
+  /\binsurance\b/i,
+  /\bcasino\b/i,
+  /\bcrypto\b/i,
+  /\bsolicitor/i,
+  /\b(llc|ltd|gmbh|plc)\b/i,
+];
+
 const SERVICE_OFFER_PATTERNS: RegExp[] = [
   /\b\d+\s*%\s*(off|discount|خصم)?/i,
   /\btour(s)?\s+(package|packages|agency)\b/i,
@@ -78,6 +102,17 @@ export function isServiceOfferText(text: string): boolean {
   const hasCert = /\b(certification|recertification)\b/i.test(lower);
   const hasTraining = /\b(training|course)\b/i.test(lower);
   return hasCert && hasTraining;
+}
+
+/**
+ * Display name or bio that looks like a business rather than a person.
+ * Photographers who mention photography in the same text are left alone.
+ */
+export function looksLikeCommercialProfileText(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (PORTFOLIO_WORDS.test(trimmed)) return false;
+  return COMMERCIAL_PROFILE_PATTERNS.some((re) => re.test(trimmed));
 }
 
 /** Classify fetched page content (not for known social hosts). */
