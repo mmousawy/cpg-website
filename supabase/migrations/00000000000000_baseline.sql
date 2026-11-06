@@ -1362,6 +1362,66 @@ $$;
 ALTER FUNCTION "public"."generate_short_id"("size" integer) OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_admin_member_activity"("p_ids" "uuid"[]) RETURNS TABLE("user_id" "uuid", "photo_count" integer, "album_count" integer, "storage_bytes" bigint, "views_received" integer, "likes_received" integer, "followers" integer, "following" integer)
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  IF p_ids IS NULL OR array_length(p_ids, 1) IS NULL THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+  WITH ids AS (
+    SELECT UNNEST(p_ids) AS id
+  )
+  SELECT
+    i.id AS user_id,
+    COALESCE(ph.photo_count, 0)::integer AS photo_count,
+    COALESCE(al.album_count, 0)::integer AS album_count,
+    COALESCE(ph.storage_bytes, 0)::bigint AS storage_bytes,
+    COALESCE(ph.views_received, 0)::integer AS views_received,
+    COALESCE(ph.likes_received, 0)::integer AS likes_received,
+    COALESCE(fl_f.followers, 0)::integer AS followers,
+    COALESCE(fl_g.following, 0)::integer AS following
+  FROM ids i
+  LEFT JOIN (
+    SELECT user_id,
+      COUNT(*)::integer AS photo_count,
+      COALESCE(SUM(file_size), 0)::bigint AS storage_bytes,
+      COALESCE(SUM(view_count), 0)::integer AS views_received,
+      COALESCE(SUM(likes_count), 0)::integer AS likes_received
+    FROM photos
+    WHERE deleted_at IS NULL
+    GROUP BY user_id
+  ) ph ON ph.user_id = i.id
+  LEFT JOIN (
+    SELECT user_id, COUNT(*)::integer AS album_count
+    FROM albums
+    WHERE deleted_at IS NULL
+    GROUP BY user_id
+  ) al ON al.user_id = i.id
+  LEFT JOIN (
+    SELECT following_id AS user_id, COUNT(*)::integer AS followers
+    FROM follows
+    GROUP BY following_id
+  ) fl_f ON fl_f.user_id = i.id
+  LEFT JOIN (
+    SELECT follower_id AS user_id, COUNT(*)::integer AS following
+    FROM follows
+    GROUP BY follower_id
+  ) fl_g ON fl_g.user_id = i.id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_admin_member_activity"("p_ids" "uuid"[]) OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_admin_member_stats"("p_search" "text" DEFAULT ''::"text", "p_filter" "text" DEFAULT 'all'::"text", "p_sort_by" "text" DEFAULT 'created_at'::"text", "p_sort_order" "text" DEFAULT 'desc'::"text", "p_page" integer DEFAULT 1, "p_limit" integer DEFAULT 50) RETURNS "jsonb"
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -7707,6 +7767,13 @@ GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "postgres"
 GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_admin_member_activity"("p_ids" "uuid"[]) TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_admin_member_activity"("p_ids" "uuid"[]) TO "anon";
+GRANT ALL ON FUNCTION "public"."get_admin_member_activity"("p_ids" "uuid"[]) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_admin_member_activity"("p_ids" "uuid"[]) TO "service_role";
 
 
 
