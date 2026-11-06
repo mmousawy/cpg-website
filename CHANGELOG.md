@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.47.1](https://github.com/mmousawy/cpg-website/compare/v1.47.0...v1.47.1) (2026-11-06)
+
+
+### 🔧 Maintenance
+
+* add is_service_account field to profiles and update related logic ([132be3f](https://github.com/mmousawy/cpg-website/commit/132be3f0c1d3619dfe078097c13225c7c7c8e689))
+* add script for reporting account deletion status and remove unused middleware ([213e71c](https://github.com/mmousawy/cpg-website/commit/213e71cf1aaf096ff56e1f56ddceab8f2e7cbb2a))
+* ignore local database dumps ([2ce51c5](https://github.com/mmousawy/cpg-website/commit/2ce51c58bcb0c91a8a06ccc4b19b6fe2e5c98ac5))
+* ignore local database dumps ([ba125a5](https://github.com/mmousawy/cpg-website/commit/ba125a5ee2c96a4a4c7bc1d4d3755e884116411d))
+* implement account deletion source tracking and enhance inactivity handling ([5180bb1](https://github.com/mmousawy/cpg-website/commit/5180bb1de66df2fea40ffffe3390d185cebbde82))
+* update .gitignore for Supabase CLI state and remove redundant file ([84b4368](https://github.com/mmousawy/cpg-website/commit/84b436832e39af1daba8b15b6d690e6d2a95f759))
+
 ## [1.47.0](https://github.com/mmousawy/cpg-website/compare/v1.46.1...v1.47.0) (2026-11-06)
 
 
