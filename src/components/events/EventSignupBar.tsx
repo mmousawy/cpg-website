@@ -6,7 +6,9 @@ import Button from '@/components/shared/Button';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import { useSupabase } from '@/hooks/useSupabase';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import type { CPGEvent } from '@/types/events';
@@ -264,6 +266,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
 
 export default function EventSignupBar(props: EventSignupBarProps) {
   const { isLoggedIn, isSessionReady } = useSession();
+  const { canInteract } = useCanInteract();
   const { user, isLoading: authLoading } = useAuth();
   // Session context stays logged-out until the profile fetch finishes, so
   // isLoggedIn alone paints the guest copy before the RSVP check can run.
@@ -275,7 +278,16 @@ export default function EventSignupBar(props: EventSignupBarProps) {
       constrainWidth
       overlaysContent
     >
-      {authPending || loggedIn ? (
+      {loggedIn && !canInteract ? (
+        <Button
+          disabled
+          title={UNDER_REVIEW_INTERACTION_HINT}
+          size="md"
+          className="shrink-0 rounded-full"
+        >
+          Join event
+        </Button>
+      ) : authPending || loggedIn ? (
         <EventSignupBarAuthenticated
           {...props}
         />

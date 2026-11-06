@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Popover from '@/components/shared/Popover';
 import AlbumActionsMenu, { getAlbumActionsVisibility } from '@/components/shared/AlbumActionsMenu';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
 
 type AlbumActionsPopoverProps = {
@@ -13,13 +14,14 @@ type AlbumActionsPopoverProps = {
 
 export default function AlbumActionsPopover({ albumId, albumTitle, albumUserId }: AlbumActionsPopoverProps) {
   const { user } = useSession();
+  const { isUnderReview } = useCanInteract();
   const [isOpen, setIsOpen] = useState(false);
   const { hasActions } = getAlbumActionsVisibility({
     userId: user?.id,
     albumUserId,
   });
 
-  if (!hasActions) {
+  if (!hasActions || isUnderReview) {
     return null;
   }
 

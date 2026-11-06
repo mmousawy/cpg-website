@@ -339,6 +339,35 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_ips: {
+        Row: {
+          blocked_at: string
+          ip_address: string
+          profile_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          blocked_at?: string
+          ip_address: string
+          profile_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          blocked_at?: string
+          ip_address?: string
+          profile_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'blocked_ips_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       challenge_announcements: {
         Row: {
           announced_by: string
@@ -1568,6 +1597,7 @@ export type Database = {
           terms_accepted_at: string | null
           theme: string | null
           tours: Json
+          under_review_at: string | null
           updated_at: string | null
           view_count: number
           watermark_enabled: boolean
@@ -1608,6 +1638,7 @@ export type Database = {
           terms_accepted_at?: string | null
           theme?: string | null
           tours?: Json
+          under_review_at?: string | null
           updated_at?: string | null
           view_count?: number
           watermark_enabled?: boolean
@@ -1648,6 +1679,7 @@ export type Database = {
           terms_accepted_at?: string | null
           theme?: string | null
           tours?: Json
+          under_review_at?: string | null
           updated_at?: string | null
           view_count?: number
           watermark_enabled?: boolean
@@ -1991,6 +2023,44 @@ export type Database = {
             foreignKeyName: 'shared_album_requests_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      signup_signals: {
+        Row: {
+          accept_language: string | null
+          created_at: string
+          ip_address: string | null
+          profile_id: string
+          source: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          accept_language?: string | null
+          created_at?: string
+          ip_address?: string | null
+          profile_id: string
+          source: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          accept_language?: string | null
+          created_at?: string
+          ip_address?: string | null
+          profile_id?: string
+          source?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'signup_signals_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: true
             referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
@@ -2367,14 +2437,24 @@ export type Database = {
       }
       join_shared_album: { Args: { p_album_id: string }; Returns: Json }
       leave_shared_album: { Args: { p_album_id: string }; Returns: undefined }
-      profile_is_public_member: {
-        Args: {
-          p_deletion_scheduled_at: string
-          p_nickname: string
-          p_suspended_at: string
-        }
-        Returns: boolean
-      }
+      profile_is_public_member:
+        | {
+            Args: {
+              p_deletion_scheduled_at: string
+              p_nickname: string
+              p_suspended_at: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              p_deletion_scheduled_at: string
+              p_nickname: string
+              p_suspended_at: string
+              p_under_review_at?: string
+            }
+            Returns: boolean
+          }
       remove_album_member: {
         Args: { p_album_id: string; p_user_id: string }
         Returns: undefined

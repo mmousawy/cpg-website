@@ -20,6 +20,7 @@ import GridCheckbox from '@/components/shared/GridCheckbox';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import {
   useBulkResolveReports,
+  useApproveMember,
   useReportCounts,
   useReportsForReview,
   useResolveReport,
@@ -71,6 +72,50 @@ function ProfileReportLink({ profileId }: { profileId: string }) {
         className="size-3"
       />
     </Link>
+  );
+}
+
+function ReportApproveMemberButton({
+  report,
+  onApprove,
+  disabled,
+}: {
+  report: ReportForReview;
+  onApprove: (reportId: string) => void;
+  disabled: boolean;
+}) {
+  const isAutomated = isAutomatedProfileReport(report);
+  const { data: profile } = useQuery({
+    queryKey: ['profile-review', report.entity_id],
+    enabled: isAutomated && report.entity_type === 'profile' && report.status === 'pending',
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('under_review_at, suspended_at')
+        .eq('id', report.entity_id)
+        .single();
+      if (error) return null;
+      return data;
+    },
+  });
+
+  if (!isAutomated || report.entity_type !== 'profile' || !profile?.under_review_at || profile.suspended_at) {
+    return null;
+  }
+
+  return (
+    <Button
+      onClick={() => onApprove(report.id)}
+      disabled={disabled}
+      size="sm"
+      className="flex-1"
+      variant="primary"
+    >
+      <CheckSVG
+        className="size-4 fill-current"
+      />
+      Approve member
+    </Button>
   );
 }
 
@@ -423,9 +468,11 @@ export default function ReportsPage() {
   const queryClient = useQueryClient();
   const resolveMutation = useResolveReport();
   const bulkResolveMutation = useBulkResolveReports();
+  const approveMemberMutation = useApproveMember();
   const deleteSceneEventMutation = useDeleteSceneEvent();
 
-  const isResolving = resolveMutation.isPending || bulkResolveMutation.isPending;
+  const isResolving = resolveMutation.isPending || bulkResolveMutation.isPending
+    || approveMemberMutation.isPending;
 
   const handleTabChange = (tab: TabStatus) => {
     setActiveTab(tab);
@@ -477,6 +524,21 @@ export default function ReportsPage() {
       />,
     );
     modalContext.setIsOpen(true);
+  };
+
+  const handleApproveMember = async (reportId: string) => {
+    const ok = await confirm({
+      title: 'Approve member?',
+      message: 'This clears under review and publishes their profile. They will receive an email when approved.',
+      confirmLabel: 'Approve member',
+      cancelLabel: 'Cancel',
+    });
+    if (!ok) return;
+    try {
+      await approveMemberMutation.mutateAsync(reportId);
+    } catch (error) {
+      console.error('Approve member failed:', error);
+    }
   };
 
   const handleDismiss = async (reportId: string) => {
@@ -1028,8 +1090,13 @@ export default function ReportsPage() {
                               Actions
                             </div>
                             <div
-                              className="flex gap-2"
+                              className="flex flex-wrap gap-2"
                             >
+                              <ReportApproveMemberButton
+                                report={report}
+                                onApprove={handleApproveMember}
+                                disabled={isResolving}
+                              />
                               <Button
                                 onClick={() => handleResolve(report.id)}
                                 disabled={isResolving}

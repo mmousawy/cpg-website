@@ -1,0 +1,102 @@
+feat: hold new profiles for review and block repeat spam signups
+
+Onboarding moderation:
+- After onboarding, publish clean profiles, hold inconclusive URL checks under review, or suspend clear ads / unsafe URLs / repeats
+- Held members stay signed in and can browse; likes, comments, follows, RSVPs, and other writes are disabled
+- `/account` and the member's public profile stay locked until an admin approves
+- Suspended members are signed out; their client IP is blocked site-wide (`/network-blocked`)
+
+Repeat signup blocking:
+- Compare new accounts to suspended members on IP, nickname stem, display name, and link host
+- Store browser IP / UA / language on `signup_signals` (skip `node` UA and missing IP)
+- `blocked_ips` is filled on suspend and cleared on unsuspend
+
+Admin & preview:
+- Approve member on an automated profile report clears `under_review_at`
+- Local preview: `?preview-block=true|false` and `?preview-review=true|false`
+
+Files changed (80):
+
+New (24):
+- changelog/2026-11-06/sha.txt
+- changelog/2026-11-06/commit-message.txt
+- changelog/2026-11-06/files-changed.md
+- docs/member-review.md
+- src/app/api/admin/reports/approve-member/route.ts
+- src/app/api/onboarding/complete/route.ts
+- src/app/network-blocked/layout.tsx
+- src/app/network-blocked/page.tsx
+- src/app/under-review/page.tsx
+- src/components/account/UnderReviewSignOut.tsx
+- src/components/memberReview/ModerationPreviewNotice.tsx
+- src/hooks/useCanInteract.ts
+- src/lib/memberReview/assessOnboardingModeration.test.ts
+- src/lib/memberReview/assessOnboardingModeration.ts
+- src/lib/memberReview/blockPreview.test.ts
+- src/lib/memberReview/blockPreview.ts
+- src/lib/memberReview/ipBlocking.ts
+- src/lib/memberReview/nicknameStem.test.ts
+- src/lib/memberReview/nicknameStem.ts
+- src/lib/memberReview/requestClientMeta.ts
+- src/lib/memberReview/underReviewGate.test.ts
+- src/lib/memberReview/underReviewGate.ts
+- src/lib/profileUrl/suspendedLinkHosts.ts
+- src/utils/networkBlockedPath.ts
+
+Modified (56):
+- README.md
+- docs/README.md
+- package.json
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
+- scripts/postprocess-database-types.mjs
+- src/app/admin/reports/page.tsx
+- src/app/api/admin/members/route.ts
+- src/app/api/auth/signup/route.ts
+- src/app/api/onboarding/notify/route.ts
+- src/app/auth-callback/route.ts
+- src/app/globals.css
+- src/app/onboarding/OnboardingClient.tsx
+- src/app/sitemap.ts
+- src/components/albums/JoinAlbumButton.tsx
+- src/components/albums/SubmitToSharedAlbumButton.tsx
+- src/components/challenges/ColorDraw/ColorDrawClient.tsx
+- src/components/challenges/SubmitButton.tsx
+- src/components/events/EventRsvpStatus.tsx
+- src/components/events/EventSignupBar.tsx
+- src/components/layout/DocumentRouteState.tsx
+- src/components/layout/MobileTabBar.tsx
+- src/components/layout/OnboardingAwareChrome.tsx
+- src/components/profile/FollowButton.tsx
+- src/components/scene/AddSceneEventButton.tsx
+- src/components/scene/SceneActionsMenu.tsx
+- src/components/scene/SceneActionsPopover.tsx
+- src/components/scene/SceneEventInterestSection.tsx
+- src/components/scene/SceneEventStickyBar.tsx
+- src/components/shared/AlbumActionsMenu.tsx
+- src/components/shared/AlbumActionsPopover.tsx
+- src/components/shared/CommentActionsPopover.tsx
+- src/components/shared/Comments.tsx
+- src/components/shared/DetailLikesSection.tsx
+- src/components/shared/PhotoActionsMenu.tsx
+- src/components/shared/PhotoActionsPopover.tsx
+- src/components/shared/ProfileActionsMenu.tsx
+- src/components/shared/ProfileActionsPopover.tsx
+- src/components/shared/ReportButton.tsx
+- src/content/help/account.tsx
+- src/context/authSessionRuntime.ts
+- src/database.types.ts
+- src/hooks/useReports.ts
+- src/lib/actions/likes.ts
+- src/lib/data/albums.ts
+- src/lib/data/challenges.ts
+- src/lib/data/gear.ts
+- src/lib/data/interests.ts
+- src/lib/data/members.ts
+- src/lib/data/profiles.ts
+- src/lib/profileTours.test.ts
+- src/lib/profileUrl/classifyPageContent.ts
+- src/proxy.ts
+- src/utils/proxyAuth.ts
+- src/utils/supabase/getServerAuth.ts
+- supabase/migrations/00000000000000_baseline.sql

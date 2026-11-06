@@ -112,6 +112,7 @@ export async function getRecentlyActiveMembers(limit = 12, includeTestContent = 
     .in('id', activeUserIds)
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null);
 
   if (!members || members.length === 0) {
@@ -150,6 +151,7 @@ export async function getNewMembers(limit = 12, includeTestContent = false) {
     .select('id, full_name, nickname, avatar_url, created_at')
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -225,6 +227,7 @@ export async function getMembersByTagUsage(limit = 12, includeTestContent = fals
     .in('id', topUserIds)
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null);
 
   return filterMemberNicknames((members || []) as Member[], includeTestContent);
@@ -306,6 +309,7 @@ export async function getRandomInterestsWithMembers(
     .in('id', Array.from(allProfileIds))
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null);
 
   if (!allProfiles || allProfiles.length === 0) {
@@ -353,6 +357,7 @@ export async function getAllMembers(includeTestContent = false) {
     .select('id, full_name, nickname, avatar_url, created_at')
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .order('created_at', { ascending: false });
 
@@ -420,6 +425,7 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
     .in('id', userIds)
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('under_review_at', null)
     .is('deletion_scheduled_at', null)
     .order('full_name', { ascending: true, nullsFirst: false })
     .order('nickname', { ascending: true });

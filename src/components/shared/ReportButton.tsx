@@ -3,7 +3,9 @@
 import { useContext } from 'react';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import ReportModal from '@/components/shared/ReportModal';
 import Button from '@/components/shared/Button';
 import type { ReportEntityType } from '@/types/reports';
@@ -32,6 +34,7 @@ export default function ReportButton({
   className,
 }: ReportButtonProps) {
   const { user } = useSession();
+  const { isUnderReview } = useCanInteract();
   const showAuthPrompt = useAuthPrompt();
   const modalContext = useContext(ModalContext);
 
@@ -43,6 +46,10 @@ export default function ReportButton({
   const handleClick = () => {
     if (!user) {
       showAuthPrompt({ feature: `report this ${entityType}` });
+      return;
+    }
+
+    if (isUnderReview) {
       return;
     }
 
@@ -66,6 +73,8 @@ export default function ReportButton({
       <button
         type="button"
         onClick={handleClick}
+        disabled={isUnderReview}
+        title={isUnderReview ? UNDER_REVIEW_INTERACTION_HINT : undefined}
         className={`text-sm text-foreground/60 hover:text-foreground/80 transition-colors ${className || ''}`}
       >
         Report
@@ -78,6 +87,8 @@ export default function ReportButton({
       variant="secondary"
       size="sm"
       onClick={handleClick}
+      disabled={isUnderReview}
+      title={isUnderReview ? UNDER_REVIEW_INTERACTION_HINT : undefined}
       className={className}
     >
       <WarningMicroSVG

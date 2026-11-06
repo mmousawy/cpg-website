@@ -2663,16 +2663,12 @@ ALTER FUNCTION "public"."handle_profile_nickname_change"() OWNER TO "supabase_ad
 
 CREATE OR REPLACE FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
+    SET "search_path" TO ''
     AS $$
 BEGIN
-  IF auth.role() <> 'service_role' THEN
-    RAISE EXCEPTION 'Not authorized';
-  END IF;
-
   IF p_entity_type = 'photo' THEN
     IF NOT EXISTS (
-      SELECT 1 FROM photos
+      SELECT 1 FROM public.photos
       WHERE id = p_entity_id
         AND is_public = true
         AND deleted_at IS NULL
@@ -2680,11 +2676,11 @@ BEGIN
       RETURN;
     END IF;
 
-    UPDATE photos SET view_count = view_count + 1 WHERE id = p_entity_id;
-    INSERT INTO photo_views (photo_id, viewed_at) VALUES (p_entity_id, NOW());
+    UPDATE public.photos SET view_count = view_count + 1 WHERE id = p_entity_id;
+    INSERT INTO public.photo_views (photo_id, viewed_at) VALUES (p_entity_id, NOW());
   ELSIF p_entity_type = 'album' THEN
     IF NOT EXISTS (
-      SELECT 1 FROM albums
+      SELECT 1 FROM public.albums
       WHERE id = p_entity_id
         AND is_public = true
         AND deleted_at IS NULL
@@ -2693,19 +2689,24 @@ BEGIN
       RETURN;
     END IF;
 
-    UPDATE albums SET view_count = view_count + 1 WHERE id = p_entity_id;
-    INSERT INTO album_views (album_id, viewed_at) VALUES (p_entity_id, NOW());
+    UPDATE public.albums SET view_count = view_count + 1 WHERE id = p_entity_id;
+    INSERT INTO public.album_views (album_id, viewed_at) VALUES (p_entity_id, NOW());
   ELSIF p_entity_type = 'profile' THEN
     IF NOT EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM public.profiles
       WHERE id = p_entity_id
-        AND public.profile_is_public_member(nickname, suspended_at, deletion_scheduled_at)
+        AND public.profile_is_public_member(
+          nickname,
+          suspended_at,
+          deletion_scheduled_at,
+          under_review_at
+        )
     ) THEN
       RETURN;
     END IF;
 
-    UPDATE profiles SET view_count = view_count + 1 WHERE id = p_entity_id;
-    INSERT INTO profile_views (profile_id, viewed_at) VALUES (p_entity_id, NOW());
+    UPDATE public.profiles SET view_count = view_count + 1 WHERE id = p_entity_id;
+    INSERT INTO public.profile_views (profile_id, viewed_at) VALUES (p_entity_id, NOW());
   END IF;
 END;
 $$;
@@ -3037,6 +3038,20 @@ $$;
 ALTER FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS boolean
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO ''
+    AS $$
+  SELECT p_nickname IS NOT NULL
+    AND p_suspended_at IS NULL
+    AND p_deletion_scheduled_at IS NULL
+    AND p_under_review_at IS NULL;
+$$;
+
+
+ALTER FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."protect_albums_moderation_columns"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -3178,6 +3193,10 @@ BEGIN
     RAISE EXCEPTION 'Cannot modify deletion_scheduled_at';
   END IF;
 
+  IF NEW.under_review_at IS DISTINCT FROM OLD.under_review_at THEN
+    RAISE EXCEPTION 'Cannot modify under_review_at';
+  END IF;
+
   IF NEW.onboarding_reminder_sent_at IS DISTINCT FROM OLD.onboarding_reminder_sent_at THEN
     RAISE EXCEPTION 'Cannot modify onboarding_reminder_sent_at';
   END IF;
@@ -3217,6 +3236,10 @@ BEGIN
 
   IF NEW.deletion_scheduled_at IS NOT NULL THEN
     RAISE EXCEPTION 'Cannot set deletion_scheduled_at';
+  END IF;
+
+  IF NEW.under_review_at IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot set under_review_at';
   END IF;
 
   IF NEW.onboarding_reminder_sent_at IS NOT NULL THEN
@@ -3816,8 +3839,18 @@ DECLARE
   was_public boolean;
   is_public boolean;
 BEGIN
-  was_public := public.profile_is_public_member(OLD.nickname, OLD.suspended_at, OLD.deletion_scheduled_at);
-  is_public := public.profile_is_public_member(NEW.nickname, NEW.suspended_at, NEW.deletion_scheduled_at);
+  was_public := public.profile_is_public_member(
+    OLD.nickname,
+    OLD.suspended_at,
+    OLD.deletion_scheduled_at,
+    OLD.under_review_at
+  );
+  is_public := public.profile_is_public_member(
+    NEW.nickname,
+    NEW.suspended_at,
+    NEW.deletion_scheduled_at,
+    NEW.under_review_at
+  );
 
   IF was_public = is_public THEN
     RETURN NEW;
@@ -3828,13 +3861,13 @@ BEGIN
     SET count = i.count + 1
     FROM public.profile_interests AS pi
     WHERE pi.profile_id = NEW.id
-      AND i.name = pi.interest;
+      AND pi.interest = i.name;
   ELSE
     UPDATE public.interests AS i
     SET count = GREATEST(i.count - 1, 0)
     FROM public.profile_interests AS pi
-    WHERE pi.profile_id = NEW.id
-      AND i.name = pi.interest;
+    WHERE pi.profile_id = OLD.id
+      AND pi.interest = i.name;
   END IF;
 
   RETURN NEW;
@@ -3989,7 +4022,12 @@ DECLARE
   member_is_public boolean;
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    SELECT public.profile_is_public_member(p.nickname, p.suspended_at, p.deletion_scheduled_at)
+    SELECT public.profile_is_public_member(
+      p.nickname,
+      p.suspended_at,
+      p.deletion_scheduled_at,
+      p.under_review_at
+    )
     INTO member_is_public
     FROM public.profiles p
     WHERE p.id = NEW.profile_id;
@@ -4005,7 +4043,12 @@ BEGIN
     END IF;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    SELECT public.profile_is_public_member(p.nickname, p.suspended_at, p.deletion_scheduled_at)
+    SELECT public.profile_is_public_member(
+      p.nickname,
+      p.suspended_at,
+      p.deletion_scheduled_at,
+      p.under_review_at
+    )
     INTO member_is_public
     FROM public.profiles p
     WHERE p.id = OLD.profile_id;
@@ -4273,6 +4316,21 @@ CREATE TABLE IF NOT EXISTS "public"."auth_tokens" (
 ALTER TABLE "public"."auth_tokens" OWNER TO "supabase_admin";
 
 
+CREATE TABLE IF NOT EXISTS "public"."blocked_ips" (
+    "ip_address" "text" NOT NULL,
+    "profile_id" "uuid",
+    "blocked_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "reason" "text"
+);
+
+
+ALTER TABLE "public"."blocked_ips" OWNER TO "supabase_admin";
+
+
+COMMENT ON TABLE "public"."blocked_ips" IS 'Client IPs blocked from the site after a member was suspended.';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."challenge_announcements" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "challenge_id" "uuid" NOT NULL,
@@ -4373,6 +4431,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "tours" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "view_count" integer DEFAULT 0 NOT NULL,
     "link_publish_state" "jsonb",
+    "under_review_at" timestamp with time zone,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_motion_check" CHECK ((("motion" IS NULL) OR ("motion" = ANY (ARRAY['system'::"text", 'reduce'::"text"])))),
@@ -4406,6 +4465,10 @@ COMMENT ON COLUMN "public"."profiles"."tours" IS 'Product tour state keyed by to
 
 
 COMMENT ON COLUMN "public"."profiles"."link_publish_state" IS 'Server-checked publish flags for website, social URLs, and bio. NULL = grandfathered (show saved links).';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."under_review_at" IS 'When set, the member finished onboarding but is not a public member until an admin clears this timestamp.';
 
 
 
@@ -5021,6 +5084,24 @@ ALTER SEQUENCE "public"."shared_album_requests_id_seq" OWNED BY "public"."shared
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."signup_signals" (
+    "profile_id" "uuid" NOT NULL,
+    "ip_address" "text",
+    "user_agent" "text",
+    "accept_language" "text",
+    "source" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."signup_signals" OWNER TO "supabase_admin";
+
+
+COMMENT ON TABLE "public"."signup_signals" IS 'Browser IP and headers captured at signup or onboarding (not GoTrue server sessions).';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."tags" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "name" "text" NOT NULL,
@@ -5125,6 +5206,11 @@ ALTER TABLE ONLY "public"."albums"
 
 ALTER TABLE ONLY "public"."auth_tokens"
     ADD CONSTRAINT "auth_tokens_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."blocked_ips"
+    ADD CONSTRAINT "blocked_ips_pkey" PRIMARY KEY ("ip_address");
 
 
 
@@ -5388,6 +5474,11 @@ ALTER TABLE ONLY "public"."shared_album_requests"
 
 
 
+ALTER TABLE ONLY "public"."signup_signals"
+    ADD CONSTRAINT "signup_signals_pkey" PRIMARY KEY ("profile_id");
+
+
+
 ALTER TABLE ONLY "public"."tags"
     ADD CONSTRAINT "tags_name_key" UNIQUE ("name");
 
@@ -5421,6 +5512,10 @@ CREATE UNIQUE INDEX "albums_user_id_slug_key" ON "public"."albums" USING "btree"
 
 
 CREATE UNIQUE INDEX "auth_tokens_pending_nickname_change_unique" ON "public"."auth_tokens" USING "btree" ("new_nickname") WHERE (("token_type" = 'nickname_change'::"text") AND ("used_at" IS NULL) AND ("new_nickname" IS NOT NULL));
+
+
+
+CREATE INDEX "blocked_ips_profile_id_idx" ON "public"."blocked_ips" USING "btree" ("profile_id");
 
 
 
@@ -6117,6 +6212,11 @@ ALTER TABLE ONLY "public"."auth_tokens"
 
 
 
+ALTER TABLE ONLY "public"."blocked_ips"
+    ADD CONSTRAINT "blocked_ips_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+
 ALTER TABLE ONLY "public"."challenge_announcements"
     ADD CONSTRAINT "challenge_announcements_announced_by_fkey" FOREIGN KEY ("announced_by") REFERENCES "public"."profiles"("id");
 
@@ -6389,6 +6489,11 @@ ALTER TABLE ONLY "public"."shared_album_requests"
 
 ALTER TABLE ONLY "public"."shared_album_requests"
     ADD CONSTRAINT "shared_album_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."signup_signals"
+    ADD CONSTRAINT "signup_signals_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -6913,7 +7018,7 @@ CREATE POLICY "View photo comment links" ON "public"."photo_comments" FOR SELECT
 
 
 
-CREATE POLICY "View profiles" ON "public"."profiles" FOR SELECT USING (("public"."is_admin"() OR ("id" = ( SELECT "auth"."uid"() AS "uid")) OR (("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL))));
+CREATE POLICY "View profiles" ON "public"."profiles" FOR SELECT USING (("public"."is_admin"() OR ("id" = ( SELECT "auth"."uid"() AS "uid")) OR (("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL) AND ("under_review_at" IS NULL))));
 
 
 
@@ -6960,6 +7065,9 @@ CREATE POLICY "authenticated_select_scene_events" ON "public"."scene_events" FOR
 
 CREATE POLICY "authenticated_update_scene_events" ON "public"."scene_events" FOR UPDATE TO "authenticated" USING (((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) AND ("deleted_at" IS NULL)) OR "public"."is_admin"())) WITH CHECK ((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
+
+
+ALTER TABLE "public"."blocked_ips" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."challenge_announcements" ENABLE ROW LEVEL SECURITY;
@@ -7079,6 +7187,9 @@ ALTER TABLE "public"."shared_album_members" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."shared_album_requests" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."signup_signals" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."tags" ENABLE ROW LEVEL SECURITY;
@@ -7761,6 +7872,13 @@ GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "
 
 
 
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "postgres";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "anon";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "anon";
 GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "authenticated";
@@ -8048,6 +8166,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."blocked_ips" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."blocked_ips" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."blocked_ips" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."blocked_ips" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_announcements" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_announcements" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_announcements" TO "authenticated";
@@ -8164,6 +8289,11 @@ GRANT SELECT("nickname_changed_at") ON TABLE "public"."profiles" TO "authenticat
 
 GRANT SELECT("link_publish_state") ON TABLE "public"."profiles" TO "anon";
 GRANT SELECT("link_publish_state") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("under_review_at") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("under_review_at") ON TABLE "public"."profiles" TO "authenticated";
 
 
 
@@ -8415,6 +8545,13 @@ GRANT ALL ON SEQUENCE "public"."shared_album_requests_id_seq" TO "postgres";
 GRANT ALL ON SEQUENCE "public"."shared_album_requests_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."shared_album_requests_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."shared_album_requests_id_seq" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."signup_signals" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."signup_signals" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."signup_signals" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."signup_signals" TO "service_role";
 
 
 

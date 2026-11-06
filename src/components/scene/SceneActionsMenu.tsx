@@ -6,6 +6,7 @@ import EditSceneEventModal from '@/components/scene/EditSceneEventModal';
 import ReportModal from '@/components/shared/ReportModal';
 import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import type { SceneEvent } from '@/types/scene';
@@ -201,7 +202,7 @@ function SceneActionsMenuAuthenticated({
 }
 
 export default function SceneActionsMenu(props: SceneActionsMenuProps) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
   if (!isLoggedIn) {
     return (
@@ -209,6 +210,10 @@ export default function SceneActionsMenu(props: SceneActionsMenuProps) {
         {...props}
       />
     );
+  }
+
+  if (!canInteract) {
+    return null;
   }
 
   return (

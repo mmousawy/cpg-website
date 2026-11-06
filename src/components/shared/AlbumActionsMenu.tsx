@@ -3,6 +3,7 @@
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ReportModal from '@/components/shared/ReportModal';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 import { useContext } from 'react';
@@ -32,6 +33,7 @@ export function getAlbumActionsVisibility({
 
 export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onActionClick }: AlbumActionsMenuProps) {
   const { user, isLoggedIn } = useSession();
+  const { canInteract } = useCanInteract();
   const showAuthPrompt = useAuthPrompt();
   const modalContext = useContext(ModalContext);
   const { canReport } = getAlbumActionsVisibility({
@@ -39,7 +41,7 @@ export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onA
     albumUserId,
   });
 
-  if (!canReport) {
+  if (!canReport || (isLoggedIn && !canInteract)) {
     return null;
   }
 
@@ -48,6 +50,10 @@ export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onA
 
     if (!isLoggedIn) {
       showAuthPrompt({ feature: 'report albums' });
+      return;
+    }
+
+    if (!canInteract) {
       return;
     }
 

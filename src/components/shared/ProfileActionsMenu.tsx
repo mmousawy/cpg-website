@@ -3,6 +3,7 @@
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ReportModal from '@/components/shared/ReportModal';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
 import Link from 'next/link';
 import CameraLensSVG from 'public/icons/camera-lens.svg';
@@ -18,6 +19,7 @@ type ProfileActionsMenuProps = {
 
 export default function ProfileActionsMenu({ profileId, profileNickname, onActionClick }: ProfileActionsMenuProps) {
   const { user, isLoggedIn } = useSession();
+  const { canInteract } = useCanInteract();
   const showAuthPrompt = useAuthPrompt();
   const modalContext = useContext(ModalContext);
 
@@ -25,6 +27,10 @@ export default function ProfileActionsMenu({ profileId, profileNickname, onActio
 
   const menuItemClass =
     'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
+
+  if (isLoggedIn && !canInteract && !isOwnProfile) {
+    return null;
+  }
 
   if (isOwnProfile) {
     return (
@@ -62,6 +68,10 @@ export default function ProfileActionsMenu({ profileId, profileNickname, onActio
 
     if (!isLoggedIn) {
       showAuthPrompt({ feature: 'report profiles' });
+      return;
+    }
+
+    if (!canInteract) {
       return;
     }
 

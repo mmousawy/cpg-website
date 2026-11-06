@@ -74,6 +74,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Activity stats
 - Gear: shooting formats, daily driver, and an inventory at `/account/gear`, shown on the profile and at `/@username/gear`
 - Self-service account deletion (30-day retention with admin revert)
+- Onboarding moderation: publish, hold under review, or suspend based on profile links and text
 
 ### Authentication
 - Google OAuth
@@ -81,6 +82,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Email/password
 - Password reset
 - Sign-up CTAs on gallery, events, challenges, and members pages
+- Repeat-signup IP blocking after a suspension (`/network-blocked`)
 
 ### Admin
 - Event CRUD with attendance tracking
@@ -89,6 +91,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Submission review queue with bulk actions
 - Album moderation (suspend/unsuspend)
 - Content reports review queue with resolution workflow
+- Approve members held under review from automated profile reports
 - Newsletter tool: compose and send newsletters to members (respects opt-out preferences)
 
 ### Search
@@ -278,7 +281,7 @@ supabase/
 
 | Table | Description |
 | --- | --- |
-| `profiles` | User profiles |
+| `profiles` | User profiles (`under_review_at`, `suspended_at`) |
 | `events` | Events/meetups |
 | `events_rsvps` | RSVPs and attendance |
 | `event_announcements` | Event email announcement tracking |
@@ -311,6 +314,8 @@ supabase/
 | `profile_interests` | Profile-interests junction |
 | `auth_tokens` | Email verification & password reset tokens |
 | `reports` | User-submitted content reports (photos, albums, profiles, comments, scene events) |
+| `signup_signals` | Browser IP, user agent, and language captured at signup |
+| `blocked_ips` | Client IPs refused by the proxy after a suspension |
 | `scene_events` | Community-curated photography events (exhibitions, photowalks, talks, etc.) |
 | `scene_event_comments` | Links comments to scene events |
 | `scene_event_interests` | Users who marked interest in scene events |
@@ -493,3 +498,5 @@ Leave the **staging** Coolify app on git branch **`staging`** (auto-deploy on). 
 ### Moderation
 
 - [x] Report content
+- [x] Onboarding link review (publish / under review / suspend)
+- [x] Repeat signup IP blocking

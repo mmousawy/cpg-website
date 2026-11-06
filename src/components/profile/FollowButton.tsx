@@ -2,7 +2,9 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/context/AuthContext';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useSession } from '@/hooks/useSession';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import { useFollowLoginHref, useFollowMutation, useFollowStatus } from '@/hooks/useFollow';
 import { confirmUnfollow } from '@/utils/confirmHelpers';
 import clsx from 'clsx';
@@ -102,7 +104,8 @@ function FollowButtonAuthenticated({
   profileId,
   profileNickname,
   showLabel = false,
-}: FollowButtonProps) {
+  locked = false,
+}: FollowButtonProps & { locked?: boolean }) {
   const { user } = useAuth();
   const confirm = useConfirm();
   const { data, isLoading } = useFollowStatus(profileId);
@@ -117,6 +120,7 @@ function FollowButtonAuthenticated({
   );
 
   const handleClick = async () => {
+    if (locked) return;
     if (isFollowing) {
       const confirmed = await confirm(confirmUnfollow(profileNickname));
       if (!confirmed) {
@@ -139,7 +143,8 @@ function FollowButtonAuthenticated({
       className={buttonClassName}
       aria-label={label}
       aria-pressed={isFollowing}
-      disabled={isPending}
+      disabled={isPending || locked}
+      title={locked ? UNDER_REVIEW_INTERACTION_HINT : undefined}
       onClick={() => void handleClick()}
     >
       {isFollowing ? (
@@ -157,7 +162,8 @@ function FollowButtonAuthenticated({
 }
 
 export default function FollowButton(props: FollowButtonProps) {
-  const { isLoggedIn, user } = useSession();
+  const { user } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
   if (user?.id === props.profileId) {
     return null;
@@ -174,6 +180,7 @@ export default function FollowButton(props: FollowButtonProps) {
   return (
     <FollowButtonAuthenticated
       {...props}
+      locked={!canInteract}
     />
   );
 }

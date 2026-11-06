@@ -41,6 +41,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
     social_links: null,
     suspended_at: null,
     suspended_reason: null,
+    under_review_at: null,
     terms_accepted_at: null,
     theme: null,
     updated_at: null,

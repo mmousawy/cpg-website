@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.46.0](https://github.com/mmousawy/cpg-website/compare/v1.45.5...v1.46.0) (2026-11-06)
+
+
+### ✨ Features
+
+* implement profile review process and related features ([8c671e2](https://github.com/mmousawy/cpg-website/commit/8c671e206d362436b31d4136de3a12c36225593b))
+
+
+### 📚 Documentation
+
+* update README to reflect new onboarding moderation and IP blocking features ([9e1ead6](https://github.com/mmousawy/cpg-website/commit/9e1ead6fe7d1f64ae258228fd600fb4a12e84481))
+
+
+### 🔧 Maintenance
+
+* update dependencies and enhance member review features ([4710fb2](https://github.com/mmousawy/cpg-website/commit/4710fb2130ddecb51824df4e6ebbadae1877e9d1))
+
 ## [1.45.5](https://github.com/mmousawy/cpg-website/compare/v1.45.4...v1.45.5) (2026-11-03)
 
 
