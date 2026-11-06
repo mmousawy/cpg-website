@@ -169,7 +169,10 @@ export default function MemberStatsExplorer({ preferenceCharts }: MemberStatsExp
         search={search}
         onSearchChange={setSearch}
         filter={filter}
-        onFilterChange={setFilter}
+        onFilterChange={(value) => {
+          if (value === 'under_review') return;
+          setFilter(value);
+        }}
       />
 
       {isLoading ? (

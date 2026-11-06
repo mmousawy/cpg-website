@@ -3,100 +3,69 @@
 import MemberConfirmDialog from '@/components/admin/MemberConfirmDialog';
 import MemberSearchFilters from '@/components/admin/MemberSearchFilters';
 import MemberTable from '@/components/admin/MemberTable';
-import PageContainer from '@/components/layout/PageContainer';
+import { pagePadding } from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
-import type { Tables } from '@/database.types';
+import type { AdminMember, AdminMemberStatusFilter } from '@/types/adminMember';
+import clsx from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
 
-type Member = Pick<
-  Tables<'profiles'>,
-  | 'id'
-  | 'email'
-  | 'full_name'
-  | 'nickname'
-  | 'avatar_url'
-  | 'is_admin'
-  | 'created_at'
-  | 'last_logged_in'
-  | 'suspended_at'
-  | 'suspended_reason'
-  | 'deletion_scheduled_at'
->;
+const FETCH_PAGE_SIZE = 200;
 
-type SortField = 'email' | 'full_name' | 'nickname' | 'created_at' | 'last_logged_in' | 'suspended_at';
+async function fetchAllMembers(): Promise<AdminMember[]> {
+  const all: AdminMember[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: FETCH_PAGE_SIZE.toString(),
+      sortBy: 'created_at',
+      sortOrder: 'desc',
+    });
+    const response = await fetch(`/api/admin/members?${params}`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch members');
+    }
+    all.push(...(data.members as AdminMember[]));
+    totalPages = data.totalPages || 1;
+    page += 1;
+  } while (page <= totalPages);
+
+  return all;
+}
 
 export default function AdminMembersPage() {
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<AdminMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'suspended'>('all');
-  const [sortBy, setSortBy] = useState<SortField>('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [filter, setFilter] = useState<AdminMemberStatusFilter>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     type: 'suspend' | 'delete' | 'unsuspend' | 'cancel-deletion';
-    member: Member;
+    member: AdminMember;
   } | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
 
   const fetchMembers = useCallback(async () => {
-    setIsLoading(true);
     setError(null);
-
     try {
-      const params = new URLSearchParams({
-        search,
-        filter,
-        sortBy,
-        sortOrder,
-        page: page.toString(),
-        limit: '50',
-      });
-
-      const response = await fetch(`/api/admin/members?${params}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch members');
-      }
-
-      setMembers(data.members);
-      setTotalPages(data.totalPages);
-      setTotal(data.total);
+      const next = await fetchAllMembers();
+      setMembers(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
-  }, [search, filter, sortBy, sortOrder, page]);
+  }, []);
 
   useEffect(() => {
-    fetchMembers();
+    void fetchMembers();
   }, [fetchMembers]);
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const handleSort = (field: SortField) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
-    }
-    setPage(1);
-  };
-
-  const handleAction = async (action: 'suspend' | 'unsuspend' | 'delete' | 'cancel-deletion', member: Member) => {
+  const handleAction = async (action: 'suspend' | 'unsuspend' | 'delete' | 'cancel-deletion', member: AdminMember) => {
     setActionLoading(member.id);
 
     try {
@@ -140,7 +109,6 @@ export default function AdminMembersPage() {
         }
       }
 
-      // Refresh the list
       await fetchMembers();
       setConfirmDialog(null);
       setSuspendReason('');
@@ -152,71 +120,66 @@ export default function AdminMembersPage() {
   };
 
   return (
-    <PageContainer>
-      <PageHeading
-        title="Manage members"
-        description={`${total} total members`}
-      />
-
-      <MemberSearchFilters
-        search={search}
-        onSearchChange={(value) => {
-          setSearch(value);
-          setPage(1);
-        }}
-        filter={filter}
-        onFilterChange={(value) => {
-          setFilter(value);
-          setPage(1);
-        }}
-      />
-
-      {/* Error message */}
-      {error && (
-        <div
-          className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-500"
-        >
-          {error}
-          <button
-            onClick={() => setError(null)}
-            className="ml-2 underline"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      <MemberTable
-        members={members}
-        isLoading={isLoading}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSort={handleSort}
-        onSuspend={(member) => setConfirmDialog({ type: 'suspend', member })}
-        onUnsuspend={(member) => setConfirmDialog({ type: 'unsuspend', member })}
-        onDelete={(member) => setConfirmDialog({ type: 'delete', member })}
-        onCancelDeletion={(member) => setConfirmDialog({ type: 'cancel-deletion', member })}
-        actionLoading={actionLoading}
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
-
-      {/* Confirmation Dialog */}
-      {confirmDialog && (
-        <MemberConfirmDialog
-          type={confirmDialog.type}
-          member={confirmDialog.member}
-          suspendReason={suspendReason}
-          onSuspendReasonChange={setSuspendReason}
-          onConfirm={() => handleAction(confirmDialog.type, confirmDialog.member)}
-          onCancel={() => {
-            setConfirmDialog(null);
-            setSuspendReason('');
-          }}
-          isLoading={actionLoading === confirmDialog.member.id}
+    <div
+      className={clsx('flex justify-center', pagePadding)}
+    >
+      <div
+        className="w-full"
+      >
+        <PageHeading
+          title="Manage members"
+          description={`${members.length} total members`}
         />
-      )}
-    </PageContainer>
+
+        <MemberSearchFilters
+          search={search}
+          onSearchChange={setSearch}
+          filter={filter}
+          includeUnderReview
+          onFilterChange={setFilter}
+        />
+
+        {error && (
+          <div
+            className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-500"
+          >
+            {error}
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        <MemberTable
+          members={members}
+          isLoading={isLoading}
+          search={search}
+          filter={filter}
+          onSuspend={(member) => setConfirmDialog({ type: 'suspend', member })}
+          onUnsuspend={(member) => setConfirmDialog({ type: 'unsuspend', member })}
+          onDelete={(member) => setConfirmDialog({ type: 'delete', member })}
+          onCancelDeletion={(member) => setConfirmDialog({ type: 'cancel-deletion', member })}
+          actionLoading={actionLoading}
+        />
+
+        {confirmDialog && (
+          <MemberConfirmDialog
+            type={confirmDialog.type}
+            member={confirmDialog.member}
+            suspendReason={suspendReason}
+            onSuspendReasonChange={setSuspendReason}
+            onConfirm={() => handleAction(confirmDialog.type, confirmDialog.member)}
+            onCancel={() => {
+              setConfirmDialog(null);
+              setSuspendReason('');
+            }}
+            isLoading={actionLoading === confirmDialog.member.id}
+          />
+        )}
+      </div>
+    </div>
   );
 }
