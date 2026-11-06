@@ -1,3 +1,4 @@
+import { isServiceAccountUserId, rememberServiceAccountFromProfile } from '@/lib/auth/serviceAccount';
 import { createAdminClient } from '@/utils/supabase/admin';
 
 /**
@@ -12,6 +13,7 @@ export function isTestEmail(email: string | null | undefined): boolean {
     || normalized.endsWith('@test.example.com')
     || normalized.includes('test-e2e-')
     || normalized.includes('test-signup-')
+    || normalized === 'bot@creativephotography.group'
   );
 }
 
@@ -22,9 +24,21 @@ export function isTestNotificationEnvironment(): boolean {
   );
 }
 
-/** Skip transactional email (and matching notification side effects) for test users/envs. */
-export function shouldSkipNotificationsAndEmails(email?: string | null): boolean {
-  return isTestNotificationEnvironment() || isTestEmail(email);
+export type SkipNotificationsOptions = {
+  userId?: string | null;
+  /** When known from a profile row (avoids extra DB lookup). */
+  isServiceAccount?: boolean | null;
+};
+
+/** Skip transactional email (and matching notification side effects) for test users/envs and service accounts. */
+export function shouldSkipNotificationsAndEmails(
+  email?: string | null,
+  options?: SkipNotificationsOptions,
+): boolean {
+  if (isTestNotificationEnvironment() || isTestEmail(email)) return true;
+  if (options?.isServiceAccount === true) return true;
+  if (isServiceAccountUserId(options?.userId)) return true;
+  return false;
 }
 
 export async function userIdsIncludeTestUser(
@@ -32,12 +46,19 @@ export async function userIdsIncludeTestUser(
 ): Promise<boolean> {
   const ids = [...new Set(userIds.filter((id): id is string => Boolean(id)))];
   if (ids.length === 0) return false;
+  if (ids.some((id) => isServiceAccountUserId(id))) return true;
 
   const supabase = createAdminClient();
   const { data } = await supabase
     .from('profiles')
-    .select('email')
+    .select('id, email, is_service_account')
     .in('id', ids);
 
-  return data?.some((profile) => isTestEmail(profile.email)) === true;
+  for (const profile of data ?? []) {
+    rememberServiceAccountFromProfile(profile);
+    if (profile.is_service_account === true || isTestEmail(profile.email)) {
+      return true;
+    }
+  }
+  return false;
 }

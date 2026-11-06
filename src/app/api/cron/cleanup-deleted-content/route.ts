@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
     // 4. Purge accounts scheduled for deletion past retention period
     const { data: scheduledProfiles, error: profilesQueryError } = await supabase
       .from('profiles')
-      .select('id, email, avatar_url, banner_url')
+      .select('id, email, avatar_url, banner_url, is_service_account')
       .not('deletion_scheduled_at', 'is', null)
       .lt('deletion_scheduled_at', cutoffISO);
 
@@ -160,6 +160,10 @@ export async function GET(request: NextRequest) {
       results.errors.push(`Failed to query scheduled profiles: ${profilesQueryError.message}`);
     } else if (scheduledProfiles && scheduledProfiles.length > 0) {
       for (const profile of scheduledProfiles) {
+        if (profile.is_service_account === true) {
+          results.errors.push(`Skipped purge for service account ${profile.id}`);
+          continue;
+        }
         try {
           const purge = await purgeAccountByUserId(profile.id);
           if (!purge.ok) {

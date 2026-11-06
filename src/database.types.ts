@@ -1582,6 +1582,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_admin: boolean | null
+          is_service_account: boolean
           last_logged_in: string | null
           link_publish_state: Json | null
           motion: string | null
@@ -1624,6 +1625,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_admin?: boolean | null
+          is_service_account?: boolean
           last_logged_in?: string | null
           link_publish_state?: Json | null
           motion?: string | null
@@ -1666,6 +1668,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          is_service_account?: boolean
           last_logged_in?: string | null
           link_publish_state?: Json | null
           motion?: string | null
@@ -2494,12 +2497,14 @@ export type Database = {
               p_deletion_scheduled_at: string
               p_nickname: string
               p_suspended_at: string
+              p_under_review_at?: string
             }
             Returns: boolean
           }
         | {
             Args: {
               p_deletion_scheduled_at: string
+              p_is_service_account?: boolean
               p_nickname: string
               p_suspended_at: string
               p_under_review_at?: string

@@ -94,9 +94,27 @@ if (!patched.includes('p_under_review_at')) {
           p_nickname: string
           p_suspended_at: string
           p_under_review_at?: string
+          p_is_service_account?: boolean
         }`,
   );
 }
+
+// profile_is_public_member: add p_is_service_account when only p_under_review_at was patched (remote still on 4-arg overload)
+if (
+  patched.includes('profile_is_public_member:')
+  && !patched.includes('p_is_service_account')
+) {
+  patched = patched.replace(
+    /(p_under_review_at\?: string\r?\n)(\s+\}\r?\n\s+Returns: boolean\r?\n\s+\})/,
+    (_, line1, closing) => `${line1}              p_is_service_account?: boolean\n${closing}`,
+  );
+}
+
+// Fix indentation if a previous patch left p_is_service_account misaligned (4-arg overload branch)
+patched = patched.replace(
+  /(p_under_review_at\?: string)\r?\n\s+p_is_service_account\?: boolean/g,
+  '$1\n              p_is_service_account?: boolean',
+);
 
 if (!patched.includes('signup_signals:')) {
   patched = patched.replace(
@@ -181,6 +199,22 @@ if (!patched.includes('batch_update_photo_exif:')) {
 }
 
 // --- Account deletion automation (migrations may be local before VPS db:sync) ---
+// profiles.is_service_account (migration may be local before VPS db:sync)
+if (!/\bprofiles:\s*\{[\s\S]*?is_service_account:/.test(patched)) {
+  patched = patched.replace(
+    /(\s+id: string\r?\n)(\s+is_admin:)/,
+    '$1          is_service_account: boolean\n$2',
+  );
+  patched = patched.replace(
+    /(\s+id: string\r?\n)(\s+is_admin\?:)/,
+    '$1          is_service_account?: boolean\n$2',
+  );
+  patched = patched.replace(
+    /(\s+is_admin\?: boolean \| null\r?\n)(\s+last_logged_in\?:)/,
+    '$1          is_service_account?: boolean\n$2',
+  );
+}
+
 // profiles.deletion_source
 if (!/\bprofiles:\s*\{[\s\S]*?deletion_source:/.test(patched)) {
   patched = patched.replace(

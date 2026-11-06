@@ -1,5 +1,6 @@
 import type { Json } from '@/database.types';
 import { retainSuspendedFingerprintForProfileId } from '@/lib/accountDeletion/retainSuspendedFingerprint';
+import { isServiceAccountFromProfileRow } from '@/lib/auth/serviceAccount';
 import { createAdminClient } from '@/utils/supabase/admin';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/database.types';
@@ -70,12 +71,16 @@ export async function purgeAccountByUserId(
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('id, email, nickname, full_name, avatar_url, banner_url, suspended_at')
+    .select('id, email, nickname, full_name, avatar_url, banner_url, suspended_at, is_service_account')
     .eq('id', userId)
     .maybeSingle();
 
   if (profileError || !profile) {
     return { ok: false, error: profileError?.message ?? 'Profile not found' };
+  }
+
+  if (isServiceAccountFromProfileRow(profile)) {
+    return { ok: false, error: 'Service accounts cannot be purged' };
   }
 
   const emailNorm = profile.email?.trim().toLowerCase() ?? null;

@@ -2788,7 +2788,8 @@ BEGIN
           nickname,
           suspended_at,
           deletion_scheduled_at,
-          under_review_at
+          under_review_at,
+          is_service_account
         )
     ) THEN
       RETURN;
@@ -3114,19 +3115,6 @@ COMMENT ON FUNCTION "public"."prevent_private_challenge_photo"() IS 'Prevents ph
 
 
 
-CREATE OR REPLACE FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) RETURNS boolean
-    LANGUAGE "sql" IMMUTABLE
-    SET "search_path" TO ''
-    AS $$
-  SELECT p_nickname IS NOT NULL
-    AND p_suspended_at IS NULL
-    AND p_deletion_scheduled_at IS NULL;
-$$;
-
-
-ALTER FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) OWNER TO "supabase_admin";
-
-
 CREATE OR REPLACE FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS boolean
     LANGUAGE "sql" IMMUTABLE
     SET "search_path" TO ''
@@ -3139,6 +3127,25 @@ $$;
 
 
 ALTER FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone DEFAULT NULL::timestamp with time zone, "p_is_service_account" boolean DEFAULT false) RETURNS boolean
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO ''
+    AS $$
+  SELECT "p_nickname" IS NOT NULL
+    AND "p_suspended_at" IS NULL
+    AND "p_deletion_scheduled_at" IS NULL
+    AND "p_under_review_at" IS NULL
+    AND COALESCE("p_is_service_account", false) = false;
+$$;
+
+
+ALTER FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone, "p_is_service_account" boolean) OWNER TO "supabase_admin";
+
+
+COMMENT ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone, "p_is_service_account" boolean) IS 'True when profile is visible in public member directory (excludes service accounts)';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."protect_albums_moderation_columns"() RETURNS "trigger"
@@ -3269,6 +3276,10 @@ BEGIN
     RAISE EXCEPTION 'Cannot modify is_admin';
   END IF;
 
+  IF NEW.is_service_account IS DISTINCT FROM OLD.is_service_account THEN
+    RAISE EXCEPTION 'Cannot modify is_service_account';
+  END IF;
+
   IF NEW.email IS DISTINCT FROM OLD.email THEN
     RAISE EXCEPTION 'Cannot modify email';
   END IF;
@@ -3278,7 +3289,6 @@ BEGIN
     RAISE EXCEPTION 'Cannot modify suspension fields';
   END IF;
 
-  -- Members may clear an inactivity schedule by nulling both columns (see cancel_inactivity_deletion_schedule).
   IF NEW.deletion_scheduled_at IS DISTINCT FROM OLD.deletion_scheduled_at
      OR NEW.deletion_source IS DISTINCT FROM OLD.deletion_source THEN
     IF NOT (
@@ -3325,6 +3335,10 @@ BEGIN
 
   IF NEW.is_admin IS TRUE THEN
     RAISE EXCEPTION 'Cannot set is_admin';
+  END IF;
+
+  IF NEW.is_service_account IS TRUE THEN
+    RAISE EXCEPTION 'Cannot set is_service_account';
   END IF;
 
   IF NEW.suspended_at IS NOT NULL OR NEW.suspended_reason IS NOT NULL THEN
@@ -3944,13 +3958,15 @@ BEGIN
     OLD.nickname,
     OLD.suspended_at,
     OLD.deletion_scheduled_at,
-    OLD.under_review_at
+    OLD.under_review_at,
+    OLD.is_service_account
   );
   is_public := public.profile_is_public_member(
     NEW.nickname,
     NEW.suspended_at,
     NEW.deletion_scheduled_at,
-    NEW.under_review_at
+    NEW.under_review_at,
+    NEW.is_service_account
   );
 
   IF was_public = is_public THEN
@@ -4127,7 +4143,8 @@ BEGIN
       p.nickname,
       p.suspended_at,
       p.deletion_scheduled_at,
-      p.under_review_at
+      p.under_review_at,
+      p.is_service_account
     )
     INTO member_is_public
     FROM public.profiles p
@@ -4148,7 +4165,8 @@ BEGIN
       p.nickname,
       p.suspended_at,
       p.deletion_scheduled_at,
-      p.under_review_at
+      p.under_review_at,
+      p.is_service_account
     )
     INTO member_is_public
     FROM public.profiles p
@@ -4534,6 +4552,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "link_publish_state" "jsonb",
     "under_review_at" timestamp with time zone,
     "deletion_source" "text",
+    "is_service_account" boolean DEFAULT false NOT NULL,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_deletion_source_check" CHECK ((("deletion_source" IS NULL) OR ("deletion_source" = ANY (ARRAY['self'::"text", 'admin'::"text", 'inactivity'::"text", 'suspension'::"text"])))),
@@ -4576,6 +4595,10 @@ COMMENT ON COLUMN "public"."profiles"."under_review_at" IS 'When set, the member
 
 
 COMMENT ON COLUMN "public"."profiles"."deletion_source" IS 'Why deletion_scheduled_at was set: self, admin, inactivity, suspension';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."is_service_account" IS 'System/scraper identity: no member email/notifications, not eligible for inactivity deletion';
 
 
 
@@ -7205,6 +7228,10 @@ CREATE POLICY "authenticated_update_scene_events" ON "public"."scene_events" FOR
 ALTER TABLE "public"."blocked_ips" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "blocked_ips_service_role_all" ON "public"."blocked_ips" TO "service_role" USING (true) WITH CHECK (true);
+
+
+
 ALTER TABLE "public"."challenge_announcements" ENABLE ROW LEVEL SECURITY;
 
 
@@ -7327,7 +7354,15 @@ ALTER TABLE "public"."shared_album_requests" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."signup_signals" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "signup_signals_service_role_all" ON "public"."signup_signals" TO "service_role" USING (true) WITH CHECK (true);
+
+
+
 ALTER TABLE "public"."suspended_deleted_fingerprints" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "suspended_deleted_fingerprints_service_role_all" ON "public"."suspended_deleted_fingerprints" TO "service_role" USING (true) WITH CHECK (true);
+
 
 
 ALTER TABLE "public"."tags" ENABLE ROW LEVEL SECURITY;
@@ -8017,17 +8052,17 @@ GRANT ALL ON FUNCTION "public"."prevent_private_challenge_photo"() TO "service_r
 
 
 
-GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "postgres";
-GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "anon";
-GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "postgres";
 GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "anon";
 GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone, "p_is_service_account" boolean) TO "postgres";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone, "p_is_service_account" boolean) TO "anon";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone, "p_is_service_account" boolean) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone, "p_under_review_at" timestamp with time zone, "p_is_service_account" boolean) TO "service_role";
 
 
 

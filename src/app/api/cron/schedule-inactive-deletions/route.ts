@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       .select('id, suspended_reason')
       .not('suspended_at', 'is', null)
       .is('deletion_scheduled_at', null)
+      .eq('is_service_account', false)
       .limit(500);
 
     if (autoErr) {
@@ -71,7 +72,8 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('id, email, full_name, nickname, suspended_reason, suspended_at, deletion_scheduled_at, is_admin')
       .not('suspended_at', 'is', null)
-      .is('deletion_scheduled_at', null);
+      .is('deletion_scheduled_at', null)
+      .eq('is_service_account', false);
 
     if (suspErr) {
       results.errors.push(`suspended query: ${suspErr.message}`);
@@ -97,7 +99,11 @@ export async function GET(request: NextRequest) {
         results.adminSuspensionScheduled += 1;
 
         const email = row.email;
-        if (email && shouldEmailSuspensionDeletion(row.suspended_reason) && !shouldSkipNotificationsAndEmails(email)) {
+        if (
+          email
+          && shouldEmailSuspensionDeletion(row.suspended_reason)
+          && !shouldSkipNotificationsAndEmails(email, { userId: row.id })
+        ) {
           const deletionDate = new Date(scheduleAt);
           deletionDate.setDate(deletionDate.getDate() + 30);
           try {
@@ -142,6 +148,7 @@ export async function GET(request: NextRequest) {
       .select('id, email, full_name, nickname, created_at, last_logged_in, is_admin, suspended_at, deletion_scheduled_at, terms_accepted_at')
       .is('deletion_scheduled_at', null)
       .is('suspended_at', null)
+      .eq('is_service_account', false)
       .limit(2000);
 
     if (candErr) {
@@ -174,7 +181,7 @@ export async function GET(request: NextRequest) {
         results.inactivityScheduled += 1;
 
         const email = p.email;
-        if (email && !shouldSkipNotificationsAndEmails(email)) {
+        if (email && !shouldSkipNotificationsAndEmails(email, { userId: p.id })) {
           const deletionDate = new Date(now);
           deletionDate.setDate(deletionDate.getDate() + 30);
           try {

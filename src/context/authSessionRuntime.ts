@@ -3,6 +3,8 @@ import type { MutableRefObject } from 'react';
 
 import type { Profile } from '@/context/AuthContext';
 import { cancelInactivityScheduleIfNeeded } from '@/lib/accountDeletion/cancelInactivitySchedule';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
+import { isServiceAccountUserId } from '@/lib/auth/serviceAccount';
 import type { ServerAuth, ServerProfile } from '@/utils/supabase/getServerAuth';
 import { loadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
 
@@ -74,6 +76,15 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
 
       let nextProfile = error ? null : (data as Profile | null);
       if (
+        nextProfile
+        && (nextProfile.is_service_account === true || isServiceAccountUserId(userId))
+      ) {
+        await supabase.auth.signOut();
+        clearSession();
+        setProfile(null);
+        return null;
+      }
+      if (
         nextProfile?.deletion_scheduled_at
         && nextProfile.deletion_source === 'inactivity'
       ) {
@@ -107,9 +118,17 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
     if (!mounted) return;
 
     const touchSessionActivity = async (userId: string): Promise<void> => {
+      if (isServiceAccountUserId(userId)) {
+        await supabase.auth.signOut();
+        return;
+      }
       const { data: prof, error: profErr } = await supabase.rpc('get_own_profile');
       if (profErr) return;
       const p = prof as Profile | null;
+      if (p?.is_service_account === true) {
+        await supabase.auth.signOut();
+        return;
+      }
       if (p?.deletion_scheduled_at && p.deletion_source === 'inactivity') {
         await cancelInactivityScheduleIfNeeded(supabase);
         lastLoggedInUpdatedRef.current = null;
@@ -117,6 +136,9 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
 
       if (lastLoggedInUpdatedRef.current === userId) return;
       lastLoggedInUpdatedRef.current = userId;
+      if (shouldSkipNotificationsAndEmails(p?.email ?? null, { userId, isServiceAccount: p?.is_service_account })) {
+        return;
+      }
       await supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId);
     };
 

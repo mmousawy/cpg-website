@@ -91,13 +91,14 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
 
-    // Build query
+    // Build query (exclude automation / scraper identities)
     let query = adminSupabase
       .from('profiles')
       .select(
         'id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason, deletion_scheduled_at, deletion_source, under_review_at, website, bio, social_links, link_publish_state, newsletter_opt_in, terms_accepted_at',
         { count: 'exact' },
-      );
+      )
+      .eq('is_service_account', false);
 
     // Apply search filter
     if (search) {
@@ -228,6 +229,18 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Missing userId or action' }, { status: 400 });
     }
 
+    const { data: patchTarget } = await adminSupabase
+      .from('profiles')
+      .select('is_service_account')
+      .eq('id', userId)
+      .maybeSingle();
+    if (patchTarget?.is_service_account === true) {
+      return NextResponse.json(
+        { error: 'Service accounts cannot be suspended or have deletion changed from the admin UI' },
+        { status: 400 },
+      );
+    }
+
     // Prevent self-suspension
     if (userId === user.id && action === 'suspend') {
       return NextResponse.json({ error: 'Cannot suspend yourself' }, { status: 400 });
@@ -263,7 +276,7 @@ export async function PATCH(request: NextRequest) {
         .single();
 
       const memberEmail = suspendedProfile?.email;
-      if (memberEmail && !shouldSkipNotificationsAndEmails(memberEmail)) {
+      if (memberEmail && !shouldSkipNotificationsAndEmails(memberEmail, { userId })) {
         try {
           const html = await render(
             AdminSuspensionDeletionScheduledEmail({
@@ -374,6 +387,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }
 
+    const { data: deleteTarget } = await adminSupabase
+      .from('profiles')
+      .select('is_service_account')
+      .eq('id', userId)
+      .maybeSingle();
+    if (deleteTarget?.is_service_account === true) {
+      return NextResponse.json({ error: 'Service accounts cannot be scheduled for deletion' }, { status: 400 });
+    }
+
     // Prevent self-deletion
     if (userId === user.id) {
       return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
@@ -382,7 +404,7 @@ export async function DELETE(request: NextRequest) {
     // Check target profile
     const { data: targetProfile } = await adminSupabase
       .from('profiles')
-      .select('is_admin, email, full_name, deletion_scheduled_at')
+      .select('is_admin, email, full_name, deletion_scheduled_at, is_service_account')
       .eq('id', userId)
       .single();
 
@@ -417,7 +439,7 @@ export async function DELETE(request: NextRequest) {
     deletionDate.setDate(deletionDate.getDate() + 30);
     const email = targetProfile.email;
 
-    if (email && !shouldSkipNotificationsAndEmails(email)) {
+    if (email && !shouldSkipNotificationsAndEmails(email, { userId })) {
       try {
         const html = await render(
           AccountDeletionEmail({

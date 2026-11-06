@@ -3,6 +3,7 @@ import { renderDebouncedEmailBatch } from '@/lib/email/renderDebouncedEmailBatch
 import type { EmailTemplateKey } from '@/lib/email/templateKeys';
 import { getEmailSiteUrl } from '@/emails/utils/siteUrl';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { isServiceAccountFromProfileRow } from '@/lib/auth/serviceAccount';
 import { encrypt } from '@/utils/encrypt';
 import { createAdminClient } from '@/utils/supabase/admin';
 
@@ -116,11 +117,16 @@ export async function flushPendingNotificationEmails(): Promise<FlushPendingNoti
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('email, full_name, suspended_at')
+      .select('email, full_name, suspended_at, is_service_account, id')
       .eq('id', batch.recipient_user_id)
       .single();
 
-    if (!profile?.email || profile.suspended_at || isTestEmail(profile.email)) {
+    if (
+      !profile?.email
+      || profile.suspended_at
+      || isTestEmail(profile.email)
+      || isServiceAccountFromProfileRow(profile)
+    ) {
       await supabase
         .from('notification_email_batches')
         .update({ status: 'cancelled', updated_at: now.toISOString() })

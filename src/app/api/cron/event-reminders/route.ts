@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
 import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { isServiceAccountUserId } from '@/lib/auth/serviceAccount';
 import { createNotification } from '@/lib/notifications/create';
 import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
 import { flushPendingNotifications } from '@/lib/notifications/schedule';
@@ -108,6 +109,7 @@ export async function GET(request: NextRequest) {
             .select('id, email, full_name')
             .is('suspended_at', null)
             .is('deletion_scheduled_at', null)
+            .eq('is_service_account', false)
             .not('email', 'is', null);
 
           if (!allProfiles || allProfiles.length === 0) {
@@ -141,6 +143,7 @@ export async function GET(request: NextRequest) {
               !existingRsvpUserIds.has(profile.id) &&
               profile.email &&
               !isTestEmail(profile.email) &&
+              !isServiceAccountUserId(profile.id) &&
               !existingRsvpEmails.has(profile.email.toLowerCase()),
             )
             .map(profile => ({
@@ -321,7 +324,10 @@ export async function GET(request: NextRequest) {
             continue;
           }
 
-          const deliverableRsvps = rsvps.filter((rsvp) => !isTestEmail(rsvp.email));
+          const deliverableRsvps = rsvps.filter((rsvp) =>
+            !isTestEmail(rsvp.email)
+            && !(rsvp.user_id && isServiceAccountUserId(rsvp.user_id)),
+          );
           if (deliverableRsvps.length === 0) {
             await supabase
               .from('events')
