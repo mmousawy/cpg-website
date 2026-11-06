@@ -1,38 +1,51 @@
-import Link from 'next/link';
+import { Suspense } from 'react';
+import LogoSVG from 'public/cpg-logo.svg';
 
-import PageContainer from '@/components/layout/PageContainer';
-import PageHeading from '@/components/layout/PageHeading';
-import { routes } from '@/config/routes';
+import ModerationPreviewNotice from '@/components/memberReview/ModerationPreviewNotice';
+import { BLOCK_PREVIEW_QUERY_PARAM } from '@/lib/memberReview/blockPreview';
+
+const APPEAL_EMAIL = 'murtada.al.mousawy@gmail.com';
 
 export default function NetworkBlockedPage() {
   return (
-    <PageContainer>
-      <PageHeading
-        title="Access not available"
+    <div
+      className="network-blocked-screen flex flex-1 flex-col items-center justify-center px-4 py-12 text-center"
+    >
+      <LogoSVG
+        className="mb-8 block size-20 shrink-0 sm:size-24"
+        aria-hidden
       />
+      <h1
+        className="mb-4 text-2xl font-bold font-heading sm:text-3xl"
+      >
+        You have been blocked
+      </h1>
       <div
-        className="prose prose-neutral dark:prose-invert max-w-xl"
+        className="max-w-md space-y-4 text-foreground/90 text-sm sm:text-base"
       >
         <p>
-          This network cannot use Creative Photography Group right now. That usually follows a
-          suspended account that was used from the same connection.
+          You have been blocked from Creative Photography Group by an administrator or an automated system.
         </p>
         <p>
-          If you believe this is a mistake, contact us through the help page and we can review it.
+          If you think this was a mistake, please email us at
+          {' '}
+          <a
+            href={`mailto:${APPEAL_EMAIL}`}
+            className="break-all text-primary underline underline-offset-2 hover:text-primary-alt text-nowrap"
+          >
+            {APPEAL_EMAIL}
+          </a>
+          {' '}
+          and we&apos;ll take a look.
         </p>
-        <ul>
-          <li>
-            <Link
-              href={routes.help.url}
-            >{routes.help.label}</Link>
-          </li>
-          <li>
-            <Link
-              href={routes.contact.url}
-            >{routes.contact.label}</Link>
-          </li>
-        </ul>
+        <Suspense
+          fallback={null}
+        >
+          <ModerationPreviewNotice
+            queryParam={BLOCK_PREVIEW_QUERY_PARAM}
+          />
+        </Suspense>
       </div>
-    </PageContainer>
+    </div>
   );
 }

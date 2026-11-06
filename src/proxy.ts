@@ -21,7 +21,21 @@ import {
   needsProxyOwnProfile,
 } from '@/utils/proxyAuth';
 import { isStagingDeployment } from '@/utils/siteEnvironment';
+import {
+  BLOCK_PREVIEW_COOKIE_NAME,
+  BLOCK_PREVIEW_QUERY_PARAM,
+  REVIEW_PREVIEW_COOKIE_NAME,
+  REVIEW_PREVIEW_QUERY_PARAM,
+  applyBlockPreviewCookie,
+  applyReviewPreviewCookie,
+  isPreviewFlagCookieSet,
+  parsePreviewFlagQuery,
+} from '@/lib/memberReview/blockPreview';
 import { isIpBlocked } from '@/lib/memberReview/ipBlocking';
+import {
+  isUnderReviewRestrictedPath,
+  isUnderReviewWriteBlocked,
+} from '@/lib/memberReview/underReviewGate';
 import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
 import { expireLegacyHostedSupabaseAuthCookies, hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
 import { createServerClient } from '@supabase/ssr';
@@ -91,19 +105,83 @@ export default async function proxy(request: NextRequest) {
   const matchesRoute = (path: string) => matchesPath(pathname, path);
 
   const clientMeta = getRequestClientMeta(request);
-  if (
-    clientMeta.ip
-    && await isIpBlocked(clientMeta.ip)
-    && !matchesRoute('/network-blocked')
-    && !matchesRoute('/help')
-    && !matchesRoute('/terms')
-    && !matchesRoute('/privacy')
-  ) {
+  const ipBlocked = Boolean(clientMeta.ip && await isIpBlocked(clientMeta.ip));
+  const previewAction = parsePreviewFlagQuery(
+    request.nextUrl.searchParams.get(BLOCK_PREVIEW_QUERY_PARAM),
+  );
+  const previewEnable = previewAction === 'enable';
+  const previewCookieOn = isPreviewFlagCookieSet(
+    request.cookies.get(BLOCK_PREVIEW_COOKIE_NAME)?.value,
+  );
+  const previewBlocked = previewEnable || (previewCookieOn && previewAction !== 'disable');
+
+  const reviewAction = parsePreviewFlagQuery(
+    request.nextUrl.searchParams.get(REVIEW_PREVIEW_QUERY_PARAM),
+  );
+  const reviewEnable = reviewAction === 'enable';
+  const reviewCookieOn = isPreviewFlagCookieSet(
+    request.cookies.get(REVIEW_PREVIEW_COOKIE_NAME)?.value,
+  );
+  const previewReview = reviewEnable || (reviewCookieOn && reviewAction !== 'disable');
+
+  if (previewAction === 'disable' && !ipBlocked) {
+    const url = request.nextUrl.clone();
+    url.searchParams.delete(BLOCK_PREVIEW_QUERY_PARAM);
+    if (matchesRoute('/network-blocked')) {
+      url.pathname = '/';
+      url.search = '';
+    }
+    const redirect = NextResponse.redirect(url);
+    applyBlockPreviewCookie(redirect, 'disable');
+    return withLegacyAuthCookieCleanup(request, redirect);
+  }
+
+  if ((ipBlocked || previewBlocked) && !matchesRoute('/network-blocked')) {
     const url = request.nextUrl.clone();
     url.pathname = '/network-blocked';
     url.search = '';
-    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
+    if (previewBlocked && !ipBlocked) {
+      url.searchParams.set(BLOCK_PREVIEW_QUERY_PARAM, 'true');
+    }
+    const redirect = NextResponse.redirect(url);
+    if (previewEnable) {
+      applyBlockPreviewCookie(redirect, 'enable');
+    }
+    return withLegacyAuthCookieCleanup(request, redirect);
   }
+
+  if (previewEnable && matchesRoute('/network-blocked')) {
+    const response = NextResponse.next();
+    applyBlockPreviewCookie(response, 'enable');
+    return withLegacyAuthCookieCleanup(request, response);
+  }
+
+  if (reviewAction === 'disable') {
+    const url = request.nextUrl.clone();
+    url.searchParams.delete(REVIEW_PREVIEW_QUERY_PARAM);
+    if (matchesRoute('/under-review')) {
+      url.pathname = '/';
+      url.search = '';
+    }
+    const redirect = NextResponse.redirect(url);
+    applyReviewPreviewCookie(redirect, 'disable');
+    return withLegacyAuthCookieCleanup(request, redirect);
+  }
+
+  if (previewReview && isUnderReviewRestrictedPath(pathname) && !matchesRoute('/under-review')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/under-review';
+    url.search = '';
+    url.searchParams.set(REVIEW_PREVIEW_QUERY_PARAM, 'true');
+    const redirect = NextResponse.redirect(url);
+    applyReviewPreviewCookie(redirect, 'enable');
+    return withLegacyAuthCookieCleanup(request, redirect);
+  }
+
+  const finish = (response: NextResponse) => {
+    if (reviewEnable) applyReviewPreviewCookie(response, 'enable');
+    return withLegacyAuthCookieCleanup(request, response);
+  };
 
   // 301 from old @-nickname URLs to the member's current nickname
   if (firstSegment?.startsWith('@')) {
@@ -115,7 +193,7 @@ export default async function proxy(request: NextRequest) {
           const url = request.nextUrl.clone();
           const rest = pathname.slice(firstSegment.length + 1);
           url.pathname = buildAtNicknamePath(currentNickname, rest);
-          return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url, 301));
+          return finish(NextResponse.redirect(url, 301));
         }
       } catch {
         // Fall through to normal routing
@@ -139,7 +217,7 @@ export default async function proxy(request: NextRequest) {
         const url = request.nextUrl.clone();
         const rest = pathname.slice(firstSegment.length + 1);
         url.pathname = buildAtNicknamePath(bareNickname, rest);
-        return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url, 301));
+        return finish(NextResponse.redirect(url, 301));
       }
 
       const redirectedNickname = await resolveNicknameRedirect(bareNickname);
@@ -147,7 +225,7 @@ export default async function proxy(request: NextRequest) {
         const url = request.nextUrl.clone();
         const rest = pathname.slice(firstSegment.length + 1);
         url.pathname = buildAtNicknamePath(redirectedNickname, rest);
-        return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url, 301));
+        return finish(NextResponse.redirect(url, 301));
       }
     } catch {
       // If the check fails, fall through and let Next.js handle the route
@@ -160,13 +238,13 @@ export default async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('error', 'staging_no_signup');
-    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
+    return finish(NextResponse.redirect(url));
   }
 
   // Skip auth check for public API routes
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
   if (isPublicApiRoute) {
-    return withLegacyAuthCookieCleanup(request, NextResponse.next());
+    return finish(NextResponse.next());
   }
 
   const isProtectedPath = ['/account', '/admin'].some((path) => matchesRoute(path));
@@ -195,7 +273,8 @@ export default async function proxy(request: NextRequest) {
       isDocument: isDocumentNavigation(request.headers),
     });
 
-  const needsAuthSession = needsProxyAuthSession(pathname) && hasAuthCookie;
+  const isAtProfilePath = Boolean(firstSegment?.startsWith('@'));
+  const needsAuthSession = (needsProxyAuthSession(pathname) || isAtProfilePath) && hasAuthCookie;
 
   if (!needsAuthSession && !needsOnboardingClassify) {
     if (isProtectedPath && !hasAuthCookie) {
@@ -206,12 +285,12 @@ export default async function proxy(request: NextRequest) {
       if (request.cookies.get(ONBOARDING_COOKIE_NAME)) {
         clearOnboardingCookie(redirect);
       }
-      return withLegacyAuthCookieCleanup(request, redirect);
+      return finish(redirect);
     }
     if (isPublicApiRoute) {
-      return withLegacyAuthCookieCleanup(request, NextResponse.next());
+      return finish(NextResponse.next());
     }
-    return nextClearingStaleOnboarding(request, hasAuthCookie);
+    return finish(nextClearingStaleOnboarding(request, hasAuthCookie));
   }
 
   let supabaseResponse = NextResponse.next();
@@ -256,6 +335,7 @@ export default async function proxy(request: NextRequest) {
 
   const shouldLoadProfile = user && (
     needsProxyOwnProfile(pathname)
+    || isAtProfilePath
     || needsOnboardingClassify
     || (!isPublicApiRoute && !matchesRoute('/under-review') && pathname.startsWith('/'))
   );
@@ -296,14 +376,14 @@ export default async function proxy(request: NextRequest) {
     const redirect = NextResponse.redirect(url);
     copyResponseCookies(supabaseResponse, redirect);
     clearOnboardingCookie(redirect);
-    return withLegacyAuthCookieCleanup(request, redirect);
+    return finish(redirect);
   }
 
   // Block suspended users from account/admin areas and write APIs
   const isSuspended = !!user && !!profile?.suspended_at;
   const isUnderReview = !!user && !!profile?.under_review_at && !profile?.suspended_at;
+  const holdReview = isUnderReview || previewReview;
   const suspendedAllowedPaths = ['/login', '/logout', '/contact', '/help', '/terms', '/privacy', '/account-deleted'];
-  const underReviewAllowedPaths = ['/under-review', '/logout', '/contact', '/help', '/terms', '/privacy', '/login'];
   if (
     isSuspended
     && !suspendedAllowedPaths.some((path) => matchesRoute(path))
@@ -316,27 +396,29 @@ export default async function proxy(request: NextRequest) {
     const redirect = NextResponse.redirect(url);
     copyResponseCookies(supabaseResponse, redirect);
     clearOnboardingCookie(redirect);
-    return withLegacyAuthCookieCleanup(request, redirect);
+    return finish(redirect);
   }
 
-  if (isUnderReview) {
-    const allowed = underReviewAllowedPaths.some((path) => matchesRoute(path));
-    if (pathname.startsWith('/api/') && !isPublicApiRoute) {
-      const allowUnderReviewApi = matchesRoute('/api/onboarding/revalidate');
-      if (!allowUnderReviewApi) {
-        const blocked = NextResponse.json({ error: 'Account under review' }, { status: 403 });
-        copyResponseCookies(supabaseResponse, blocked);
-        return withLegacyAuthCookieCleanup(request, blocked);
-      }
+  if (holdReview && isUnderReviewWriteBlocked(pathname, request.method)) {
+    const blocked = NextResponse.json({ error: 'Account under review' }, { status: 403 });
+    copyResponseCookies(supabaseResponse, blocked);
+    return finish(blocked);
+  }
+
+  if (
+    holdReview
+    && isUnderReviewRestrictedPath(pathname, profile?.nickname)
+    && !matchesRoute('/under-review')
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/under-review';
+    url.search = '';
+    if (previewReview && !isUnderReview) {
+      url.searchParams.set(REVIEW_PREVIEW_QUERY_PARAM, 'true');
     }
-    if (!allowed && !pathname.startsWith('/api/')) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/under-review';
-      url.search = '';
-      const redirect = NextResponse.redirect(url);
-      copyResponseCookies(supabaseResponse, redirect);
-      return withLegacyAuthCookieCleanup(request, redirect);
-    }
+    const redirect = NextResponse.redirect(url);
+    copyResponseCookies(supabaseResponse, redirect);
+    return finish(redirect);
   }
 
   // Force profile completion on gated routes. Public pages skip this so
@@ -352,7 +434,7 @@ export default async function proxy(request: NextRequest) {
   ) {
     const redirect = redirectToOnboarding(request, supabaseResponse);
     applyOnboardingCookie(redirect, ONBOARDING_COOKIE_PENDING);
-    return withLegacyAuthCookieCleanup(request, redirect);
+    return finish(redirect);
   }
 
   if (
@@ -363,14 +445,14 @@ export default async function proxy(request: NextRequest) {
   ) {
     const redirect = redirectToOnboarding(request, supabaseResponse);
     applyOnboardingCookie(redirect, ONBOARDING_COOKIE_PENDING);
-    return withLegacyAuthCookieCleanup(request, redirect);
+    return finish(redirect);
   }
 
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirectTo', pathname);
-    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
+    return finish(NextResponse.redirect(url));
   }
 
   if (isAuthPath && user) {
@@ -380,10 +462,10 @@ export default async function proxy(request: NextRequest) {
     } else {
       url.pathname = '/account/events';
     }
-    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
+    return finish(NextResponse.redirect(url));
   }
 
-  return withLegacyAuthCookieCleanup(request, supabaseResponse);
+  return finish(supabaseResponse);
 }
 
 export const config = {

@@ -217,7 +217,7 @@ export const accountFAQ: FAQSection = {
           <p
             className="mb-4"
           >
-            If a link needs a closer look, your account stays signed in but your profile is not public yet. You will see an under review message until a moderator approves you. You can still sign out or read our terms and privacy policy.
+            If a link needs a closer look, you stay signed in and can browse the site, but likes, comments, follows, and other interactions stay locked. Your profile is not public yet and account pages stay locked until a moderator approves you.
           </p>
           <p>
             Accounts that look like spam or advertising, or that closely match a suspended account, are not allowed on the site. If access from your network was blocked after a suspension, contact us through the Contact page and we can help.

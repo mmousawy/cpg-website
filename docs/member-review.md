@@ -9,7 +9,7 @@ Onboarding finishes through [`POST /api/onboarding/complete`](../src/app/api/onb
 | Outcome | When | Member experience |
 |--------|------|-------------------|
 | **Publish** | No advertising signal and no inconclusive URL | Public profile; admins get member-joined notification |
-| **Under review** | A URL was checked and the verdict was inconclusive | Signed in, but only `/under-review` and legal pages; admin approves via automated report |
+| **Under review** | A URL was checked and the verdict was inconclusive | Signed in and can browse; likes, comments, follows, RSVPs, and other writes are blocked; `/account` and their public profile stay locked until an admin approves |
 | **Suspend** | Clear advertising, unsafe URL, repeat of a suspended member, or overlapping host/name/IP | Signed out; `suspended_at` set; automated report filed |
 
 Existing members who later save a bad link only get link hiding and a report. They are not auto-suspended.
@@ -42,7 +42,9 @@ Migrations: [`20261105153000_profile_under_review.sql`](../supabase/migrations/2
 
 ### Proxy and signup
 
-- [`src/proxy.ts`](../src/proxy.ts) redirects blocked IPs to [`/network-blocked`](../src/app/network-blocked/page.tsx) before other handling.
+- [`src/proxy.ts`](../src/proxy.ts) redirects blocked IPs to [`/network-blocked`](../src/app/network-blocked/page.tsx) before other handling. That page is the only site route they can open.
+- Held members can browse, but mutating `/api/*` calls return 403 except auth, contact, views, unsubscribe, notifications, onboarding revalidate, and feedback. The UI also disables likes, comments, follows, RSVPs, reports, and similar actions.
+- Local preview (does not bypass a real hold or IP block): `?preview-block=true` / `?preview-block=false` for the blocked screen; `?preview-review=true` / `?preview-review=false` for the under-review screen.
 - [`/api/auth/signup`](../src/app/api/auth/signup/route.ts) returns 403 for blocked IPs.
 - [`/auth-callback`](../src/app/auth-callback/route.ts) redirects blocked IPs to `/network-blocked`.
 

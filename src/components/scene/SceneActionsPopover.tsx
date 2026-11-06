@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Popover from '@/components/shared/Popover';
 import SceneActionsMenu from '@/components/scene/SceneActionsMenu';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import type { SceneEvent } from '@/types/scene';
 
 type SceneActionsPopoverProps = {
@@ -10,7 +11,12 @@ type SceneActionsPopoverProps = {
 };
 
 export default function SceneActionsPopover({ event }: SceneActionsPopoverProps) {
+  const { isUnderReview } = useCanInteract();
   const [isOpen, setIsOpen] = useState(false);
+
+  if (isUnderReview) {
+    return null;
+  }
 
   return (
     <Popover

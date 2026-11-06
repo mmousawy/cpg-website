@@ -2,6 +2,8 @@
 
 import Popover from '@/components/shared/Popover';
 import ProfileActionsMenu from '@/components/shared/ProfileActionsMenu';
+import { useCanInteract } from '@/hooks/useCanInteract';
+import { useSession } from '@/hooks/useSession';
 import { useState } from 'react';
 
 type ProfileActionsPopoverProps = {
@@ -10,7 +12,14 @@ type ProfileActionsPopoverProps = {
 };
 
 export default function ProfileActionsPopover({ profileId, profileNickname }: ProfileActionsPopoverProps) {
+  const { user } = useSession();
+  const { isUnderReview } = useCanInteract();
   const [isOpen, setIsOpen] = useState(false);
+  const isOwnProfile = !!(user && user.id === profileId);
+
+  if (isUnderReview && !isOwnProfile) {
+    return null;
+  }
 
   return (
     <Popover

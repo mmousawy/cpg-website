@@ -829,6 +829,18 @@ html.onboarding-page .mobile-main-bottom-spacer {
   display: none;
 }
 
+html.network-blocked-page .app-site-header {
+  display: none;
+}
+
+html.network-blocked-page .mobile-main-bottom-spacer {
+  display: none;
+}
+
+html.network-blocked-page .app-shell-main {
+  min-height: 100dvh;
+}
+
 html.manage-page .app-header-inner {
   max-width: none;
 }

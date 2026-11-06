@@ -10,7 +10,8 @@ import Button from '../shared/Button';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useSession } from '@/hooks/useSession';
+import { useCanInteract } from '@/hooks/useCanInteract';
+import { UNDER_REVIEW_INTERACTION_HINT } from '@/lib/memberReview/underReviewGate';
 import { useSupabase } from '@/hooks/useSupabase';
 import { CPGEvent } from '@/types/events';
 
@@ -140,13 +141,26 @@ function EventRsvpStatusAuthenticated({ className, event }: Props) {
 }
 
 export default function EventRsvpStatus(props: Props) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, canInteract } = useCanInteract();
 
   if (!isLoggedIn) {
     return (
       <EventRsvpStatusGuest
         {...props}
       />
+    );
+  }
+
+  if (!canInteract) {
+    return (
+      <Button
+        size="sm"
+        disabled
+        title={UNDER_REVIEW_INTERACTION_HINT}
+        className="rounded-full"
+      >
+        Join event
+      </Button>
     );
   }
 

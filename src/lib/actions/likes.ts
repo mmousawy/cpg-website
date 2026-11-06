@@ -27,6 +27,15 @@ export async function toggleLike(
     return { liked: false, count: 0, error: 'Not authenticated' };
   }
 
+  const { data: actorHold } = await supabase
+    .from('profiles')
+    .select('under_review_at')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (actorHold?.under_review_at) {
+    return { liked: false, count: 0, error: 'Account under review' };
+  }
+
   // Get owner nickname and entity identifiers for cache invalidation
   let ownerNickname: string | null = null;
   let photoShortId: string | null = null;

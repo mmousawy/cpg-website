@@ -4,6 +4,7 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ReportModal from '@/components/shared/ReportModal';
 import { useAuth } from '@/context/AuthContext';
+import { useCanInteract } from '@/hooks/useCanInteract';
 import { useDeletePhotos } from '@/hooks/usePhotoMutations';
 import { useRouter } from 'next/navigation';
 import EditMiniSVG from 'public/icons/edit-mini.svg';
@@ -22,6 +23,7 @@ type PhotoActionsMenuProps = {
 
 export default function PhotoActionsMenu({ photoId, photoTitle, photoUserId, storagePath, onActionClick }: PhotoActionsMenuProps) {
   const { user, profile } = useAuth();
+  const { isUnderReview } = useCanInteract();
   const modalContext = useContext(ModalContext);
   const confirm = useConfirm();
   const router = useRouter();
@@ -76,6 +78,10 @@ export default function PhotoActionsMenu({ photoId, photoTitle, photoUserId, sto
   const handleReportClick = () => {
     onActionClick?.();
 
+    if (isUnderReview) {
+      return;
+    }
+
     modalContext.setSize('default');
     modalContext.setTitle(`Report photo "${photoTitle || 'Untitled'}"`);
     modalContext.setContent(
@@ -93,6 +99,10 @@ export default function PhotoActionsMenu({ photoId, photoTitle, photoUserId, sto
 
   const menuItemClass = 'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
   const dangerMenuItemClass = 'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300';
+
+  if (isUnderReview && !isOwner) {
+    return null;
+  }
 
   if (isOwner) {
     return (

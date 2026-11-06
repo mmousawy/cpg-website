@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Popover from '@/components/shared/Popover';
 import PhotoActionsMenu from '@/components/shared/PhotoActionsMenu';
+import { useCanInteract } from '@/hooks/useCanInteract';
+import { useSession } from '@/hooks/useSession';
 
 type PhotoActionsPopoverProps = {
   photoId: string;
@@ -13,7 +15,14 @@ type PhotoActionsPopoverProps = {
 };
 
 export default function PhotoActionsPopover({ photoId, photoTitle, photoUserId, storagePath }: PhotoActionsPopoverProps) {
+  const { user } = useSession();
+  const { isUnderReview } = useCanInteract();
   const [isOpen, setIsOpen] = useState(false);
+  const isOwner = !!(user && photoUserId && user.id === photoUserId);
+
+  if (isUnderReview && !isOwner) {
+    return null;
+  }
 
   return (
     <Popover
