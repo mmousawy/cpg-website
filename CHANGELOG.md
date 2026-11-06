@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.46.1](https://github.com/mmousawy/cpg-website/compare/v1.46.0...v1.46.1) (2026-11-06)
+
+
+### ♻️ Refactoring
+
+* enhance member review and onboarding moderation processes ([d9cfb57](https://github.com/mmousawy/cpg-website/commit/d9cfb57d387142afd203ca855d3101cc5de18f6f))
+
 ## [1.46.0](https://github.com/mmousawy/cpg-website/compare/v1.45.5...v1.46.0) (2026-11-06)
 
 
