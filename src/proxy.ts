@@ -325,6 +325,7 @@ export default async function proxy(request: NextRequest) {
 
   let profile: {
     deletion_scheduled_at: string | null;
+    deletion_source: string | null;
     suspended_at: string | null;
     under_review_at: string | null;
     email: string | null;
@@ -346,6 +347,7 @@ export default async function proxy(request: NextRequest) {
       const ownProfile = data as Record<string, unknown>;
       profile = {
         deletion_scheduled_at: (ownProfile.deletion_scheduled_at as string | null) ?? null,
+        deletion_source: (ownProfile.deletion_source as string | null) ?? null,
         suspended_at: (ownProfile.suspended_at as string | null) ?? null,
         under_review_at: (ownProfile.under_review_at as string | null) ?? null,
         email: (ownProfile.email as string | null) ?? null,
@@ -354,6 +356,19 @@ export default async function proxy(request: NextRequest) {
         terms_accepted_at: (ownProfile.terms_accepted_at as string | null) ?? null,
       };
     }
+  }
+
+  if (
+    user
+    && profile?.deletion_scheduled_at
+    && profile.deletion_source === 'inactivity'
+  ) {
+    await supabase.rpc('cancel_inactivity_deletion_schedule');
+    profile = {
+      ...profile,
+      deletion_scheduled_at: null,
+      deletion_source: null,
+    };
   }
 
   if (profile) {
@@ -367,7 +382,7 @@ export default async function proxy(request: NextRequest) {
     applyOnboardingCookie(supabaseResponse, ONBOARDING_COOKIE_PENDING);
   }
 
-  // Block users whose account is scheduled for deletion
+  // Block users whose account is scheduled for deletion (inactivity cleared above)
   if (user && profile?.deletion_scheduled_at && !matchesRoute('/account-deleted')) {
     await supabase.auth.signOut();
     const url = request.nextUrl.clone();

@@ -2,6 +2,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import type { MutableRefObject } from 'react';
 
 import type { Profile } from '@/context/AuthContext';
+import { cancelInactivityScheduleIfNeeded } from '@/lib/accountDeletion/cancelInactivitySchedule';
 import type { ServerAuth, ServerProfile } from '@/utils/supabase/getServerAuth';
 import { loadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
 
@@ -71,7 +72,16 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
       const supabase = await loadBrowserSupabase();
       const { data, error } = await supabase.rpc('get_own_profile');
 
-      const nextProfile = error ? null : (data as Profile | null);
+      let nextProfile = error ? null : (data as Profile | null);
+      if (
+        nextProfile?.deletion_scheduled_at
+        && nextProfile.deletion_source === 'inactivity'
+      ) {
+        await cancelInactivityScheduleIfNeeded(supabase);
+        const refetch = await supabase.rpc('get_own_profile');
+        nextProfile = refetch.error ? null : (refetch.data as Profile | null);
+      }
+
       setProfile(nextProfile);
       if (nextProfile) {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -96,15 +106,23 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
     const supabase = await loadBrowserSupabase();
     if (!mounted) return;
 
-    const updateLastLoggedIn = (userId: string): void => {
+    const touchSessionActivity = async (userId: string): Promise<void> => {
+      const { data: prof, error: profErr } = await supabase.rpc('get_own_profile');
+      if (profErr) return;
+      const p = prof as Profile | null;
+      if (p?.deletion_scheduled_at && p.deletion_source === 'inactivity') {
+        await cancelInactivityScheduleIfNeeded(supabase);
+        lastLoggedInUpdatedRef.current = null;
+      }
+
       if (lastLoggedInUpdatedRef.current === userId) return;
       lastLoggedInUpdatedRef.current = userId;
-      supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => { });
+      await supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId);
     };
 
     const forceProfileRefresh = !initialAuth?.profile;
 
-    supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: nextSession } }) => {
       if (!mounted) return;
 
       const userId = nextSession?.user?.id ?? null;
@@ -115,7 +133,7 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
       markSessionReady();
 
       if (userId) {
-        updateLastLoggedIn(userId);
+        await touchSessionActivity(userId);
         if (!hasInitialAuth || forceProfileRefresh) {
           void fetchProfile(userId);
         }
@@ -140,7 +158,7 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
       if (userChanged) {
         if (userId) {
           if (event === 'SIGNED_IN') {
-            updateLastLoggedIn(userId);
+            void touchSessionActivity(userId);
           }
           void fetchProfile(userId);
         } else {
@@ -164,5 +182,12 @@ export function bindAuthSession(options: BindAuthSessionOptions): () => void {
 export async function fetchOwnProfile(): Promise<Profile | null> {
   const supabase = await loadBrowserSupabase();
   const { data, error } = await supabase.rpc('get_own_profile');
-  return error ? null : (data as Profile | null);
+  if (error) return null;
+  let p = data as Profile | null;
+  if (p?.deletion_scheduled_at && p.deletion_source === 'inactivity') {
+    await cancelInactivityScheduleIfNeeded(supabase);
+    const refetch = await supabase.rpc('get_own_profile');
+    p = refetch.error ? null : (refetch.data as Profile | null);
+  }
+  return p;
 }

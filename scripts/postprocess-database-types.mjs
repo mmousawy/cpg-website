@@ -26,7 +26,8 @@ const GENERATED_FILE_HEADER = `/**
  *     supabase gen types typescript … > src/database.types.ts
  *     pnpm db:types
  *
- * This script patches nullable catalog RPC uuid arguments and formats the file with ESLint.
+ * This script patches generated types (catalog RPC uuids, account-deletion columns, etc.)
+ * and formats the file with ESLint.
  */
 `;
 
@@ -176,6 +177,117 @@ if (!patched.includes('batch_update_photo_exif:')) {
     /(\s+batch_update_photos: \{ Args: \{ photo_updates: Json \}; Returns: undefined \})/,
     `$1
       batch_update_photo_exif: { Args: { photo_updates: Json }; Returns: undefined }`,
+  );
+}
+
+// --- Account deletion automation (migrations may be local before VPS db:sync) ---
+// profiles.deletion_source
+if (!/\bprofiles:\s*\{[\s\S]*?deletion_source:/.test(patched)) {
+  patched = patched.replace(
+    /(profiles: \{\r?\n        Row: \{[\s\S]*?          deletion_scheduled_at: string \| null\r?\n)(          email: string \| null\r?\n)/,
+    '$1          deletion_source: string | null\n$2',
+  );
+  patched = patched.replace(
+    /(profiles: \{\r?\n        Row: \{[\s\S]*?\r?\n        Insert: \{[\s\S]*?          deletion_scheduled_at\?: string \| null\r?\n)(          email\?: string \| null\r?\n)/,
+    '$1          deletion_source?: string | null\n$2',
+  );
+  patched = patched.replace(
+    /(profiles: \{\r?\n        Row: \{[\s\S]*?\r?\n        Update: \{[\s\S]*?          deletion_scheduled_at\?: string \| null\r?\n)(          email\?: string \| null\r?\n)/,
+    '$1          deletion_source?: string | null\n$2',
+  );
+}
+
+// feedback.name nullable (purge scrub)
+if (
+  /\bfeedback:\s*\{/.test(patched)
+  && /\bfeedback:\s*\{[\s\S]*?Row:\s*\{[\s\S]*?\bname:\s*string\r?\n/.test(patched)
+  && !/\bfeedback:\s*\{[\s\S]*?Row:\s*\{[\s\S]*?\bname:\s*string\s*\|\s*null/.test(patched)
+) {
+  patched = patched.replace(
+    /(\bfeedback:\s*\{\r?\n        Row:\s*\{[\s\S]*?          name:\s*)string(\r?\n)/,
+    '$1string | null$2',
+  );
+}
+if (
+  /\bfeedback:\s*\{[\s\S]*?Insert:\s*\{[\s\S]*?\bname:\s*string\r?\n/.test(patched)
+  && !/\bfeedback:\s*\{[\s\S]*?Insert:\s*\{[\s\S]*?\bname\?:\s*string\s*\|\s*null/.test(patched)
+) {
+  patched = patched.replace(
+    /(\bfeedback:\s*\{[\s\S]*?Insert:\s*\{[\s\S]*?          name:\s*)string(\r?\n)/,
+    '$1string | null$2',
+  );
+}
+patched = patched.replace(
+  /(\bfeedback:\s*\{[\s\S]*?Update:\s*\{[\s\S]*?          name\?:\s*)string(\r?\n)/,
+  '$1string | null$2',
+);
+
+// scene_events.submitted_by nullable
+if (
+  /\bscene_events:\s*\{[\s\S]*?Row:\s*\{[\s\S]*?submitted_by:\s*string\r?\n/.test(patched)
+  && !/\bscene_events:\s*\{[\s\S]*?submitted_by:\s*string\s*\|\s*null/.test(patched)
+) {
+  patched = patched.replace(
+    /(\bscene_events:\s*\{\r?\n        Row:\s*\{[\s\S]*?          submitted_by:\s*)string(\r?\n          title:)/,
+    '$1string | null$2',
+  );
+}
+patched = patched.replace(
+  /(\bscene_events:\s*\{[\s\S]*?Insert:\s*\{[\s\S]*?          submitted_by:\s*)string(\r?\n          title:)/,
+  '$1string | null$2',
+);
+patched = patched.replace(
+  /(\bscene_events:\s*\{[\s\S]*?Update:\s*\{[\s\S]*?          submitted_by\?:\s*)string(\r?\n          title\?:)/,
+  '$1string | null$2',
+);
+
+// suspended_deleted_fingerprints (repeat detection after suspended purge)
+if (!patched.includes('suspended_deleted_fingerprints:')) {
+  patched = patched.replace(
+    /(\s+signup_signals: \{)/,
+    `      suspended_deleted_fingerprints: {
+        Row: {
+          accept_language: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          ip_address: string | null
+          link_hosts: string[]
+          nickname: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          accept_language?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          ip_address?: string | null
+          link_hosts?: string[]
+          nickname?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          accept_language?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          ip_address?: string | null
+          link_hosts?: string[]
+          nickname?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+$1`,
+  );
+}
+
+// cancel_inactivity_deletion_schedule()
+if (!patched.includes('cancel_inactivity_deletion_schedule:')) {
+  patched = patched.replace(
+    /(cleanup_expired_auth_tokens: \{ Args: never; Returns: undefined \})/,
+    `$1
+      cancel_inactivity_deletion_schedule: { Args: never; Returns: undefined }`,
   );
 }
 

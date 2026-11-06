@@ -6,6 +6,7 @@ import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { buildPostgrestIlikeOr } from '@/lib/search/fuzzyQuery';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
+import { AdminSuspensionDeletionScheduledEmail } from '@/emails/admin-suspension-deletion-scheduled';
 import {
   blockClientIpsForProfile,
   unblockClientIpsForProfile,
@@ -29,6 +30,7 @@ type Profile = Pick<Tables<'profiles'>,
   | 'suspended_at'
   | 'suspended_reason'
   | 'deletion_scheduled_at'
+  | 'deletion_source'
   | 'under_review_at'
   | 'website'
   | 'bio'
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest) {
     let query = adminSupabase
       .from('profiles')
       .select(
-        'id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason, deletion_scheduled_at, under_review_at, website, bio, social_links, link_publish_state, newsletter_opt_in, terms_accepted_at',
+        'id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason, deletion_scheduled_at, deletion_source, under_review_at, website, bio, social_links, link_publish_state, newsletter_opt_in, terms_accepted_at',
         { count: 'exact' },
       );
 
@@ -232,12 +234,18 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === 'suspend') {
-      // Suspend user
+      const now = new Date().toISOString();
+      const deletionDate = new Date();
+      deletionDate.setDate(deletionDate.getDate() + 30);
+
+      // Suspend user and start 30-day deletion clock (admin suspension)
       const { error: updateError } = await adminSupabase
         .from('profiles')
         .update({
-          suspended_at: new Date().toISOString(),
+          suspended_at: now,
           suspended_reason: reason || null,
+          deletion_scheduled_at: now,
+          deletion_source: 'suspension',
         })
         .eq('id', userId);
 
@@ -248,17 +256,59 @@ export async function PATCH(request: NextRequest) {
 
       await blockClientIpsForProfile(userId, reason || null);
 
+      const { data: suspendedProfile } = await adminSupabase
+        .from('profiles')
+        .select('email, full_name, nickname')
+        .eq('id', userId)
+        .single();
+
+      const memberEmail = suspendedProfile?.email;
+      if (memberEmail && !shouldSkipNotificationsAndEmails(memberEmail)) {
+        try {
+          const html = await render(
+            AdminSuspensionDeletionScheduledEmail({
+              fullName: suspendedProfile?.full_name || suspendedProfile?.nickname || memberEmail,
+              recipientEmail: memberEmail,
+              deletionDate: deletionDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              }),
+            }),
+          );
+          await sendAppEmail({
+            from: 'Creative Photography Group <noreply@creativephotography.group>',
+            to: memberEmail,
+            subject: 'Your suspended account is scheduled for deletion',
+            html,
+          });
+        } catch (emailError) {
+          console.error('Failed to send suspension deletion email:', emailError);
+        }
+      }
+
       // Revalidate all pages (suspended users affect homepage, profiles, galleries, etc.)
       await revalidateAll();
 
       return NextResponse.json({ success: true, message: 'User suspended' });
     } else if (action === 'unsuspend') {
       // Unsuspend user
+      const { data: before } = await adminSupabase
+        .from('profiles')
+        .select('deletion_source, deletion_scheduled_at')
+        .eq('id', userId)
+        .single();
+
+      const clearSchedule = before?.deletion_source === 'suspension';
+
       const { error: updateError } = await adminSupabase
         .from('profiles')
         .update({
           suspended_at: null,
           suspended_reason: null,
+          ...(clearSchedule
+            ? { deletion_scheduled_at: null, deletion_source: null }
+            : {}),
         })
         .eq('id', userId);
 
@@ -279,6 +329,7 @@ export async function PATCH(request: NextRequest) {
         .from('profiles')
         .update({
           deletion_scheduled_at: null,
+          deletion_source: null,
         })
         .eq('id', userId);
 
@@ -353,7 +404,7 @@ export async function DELETE(request: NextRequest) {
     const now = new Date().toISOString();
     const { error: updateError } = await adminSupabase
       .from('profiles')
-      .update({ deletion_scheduled_at: now })
+      .update({ deletion_scheduled_at: now, deletion_source: 'admin' })
       .eq('id', userId);
 
     if (updateError) {

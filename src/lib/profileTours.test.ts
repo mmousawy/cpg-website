@@ -26,6 +26,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
     created_at: null,
     default_license: 'all-rights-reserved',
     deletion_scheduled_at: null,
+    deletion_source: null,
     email: null,
     embed_copyright_exif: false,
     exif_copyright_text: null,

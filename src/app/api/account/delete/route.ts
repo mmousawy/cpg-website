@@ -55,7 +55,7 @@ export async function POST() {
     const now = new Date().toISOString();
     const { error: updateError } = await adminSupabase
       .from('profiles')
-      .update({ deletion_scheduled_at: now })
+      .update({ deletion_scheduled_at: now, deletion_source: 'self' })
       .eq('id', user.id);
 
     if (updateError) {

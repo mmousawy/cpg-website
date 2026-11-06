@@ -1,4 +1,6 @@
 import type { Json } from '@/database.types';
+import { isClearAutomaticSuspensionReason } from '@/lib/accountDeletion/deletionSource';
+import { revalidateAll } from '@/app/actions/revalidate';
 import { evaluateProfileModeration } from '@/lib/memberReview/evaluateProfileModeration';
 import { persistProfileModeration } from '@/lib/memberReview/persistProfileModeration';
 import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
@@ -110,7 +112,28 @@ export async function POST(request: NextRequest) {
       : { outcome: 'publish' as const, suspendedReason: null, checks };
 
     await persistProfileModeration(user.id, moderation);
-    await fileModerationReport(user.id, moderation, { fullName, bio: bio || null });
+    if (
+      !(moderation.outcome === 'suspend' && isClearAutomaticSuspensionReason(moderation.suspendedReason))
+    ) {
+      await fileModerationReport(user.id, moderation, { fullName, bio: bio || null });
+    }
+
+    if (moderation.outcome === 'suspend' && isClearAutomaticSuspensionReason(moderation.suspendedReason)) {
+      await revalidateAll();
+      return NextResponse.json({
+        success: true,
+        outcome: moderation.outcome,
+        state,
+        checks: checks.map((c) => ({
+          url: c.url,
+          verdict: c.verdict,
+          reason: c.reason,
+          title: c.title,
+          schemaTypes: c.schemaTypes,
+          safeBrowsing: c.safeBrowsing,
+        })),
+      });
+    }
 
     const blocked: {
       website?: string;

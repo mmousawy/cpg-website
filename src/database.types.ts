@@ -11,7 +11,8 @@
  *     supabase gen types typescript … > src/database.types.ts
  *     pnpm db:types
  *
- * This script patches nullable catalog RPC uuid arguments and formats the file with ESLint.
+ * This script patches generated types (catalog RPC uuids, account-deletion columns, etc.)
+ * and formats the file with ESLint.
  */
 
 export type Json =
@@ -961,7 +962,7 @@ export type Database = {
           email: string | null
           id: string
           message: string
-          name: string
+          name: string | null
           screenshots: string[] | null
           status: string
           subject: string
@@ -973,7 +974,7 @@ export type Database = {
           email?: string | null
           id?: string
           message: string
-          name: string
+          name: string | null
           screenshots?: string[] | null
           status?: string
           subject: string
@@ -985,7 +986,7 @@ export type Database = {
           email?: string | null
           id?: string
           message?: string
-          name?: string
+          name?: string | null
           screenshots?: string[] | null
           status?: string
           subject?: string
@@ -1574,6 +1575,7 @@ export type Database = {
           created_at: string | null
           default_license: Database['public']['Enums']['license_type']
           deletion_scheduled_at: string | null
+          deletion_source: string | null
           email: string | null
           embed_copyright_exif: boolean
           exif_copyright_text: string | null
@@ -1615,6 +1617,7 @@ export type Database = {
           created_at?: string | null
           default_license?: Database['public']['Enums']['license_type']
           deletion_scheduled_at?: string | null
+          deletion_source?: string | null
           email?: string | null
           embed_copyright_exif?: boolean
           exif_copyright_text?: string | null
@@ -1656,6 +1659,7 @@ export type Database = {
           created_at?: string | null
           default_license?: Database['public']['Enums']['license_type']
           deletion_scheduled_at?: string | null
+          deletion_source?: string | null
           email?: string | null
           embed_copyright_exif?: boolean
           exif_copyright_text?: string | null
@@ -1841,7 +1845,7 @@ export type Database = {
           slug: string
           start_date: string
           start_time: string | null
-          submitted_by: string
+          submitted_by: string | null
           title: string
           updated_at: string
           url: string | null
@@ -1868,7 +1872,7 @@ export type Database = {
           slug: string
           start_date: string
           start_time?: string | null
-          submitted_by: string
+          submitted_by?: string | null
           title: string
           updated_at?: string
           url?: string | null
@@ -1895,7 +1899,7 @@ export type Database = {
           slug?: string
           start_date?: string
           start_time?: string | null
-          submitted_by?: string
+          submitted_by?: string | null
           title?: string
           updated_at?: string
           url?: string | null
@@ -2065,6 +2069,39 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      suspended_deleted_fingerprints: {
+        Row: {
+          accept_language: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          ip_address: string | null
+          link_hosts: string[]
+          nickname: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          accept_language?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          ip_address?: string | null
+          link_hosts?: string[]
+          nickname?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          accept_language?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          ip_address?: string | null
+          link_hosts?: string[]
+          nickname?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       tags: {
         Row: {
@@ -2339,6 +2376,7 @@ export type Database = {
       }
       can_comment_on_album: { Args: { p_album_id: string }; Returns: boolean }
       can_comment_on_photo: { Args: { p_photo_id: string }; Returns: boolean }
+      cancel_inactivity_deletion_schedule: { Args: never; Returns: undefined }
       cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
       comment_is_readable: { Args: { p_comment_id: string }; Returns: boolean }
       create_event_album: { Args: { p_event_id: number }; Returns: string }

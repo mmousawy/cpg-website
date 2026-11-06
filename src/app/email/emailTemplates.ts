@@ -3,6 +3,8 @@ type EmailModule = { default: EmailTemplateComponent };
 
 export const emailTemplateLoaders: Record<string, () => Promise<EmailModule>> = {
   'account-deletion': () => import('@/emails/account-deletion') as unknown as Promise<EmailModule>,
+  'admin-suspension-deletion-scheduled': () =>
+    import('@/emails/admin-suspension-deletion-scheduled') as unknown as Promise<EmailModule>,
   'attendee-message': () => import('@/emails/attendee-message') as unknown as Promise<EmailModule>,
   'attendee-reminder': () => import('@/emails/attendee-reminder') as unknown as Promise<EmailModule>,
   'cancel': () => import('@/emails/cancel') as unknown as Promise<EmailModule>,
@@ -13,6 +15,8 @@ export const emailTemplateLoaders: Record<string, () => Promise<EmailModule>> = 
   'confirm': () => import('@/emails/confirm') as unknown as Promise<EmailModule>,
   'contact': () => import('@/emails/contact') as unknown as Promise<EmailModule>,
   'event-announcement': () => import('@/emails/event-announcement') as unknown as Promise<EmailModule>,
+  'inactivity-deletion-scheduled': () =>
+    import('@/emails/inactivity-deletion-scheduled') as unknown as Promise<EmailModule>,
   'feedback-notification': () => import('@/emails/feedback-notification') as unknown as Promise<EmailModule>,
   'member-deleted': () => import('@/emails/member-notification').then((mod) => ({
     default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'deleted' }),

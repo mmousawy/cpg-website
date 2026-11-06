@@ -1,4 +1,6 @@
 import { revalidateAll } from '@/app/actions/revalidate';
+import { purgeAccountByUserId } from '@/lib/accountDeletion/purgeAccountByUserId';
+import { isClearAutomaticSuspensionReason } from '@/lib/accountDeletion/deletionSource';
 import type { OnboardingModerationResult } from '@/lib/memberReview/assessOnboardingModeration';
 import { blockClientIpsForProfile } from '@/lib/memberReview/ipBlocking';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -14,6 +16,27 @@ export async function persistProfileModeration(
   const admin = createAdminClient();
 
   if (moderation.outcome === 'suspend') {
+    if (isClearAutomaticSuspensionReason(moderation.suspendedReason)) {
+      const { error: updErr } = await admin
+        .from('profiles')
+        .update({
+          suspended_at: now,
+          suspended_reason: moderation.suspendedReason,
+        })
+        .eq('id', userId);
+      if (updErr) {
+        console.error('persistProfileModeration suspend (auto):', updErr);
+        return;
+      }
+      await blockClientIpsForProfile(userId, moderation.suspendedReason);
+      const purge = await purgeAccountByUserId(userId, { retainSuspendedFingerprint: true });
+      if (!purge.ok) {
+        console.error('persistProfileModeration immediate purge:', purge.error);
+      }
+      await revalidateAll();
+      return;
+    }
+
     const { error } = await admin
       .from('profiles')
       .update({

@@ -209,9 +209,25 @@ function stickyClass(id: string, kind: 'header' | 'cell') {
   return '';
 }
 
+function deletionSourceLabel(source: string | null | undefined): string | null {
+  switch (source) {
+    case 'self':
+      return 'Self-requested';
+    case 'admin':
+      return 'Admin';
+    case 'inactivity':
+      return 'Inactive account';
+    case 'suspension':
+      return 'Suspended';
+    default:
+      return null;
+  }
+}
+
 function StatusCell({ member }: { member: AdminMember }) {
   if (member.deletion_scheduled_at) {
     const d = new Date(new Date(member.deletion_scheduled_at).getTime() + 30 * 24 * 60 * 60 * 1000);
+    const sourceLine = deletionSourceLabel(member.deletion_source);
     return (
       <div>
         <span
@@ -219,6 +235,13 @@ function StatusCell({ member }: { member: AdminMember }) {
         >
           Deletion scheduled
         </span>
+        {sourceLine ? (
+          <p
+            className="mt-0.5 text-[11px] text-foreground/45"
+          >
+            {sourceLine}
+          </p>
+        ) : null}
         <p
           className="mt-1 text-xs text-foreground/50"
           title={`Scheduled on ${new Date(member.deletion_scheduled_at).toLocaleDateString()}`}

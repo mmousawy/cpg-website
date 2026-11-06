@@ -108,12 +108,19 @@ export async function GET(request: NextRequest) {
             });
           });
         } else if (profile.deletion_scheduled_at) {
-          await supabase.auth.signOut();
-          const deletedResponse = NextResponse.redirect(`${siteUrl}/account-deleted`);
-          applyCookies(deletedResponse, cookiesToSet);
-          clearOnboardingCookie(deletedResponse);
-          return deletedResponse;
-        } else {
+          const source = typeof profile.deletion_source === 'string' ? profile.deletion_source : null;
+          if (source === 'inactivity') {
+            await supabase.rpc('cancel_inactivity_deletion_schedule');
+          } else {
+            await supabase.auth.signOut();
+            const deletedResponse = NextResponse.redirect(`${siteUrl}/account-deleted`);
+            applyCookies(deletedResponse, cookiesToSet);
+            clearOnboardingCookie(deletedResponse);
+            return deletedResponse;
+          }
+        }
+
+        if (profile) {
           const oauthAvatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
           const updateData: Record<string, unknown> = {
             last_logged_in: new Date().toISOString(),

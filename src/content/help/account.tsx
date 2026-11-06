@@ -118,6 +118,9 @@ export const accountFAQ: FAQSection = {
           <p>
             Changed your mind? Contact us through the Contact page within 30 days and we can cancel the deletion.
           </p>
+          <p>
+            If your account was scheduled because it was inactive, signing in before the deletion date cancels the schedule and restores access. If an administrator suspended your account, only an administrator can unsuspend it before the deletion date. Some automatic suspensions at signup are removed immediately. Scene listings you submitted may stay visible without your name after your account is gone.
+          </p>
         </>
       ),
     },

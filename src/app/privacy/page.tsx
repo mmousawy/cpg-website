@@ -237,6 +237,12 @@ export default function PrivacyPage() {
             <p>
               We retain your data for as long as your account is active. When you delete content, it is immediately hidden from all users and marked for permanent deletion. Deleted content, including all associated files, is permanently purged from our servers within 30 days. When your account is deleted, the same process applies to all remaining content. Some data may also remain in backups for a limited period for disaster recovery purposes, but it will not be accessible through the service.
             </p>
+            <p>
+              If you have not signed in for a long time, we may schedule your account for deletion: after six months from signup when you never returned on a later day, or after two years without a sign-in. We email you first; signing in before the 30-day period ends restores your account. If an administrator suspends your account, it is scheduled for permanent deletion 30 days after suspension unless an administrator unsuspends you first. Certain automatic suspensions at signup (for example repeat abuse or unsafe links) are removed immediately with no retention period. Scene event listings you submitted may stay visible without your name after deletion.
+            </p>
+            <p>
+              After a suspended account is deleted, we may keep the IP address, device signals, blocklist entry, and the nickname, name, and link hosts we use to detect repeat signups and automated abuse.
+            </p>
           </section>
 
           <section>

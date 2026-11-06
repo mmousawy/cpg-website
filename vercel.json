@@ -43,6 +43,10 @@
       "schedule": "0 3 * * 0"
     },
     {
+      "path": "/api/cron/schedule-inactive-deletions",
+      "schedule": "15 3 * * *"
+    },
+    {
       "path": "/api/cron/send-pending-notification-emails",
       "schedule": "*/5 * * * *"
     },

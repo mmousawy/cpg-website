@@ -1,3 +1,4 @@
+import { purgeAccountByUserId } from '@/lib/accountDeletion/purgeAccountByUserId';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 
@@ -160,82 +161,13 @@ export async function GET(request: NextRequest) {
     } else if (scheduledProfiles && scheduledProfiles.length > 0) {
       for (const profile of scheduledProfiles) {
         try {
-          // a) Soft-delete all owned photos (so next cron cycle cleans up storage)
-          const { error: softDeletePhotosError } = await supabase
-            .from('photos')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('user_id', profile.id)
-            .is('deleted_at', null);
-
-          if (softDeletePhotosError) {
-            results.errors.push(`Failed to soft-delete photos for ${profile.id}: ${softDeletePhotosError.message}`);
-          }
-
-          // b) Remove contributed album_photos from shared albums
-          const { error: albumPhotosError } = await supabase
-            .from('album_photos')
-            .delete()
-            .eq('added_by', profile.id);
-
-          if (albumPhotosError) {
-            results.errors.push(`Failed to remove contributed album_photos for ${profile.id}: ${albumPhotosError.message}`);
-          }
-
-          // c) Nullify blocking FK references
-          await supabase
-            .from('challenge_announcements')
-            .update({ announced_by: null } as never)
-            .eq('announced_by', profile.id);
-
-          await supabase
-            .from('challenge_submissions')
-            .update({ reviewed_by: null } as never)
-            .eq('reviewed_by', profile.id);
-
-          await supabase
-            .from('challenges')
-            .update({ created_by: null } as never)
-            .eq('created_by', profile.id);
-
-          await supabase
-            .from('event_announcements')
-            .update({ announced_by: null } as never)
-            .eq('announced_by', profile.id);
-
-          await supabase
-            .from('albums')
-            .update({ suspended_by: null } as never)
-            .eq('suspended_by', profile.id);
-
-          // d) Delete avatar and banner files from storage
-          for (const bucket of ['user-avatars', 'user-banners'] as const) {
-            const hasFile = bucket === 'user-avatars' ? profile.avatar_url : profile.banner_url;
-            if (!hasFile) continue;
-
-            try {
-              const { data: files } = await supabase.storage
-                .from(bucket)
-                .list(profile.id);
-
-              if (files && files.length > 0) {
-                await supabase.storage
-                  .from(bucket)
-                  .remove(files.map((f) => `${profile.id}/${f.name}`));
-              }
-            } catch {
-              results.errors.push(`Failed to delete ${bucket} files for ${profile.id}`);
-            }
-          }
-
-          // e) Delete auth user (cascades profile + all related records)
-          const { error: authDeleteError } = await supabase.auth.admin.deleteUser(profile.id);
-
-          if (authDeleteError) {
-            results.errors.push(`Failed to delete auth user ${profile.id}: ${authDeleteError.message}`);
+          const purge = await purgeAccountByUserId(profile.id);
+          if (!purge.ok) {
+            results.errors.push(`Account purge failed for ${profile.id}: ${purge.error}`);
             results.accounts.failed += 1;
-          } else {
-            results.accounts.deleted += 1;
+            continue;
           }
+          results.accounts.deleted += 1;
         } catch (accountError) {
           results.errors.push(`Error purging account ${profile.id}: ${accountError instanceof Error ? accountError.message : 'Unknown error'}`);
           results.accounts.failed += 1;
