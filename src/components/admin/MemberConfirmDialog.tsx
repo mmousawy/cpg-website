@@ -8,30 +8,15 @@ import { createPortal } from 'react-dom';
 import { modalOverlayZClassName } from '@/components/layout/mobileChrome';
 import Button from '@/components/shared/Button';
 import Textarea from '@/components/shared/Textarea';
-import type { Tables } from '@/database.types';
+import type { AdminMember } from '@/types/adminMember';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useMounted } from '@/hooks/useMounted';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 
-type Member = Pick<
-  Tables<'profiles'>,
-  | 'id'
-  | 'email'
-  | 'full_name'
-  | 'nickname'
-  | 'avatar_url'
-  | 'is_admin'
-  | 'created_at'
-  | 'last_logged_in'
-  | 'suspended_at'
-  | 'suspended_reason'
-  | 'deletion_scheduled_at'
->;
-
 interface MemberConfirmDialogProps {
   type: 'suspend' | 'delete' | 'unsuspend' | 'cancel-deletion';
-  member: Member;
+  member: AdminMember;
   suspendReason: string;
   onSuspendReasonChange: (reason: string) => void;
   onConfirm: () => void;

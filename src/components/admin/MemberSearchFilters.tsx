@@ -2,12 +2,14 @@
 
 import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
+import type { AdminMemberStatusFilter } from '@/types/adminMember';
 
 interface MemberSearchFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
-  filter: 'all' | 'active' | 'suspended';
-  onFilterChange: (value: 'all' | 'active' | 'suspended') => void;
+  filter: AdminMemberStatusFilter;
+  onFilterChange: (value: AdminMemberStatusFilter) => void;
+  includeUnderReview?: boolean;
 }
 
 export default function MemberSearchFilters({
@@ -15,12 +17,12 @@ export default function MemberSearchFilters({
   onSearchChange,
   filter,
   onFilterChange,
+  includeUnderReview = false,
 }: MemberSearchFiltersProps) {
   return (
     <div
       className="mb-6 flex flex-col gap-4 rounded-lg border border-border-color bg-background-light p-4 sm:flex-row sm:items-center"
     >
-      {/* Search */}
       <div
         className="flex-1"
       >
@@ -32,7 +34,6 @@ export default function MemberSearchFilters({
         />
       </div>
 
-      {/* Filter dropdown */}
       <div
         className="flex items-center gap-2"
       >
@@ -43,14 +44,17 @@ export default function MemberSearchFilters({
         </label>
         <Select
           value={filter}
-          onValueChange={(value) => onFilterChange(value as 'all' | 'active' | 'suspended')}
+          onValueChange={(value) => onFilterChange(value as AdminMemberStatusFilter)}
           options={[
             { value: 'all', label: 'All' },
             { value: 'active', label: 'Active' },
+            ...(includeUnderReview
+              ? [{ value: 'under_review', label: 'Under review' }]
+              : []),
             { value: 'suspended', label: 'Suspended' },
           ]}
           fullWidth={false}
-          className="min-w-[120px]"
+          className="min-w-[140px]"
         />
       </div>
     </div>

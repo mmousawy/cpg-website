@@ -2368,6 +2368,19 @@ export type Database = {
             Returns: string
           }
       generate_short_id: { Args: { size?: number }; Returns: string }
+      get_admin_member_activity: {
+        Args: { p_ids: string[] }
+        Returns: {
+          album_count: number
+          followers: number
+          following: number
+          likes_received: number
+          photo_count: number
+          storage_bytes: number
+          user_id: string
+          views_received: number
+        }[]
+      }
       get_admin_member_stats: {
         Args: {
           p_filter?: string

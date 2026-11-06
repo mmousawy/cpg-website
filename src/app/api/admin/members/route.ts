@@ -15,6 +15,8 @@ import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
 import { NextRequest, NextResponse, after } from 'next/server';
 
+import type { AdminMember, AdminMemberActivity, AdminMemberSignupSignal } from '@/types/adminMember';
+
 type Profile = Pick<Tables<'profiles'>,
   | 'id'
   | 'email'
@@ -27,7 +29,34 @@ type Profile = Pick<Tables<'profiles'>,
   | 'suspended_at'
   | 'suspended_reason'
   | 'deletion_scheduled_at'
+  | 'under_review_at'
+  | 'website'
+  | 'bio'
+  | 'social_links'
+  | 'link_publish_state'
+  | 'newsletter_opt_in'
+  | 'terms_accepted_at'
 >
+
+const ADMIN_MEMBER_SORT_KEYS: (keyof Profile)[] = [
+  'email',
+  'full_name',
+  'nickname',
+  'created_at',
+  'last_logged_in',
+  'suspended_at',
+  'under_review_at',
+];
+
+const emptyActivity: AdminMemberActivity = {
+  photo_count: 0,
+  album_count: 0,
+  storage_bytes: 0,
+  views_received: 0,
+  likes_received: 0,
+  followers: 0,
+  following: 0,
+};
 
 // GET - List all members
 export async function GET(request: NextRequest) {
@@ -50,8 +79,11 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search') || '';
-    const filter = searchParams.get('filter') || 'all'; // all, active, suspended
-    const sortBy = searchParams.get('sortBy') || 'created_at';
+    const filter = searchParams.get('filter') || 'all'; // all, active, suspended, under_review
+    const sortByRaw = searchParams.get('sortBy') || 'created_at';
+    const sortBy = ADMIN_MEMBER_SORT_KEYS.includes(sortByRaw as keyof Profile)
+      ? sortByRaw
+      : 'created_at';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -60,7 +92,10 @@ export async function GET(request: NextRequest) {
     // Build query
     let query = adminSupabase
       .from('profiles')
-      .select('id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason, deletion_scheduled_at', { count: 'exact' });
+      .select(
+        'id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason, deletion_scheduled_at, under_review_at, website, bio, social_links, link_publish_state, newsletter_opt_in, terms_accepted_at',
+        { count: 'exact' },
+      );
 
     // Apply search filter
     if (search) {
@@ -72,6 +107,8 @@ export async function GET(request: NextRequest) {
       query = query.is('suspended_at', null);
     } else if (filter === 'suspended') {
       query = query.not('suspended_at', 'is', null);
+    } else if (filter === 'under_review') {
+      query = query.not('under_review_at', 'is', null).is('suspended_at', null);
     }
 
     // Apply sorting
@@ -81,15 +118,79 @@ export async function GET(request: NextRequest) {
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
 
-    const { data: members, error, count } = await query;
+    const { data: profileRows, error, count } = await query;
 
     if (error) {
       console.error('Error fetching members:', error);
       return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
     }
 
+    const profiles = (profileRows ?? []) as Profile[];
+    let members: AdminMember[] = profiles.map((p) => ({
+      ...p,
+      signup_signal: null,
+      activity: { ...emptyActivity },
+    }));
+
+    if (profiles.length > 0) {
+      const ids = profiles.map((p) => p.id);
+
+      const { data: signalRows, error: signalError } = await adminSupabase
+        .from('signup_signals')
+        .select('profile_id, ip_address, user_agent, accept_language, source')
+        .in('profile_id', ids);
+
+      if (signalError) {
+        console.error('Error fetching signup signals:', signalError);
+      }
+
+      const signalByProfile = new Map<string, AdminMemberSignupSignal>();
+      for (const row of signalRows ?? []) {
+        signalByProfile.set(row.profile_id, {
+          ip_address: row.ip_address,
+          user_agent: row.user_agent,
+          accept_language: row.accept_language,
+          source: row.source,
+        });
+      }
+
+      const activityByUser = new Map<string, AdminMemberActivity>();
+      const { data: statsPayload, error: statsError } = await supabase.rpc('get_admin_member_stats', {
+        p_search: search,
+        p_filter: filter === 'under_review' ? 'all' : filter,
+        p_sort_by: sortBy,
+        p_sort_order: sortOrder,
+        p_page: page,
+        p_limit: limit,
+      });
+
+      if (statsError) {
+        console.error('Error fetching member activity:', statsError);
+      } else {
+        const statsMembers = (statsPayload as { members?: Array<AdminMemberActivity & { id: string }> } | null)
+          ?.members ?? [];
+        for (const row of statsMembers) {
+          activityByUser.set(row.id, {
+            photo_count: row.photo_count ?? 0,
+            album_count: row.album_count ?? 0,
+            storage_bytes: Number(row.storage_bytes ?? 0),
+            views_received: row.views_received ?? 0,
+            likes_received: row.likes_received ?? 0,
+            followers: row.followers ?? 0,
+            following: row.following ?? 0,
+          });
+        }
+      }
+
+      members = profiles.map((p) => ({
+        ...p,
+        signup_signal: signalByProfile.get(p.id) ?? null,
+        activity: activityByUser.get(p.id) ?? { ...emptyActivity },
+      }));
+    }
+
     return NextResponse.json({
-      members: members || [],
+      members,
       total: count || 0,
       page,
       limit,

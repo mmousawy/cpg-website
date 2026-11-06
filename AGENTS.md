@@ -8,6 +8,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## Supabase types (`src/database.types.ts`)
+## Generated database artifacts
 
-Do **not** edit `src/database.types.ts` directly. It is generated from the database and post-processed by `scripts/postprocess-database-types.mjs` (`pnpm db:types`). After schema changes: add a migration, apply it, then run `pnpm db:sync` or `supabase gen types` → `pnpm db:types`. See README “Generate Supabase Types”.
+Do **not** edit `src/database.types.ts` or `supabase/migrations/00000000000000_baseline.sql` by hand. After schema changes: add a dated migration under `supabase/migrations/`, apply it, then run `pnpm db:sync` (pulls types and baseline from the VPS). See README “Generate Supabase Types”.
