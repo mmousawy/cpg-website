@@ -6,6 +6,7 @@ import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOf
 import { isIpBlocked, upsertSignupSignal } from '@/lib/memberReview/ipBlocking';
 import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
+import { isServiceAccountUserId } from '@/lib/auth/serviceAccount';
 import {
   applyOnboardingCookie,
   clearOnboardingCookie,
@@ -74,6 +75,16 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user && isServiceAccountUserId(user.id)) {
+        await supabase.auth.signOut();
+        const denied = NextResponse.redirect(`${siteUrl}/auth-error`);
+        applyCookies(denied, cookiesToSet);
+        clearOnboardingCookie(denied);
+        return denied;
+      }
+
       if (clientMeta.ip && await isIpBlocked(clientMeta.ip)) {
         await supabase.auth.signOut();
         const blocked = NextResponse.redirect(`${siteUrl}/network-blocked`);
@@ -82,7 +93,6 @@ export async function GET(request: NextRequest) {
         return blocked;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
       let dest = getPostLoginRedirect(redirectToParam);
 
       if (user) {
@@ -90,6 +100,14 @@ export async function GET(request: NextRequest) {
         const profile = profileData && typeof profileData === 'object' && !Array.isArray(profileData)
           ? profileData as Record<string, unknown>
           : null;
+
+        if (profile && profile.is_service_account === true) {
+          await supabase.auth.signOut();
+          const denied = NextResponse.redirect(`${siteUrl}/auth-error`);
+          applyCookies(denied, cookiesToSet);
+          clearOnboardingCookie(denied);
+          return denied;
+        }
 
         if (!profile) {
           await supabase.from('profiles').insert({
@@ -102,18 +120,25 @@ export async function GET(request: NextRequest) {
           await upsertSignupSignal(user.id, clientMeta, 'oauth_callback');
 
           after(() => {
-            if (shouldSkipNotificationsAndEmails(user.email)) return;
+            if (shouldSkipNotificationsAndEmails(user.email, { userId: user.id })) return;
             void notifyAdminsOfMemberSignedUp(user.id).catch((err) => {
               console.error('Error notifying admins of signup:', err);
             });
           });
         } else if (profile.deletion_scheduled_at) {
-          await supabase.auth.signOut();
-          const deletedResponse = NextResponse.redirect(`${siteUrl}/account-deleted`);
-          applyCookies(deletedResponse, cookiesToSet);
-          clearOnboardingCookie(deletedResponse);
-          return deletedResponse;
-        } else {
+          const source = typeof profile.deletion_source === 'string' ? profile.deletion_source : null;
+          if (source === 'inactivity') {
+            await supabase.rpc('cancel_inactivity_deletion_schedule');
+          } else {
+            await supabase.auth.signOut();
+            const deletedResponse = NextResponse.redirect(`${siteUrl}/account-deleted`);
+            applyCookies(deletedResponse, cookiesToSet);
+            clearOnboardingCookie(deletedResponse);
+            return deletedResponse;
+          }
+        }
+
+        if (profile) {
           const oauthAvatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
           const updateData: Record<string, unknown> = {
             last_logged_in: new Date().toISOString(),
@@ -130,7 +155,7 @@ export async function GET(request: NextRequest) {
 
           if (!profile.terms_accepted_at) {
             after(() => {
-              if (shouldSkipNotificationsAndEmails(user.email)) return;
+              if (shouldSkipNotificationsAndEmails(user.email, { userId: user.id })) return;
               void notifyAdminsOfMemberSignedUp(user.id).catch((err) => {
                 console.error('Error notifying admins of signup:', err);
               });

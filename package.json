@@ -1,6 +1,6 @@
 {
   "name": "cpg-website",
-  "version": "1.47.0",
+  "version": "1.47.1",
   "private": true,
   "packageManager": "pnpm@11.28.11",
   "engines": {
@@ -31,6 +31,7 @@
     "verify:image-icc": "node scripts/verify-image-icc.mjs",
     "check:urls": "npx tsx scripts/check-profile-urls.ts",
     "db:types": "node scripts/postprocess-database-types.mjs",
+    "db:report-deletion": "npx tsx scripts/report-account-deletion-status.ts",
     "db:sync": "node scripts/sync-remote-database.mjs",
     "prepare": "husky"
   },

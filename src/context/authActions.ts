@@ -1,3 +1,6 @@
+import { cancelInactivityScheduleIfNeeded } from '@/lib/accountDeletion/cancelInactivitySchedule';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
+import { isServiceAccountUserId } from '@/lib/auth/serviceAccount';
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { loadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
@@ -39,12 +42,36 @@ export async function signInWithEmail(email: string, password: string) {
   if (error) return { error };
 
   if (data.user) {
+    if (isServiceAccountUserId(data.user.id)) {
+      await supabase.auth.signOut();
+      return { error: new Error('This account cannot be used to sign in.') };
+    }
+
     const { data: profileData, error: profileError } = await supabase.rpc('get_own_profile');
-    const profile = profileError ? null : profileData as Profile | null;
+    let profile = profileError ? null : profileData as Profile | null;
+
+    if (profile?.is_service_account === true) {
+      await supabase.auth.signOut();
+      return { error: new Error('This account cannot be used to sign in.') };
+    }
 
     if (profile?.deletion_scheduled_at) {
-      await supabase.auth.signOut();
-      return { error: new Error('This account is scheduled for deletion. If you want to cancel the deletion, please contact us through the contact form.') };
+      if (profile.deletion_source === 'inactivity') {
+        await cancelInactivityScheduleIfNeeded(supabase);
+        await supabase
+          .from('profiles')
+          .update({ last_logged_in: new Date().toISOString() })
+          .eq('id', data.user.id);
+        const refetch = await supabase.rpc('get_own_profile');
+        profile = refetch.error ? null : refetch.data as Profile | null;
+      } else {
+        await supabase.auth.signOut();
+        return {
+          error: new Error(
+            'This account is scheduled for deletion. If you want to cancel the deletion, please contact us through the contact form.',
+          ),
+        };
+      }
     }
 
     if (profile?.suspended_at) {

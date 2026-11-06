@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getWeeklyDigestSubject, WeeklyDigestEmail } from '@/emails/weekly-digest';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { isServiceAccountFromProfileRow } from '@/lib/auth/serviceAccount';
 import { isAdminNotificationType, isEventNotificationType, type NotificationWithActor } from '@/types/notifications';
 import { encrypt } from '@/utils/encrypt';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -109,7 +110,7 @@ export async function GET(request: NextRequest) {
   const userIds = Array.from(userNotificationsMap.keys());
   const { data: userProfiles } = await supabase
     .from('profiles')
-    .select('id, email, full_name')
+    .select('id, email, full_name, is_service_account')
     .in('id', userIds);
 
   const userProfilesMap = new Map(
@@ -133,7 +134,11 @@ export async function GET(request: NextRequest) {
   for (const [userId, notifications] of userNotificationsMap.entries()) {
     const userProfile = userProfilesMap.get(userId);
 
-    if (!userProfile?.email || isTestEmail(userProfile.email)) {
+    if (
+      !userProfile?.email
+      || isTestEmail(userProfile.email)
+      || isServiceAccountFromProfileRow(userProfile)
+    ) {
       continue;
     }
 

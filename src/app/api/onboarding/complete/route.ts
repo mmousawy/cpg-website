@@ -1,5 +1,7 @@
 import type { Json, TablesUpdate } from '@/database.types';
 import { revalidateAll } from '@/app/actions/revalidate';
+import { isClearAutomaticSuspensionReason } from '@/lib/accountDeletion/deletionSource';
+import { purgeAccountByUserId } from '@/lib/accountDeletion/purgeAccountByUserId';
 import { evaluateProfileModeration } from '@/lib/memberReview/evaluateProfileModeration';
 import {
   blockClientIpsForProfile,
@@ -128,10 +130,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    await fileModerationReport(user.id, moderation, { fullName, bio: bio || null });
+    if (
+      !(moderation.outcome === 'suspend' && isClearAutomaticSuspensionReason(moderation.suspendedReason))
+    ) {
+      await fileModerationReport(user.id, moderation, { fullName, bio: bio || null });
+    }
 
     if (moderation.outcome === 'suspend') {
       await blockClientIpsForProfile(user.id, moderation.suspendedReason);
+      if (isClearAutomaticSuspensionReason(moderation.suspendedReason)) {
+        const purge = await purgeAccountByUserId(user.id, { retainSuspendedFingerprint: true });
+        if (!purge.ok) {
+          return NextResponse.json({ error: purge.error }, { status: 500 });
+        }
+        await revalidateAll();
+        return NextResponse.json({
+          success: true,
+          outcome: moderation.outcome,
+        });
+      }
     }
 
     if (moderation.outcome === 'publish') {

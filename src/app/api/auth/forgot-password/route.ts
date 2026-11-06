@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Send reset email
     const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
-    if (!shouldSkipNotificationsAndEmails(email)) {
+    if (!shouldSkipNotificationsAndEmails(email, { userId: user.id })) {
       const emailResult = await sendAppEmail({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: email,

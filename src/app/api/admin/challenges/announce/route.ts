@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     .select('id, email, full_name')
     .is('suspended_at', null)
     .is('deletion_scheduled_at', null)
+    .eq('is_service_account', false)
     .not('email', 'is', null);
 
   if (profilesError) {

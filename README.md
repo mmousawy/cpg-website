@@ -333,7 +333,17 @@ supabase/
 
 ## Generate Supabase Types
 
-From your **local machine** (repo root), pull types over SSH, then post-process (nullable RPC `uuid` patches + ESLint format):
+**Preferred:** from the repo root, with `SSH_HOST`, `SSH_USER`, `SSH_PASSWORD`, and `SUPABASE_DB_URL` set in `.env.local` (see [`scripts/sync-remote-database.mjs`](scripts/sync-remote-database.mjs)):
+
+```bash
+pnpm db:sync
+```
+
+That command generates `src/database.types.ts` on the VPS, runs [`scripts/postprocess-database-types.mjs`](scripts/postprocess-database-types.mjs) (RPC `uuid` nullability, account-deletion columns/RPC, ESLint format), and refreshes the schema baseline.
+
+---
+
+**Manual — SSH + redirect** (same post-process step; use if you are not using `db:sync`):
 
 ```bash
 ssh ubuntu@57.129.6.153 "npx supabase gen types typescript --db-url 'postgresql://postgres.<tenant-ref>:<password>@localhost:5432/postgres' --schema public" > ./src/database.types.ts
@@ -349,7 +359,7 @@ npx supabase gen types typescript --project-id "your-project-id" > ./src/databas
 pnpm db:types
 ```
 
-`pnpm typecheck` fails if you skip `pnpm db:types` after regenerating `src/database.types.ts`.
+`pnpm typecheck` fails if you skip `pnpm db:types` after regenerating `src/database.types.ts` (including after any flow that overwrites `database.types.ts` without running postprocess).
 
 ## Performance
 

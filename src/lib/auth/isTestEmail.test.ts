@@ -42,6 +42,10 @@ describe('isTestEmail', () => {
     expect(isTestEmail(undefined)).toBe(false);
     expect(isTestEmail('')).toBe(false);
   });
+
+  it('treats the scene scraper bot address like a non-outbound identity', () => {
+    expect(isTestEmail('bot@creativephotography.group')).toBe(true);
+  });
 });
 
 describe('shouldSkipNotificationsAndEmails', () => {
@@ -49,6 +53,7 @@ describe('shouldSkipNotificationsAndEmails', () => {
     setEnv({ NODE_ENV: 'production', RESEND_API_KEY: 're_live_abc' });
     expect(shouldSkipNotificationsAndEmails('test-e2e-1@test.local')).toBe(true);
     expect(shouldSkipNotificationsAndEmails('real@example.com')).toBe(false);
+    expect(shouldSkipNotificationsAndEmails('bot@creativephotography.group')).toBe(true);
   });
 
   it('skips when NODE_ENV is test', () => {

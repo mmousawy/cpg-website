@@ -56,7 +56,13 @@ export async function getServerAuth(): Promise<ServerAuth> {
       return { user: null, profile: null };
     }
 
-    const { data: profileData } = await supabase.rpc('get_own_profile');
+    let { data: profileData } = await supabase.rpc('get_own_profile');
+    const p = profileData as (ServerProfile & { deletion_scheduled_at?: string | null; deletion_source?: string | null }) | null;
+    if (p?.deletion_scheduled_at && p.deletion_source === 'inactivity') {
+      await supabase.rpc('cancel_inactivity_deletion_schedule');
+      const refetch = await supabase.rpc('get_own_profile');
+      profileData = refetch.data;
+    }
     const profile = profileData as ServerProfile | null;
 
     return {

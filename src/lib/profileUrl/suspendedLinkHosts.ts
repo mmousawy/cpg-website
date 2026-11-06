@@ -59,6 +59,26 @@ export async function getSuspendedProfileLinkHosts(): Promise<Set<string>> {
       hosts.add(host);
     }
   }
+
+  const { data: retained, error: retainedError } = await (adminSupabase as unknown as {
+    from: (table: string) => {
+      select: (cols: string) => Promise<{
+        data: Array<{ link_hosts: string[] | null }> | null;
+        error: { message: string } | null;
+      }>;
+    };
+  }).from('suspended_deleted_fingerprints').select('link_hosts');
+
+  if (retainedError) {
+    console.error('getSuspendedProfileLinkHosts retained:', retainedError);
+  } else {
+    for (const row of retained ?? []) {
+      for (const h of row.link_hosts ?? []) {
+        if (h) hosts.add(h);
+      }
+    }
+  }
+
   return hosts;
 }
 

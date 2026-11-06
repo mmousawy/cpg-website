@@ -2,6 +2,7 @@ import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { revalidateAll } from '@/app/actions/revalidate';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
+import { isServiceAccountFromProfileRow } from '@/lib/auth/serviceAccount';
 import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
@@ -22,12 +23,16 @@ export async function POST() {
     // Get user profile
     const { data: profile } = await adminSupabase
       .from('profiles')
-      .select('id, email, full_name, is_admin, deletion_scheduled_at')
+      .select('id, email, full_name, is_admin, deletion_scheduled_at, is_service_account')
       .eq('id', user.id)
       .single();
 
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    if (isServiceAccountFromProfileRow(profile)) {
+      return NextResponse.json({ error: 'This account cannot be deleted through the app' }, { status: 403 });
     }
 
     // Check if already scheduled for deletion
@@ -55,7 +60,7 @@ export async function POST() {
     const now = new Date().toISOString();
     const { error: updateError } = await adminSupabase
       .from('profiles')
-      .update({ deletion_scheduled_at: now })
+      .update({ deletion_scheduled_at: now, deletion_source: 'self' })
       .eq('id', user.id);
 
     if (updateError) {
@@ -72,7 +77,7 @@ export async function POST() {
 
     // Send confirmation email
     const email = profile.email || user.email;
-    if (email && !shouldSkipNotificationsAndEmails(email)) {
+    if (email && !shouldSkipNotificationsAndEmails(email, { userId: profile.id })) {
       try {
         const html = await render(
           AccountDeletionEmail({

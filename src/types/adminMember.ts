@@ -16,6 +16,7 @@ export type AdminMemberProfile = Pick<
   | 'suspended_at'
   | 'suspended_reason'
   | 'deletion_scheduled_at'
+  | 'deletion_source'
   | 'under_review_at'
   | 'website'
   | 'bio'

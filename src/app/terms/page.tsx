@@ -132,6 +132,9 @@ export default function TermsPage() {
             <p>
               Note: If you have shared content with others (for example, photos in a shared album), those copies will also be removed when your content is permanently deleted. You can schedule your account for deletion from your account settings — the same two-phase process applies, with your content being permanently purged after 30 days. If you change your mind, contact us through the contact form within 30 days to cancel the deletion.
             </p>
+            <p>
+              We may also schedule inactive accounts for deletion (six months without a return visit after signup, or two years without signing in), or suspend accounts that break these terms. In those cases we email you when a schedule starts; you have 30 days to sign in (for inactivity) or an admin must unsuspend you (for admin suspensions) before permanent deletion. Some automatic signup suspensions are removed immediately. Event listings you added may remain without your name.
+            </p>
           </section>
 
           <section>

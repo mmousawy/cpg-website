@@ -103,7 +103,42 @@ type SuspendedSnapshot = {
   bio: string | null;
   social_links: unknown;
   signalIp: string | null;
+  retainedLinkHosts?: string[] | null;
 };
+
+async function loadRetainedSuspendedSnapshots(): Promise<SuspendedSnapshot[]> {
+  const { data, error } = await (adminSupabase as unknown as {
+    from: (table: string) => {
+      select: (cols: string) => Promise<{
+        data: Array<{
+          ip_address: string | null;
+          nickname: string | null;
+          full_name: string | null;
+          link_hosts: string[] | null;
+        }> | null;
+        error: { message: string } | null;
+      }>;
+    };
+  }).from('suspended_deleted_fingerprints').select('ip_address, nickname, full_name, link_hosts');
+
+  if (error) {
+    console.error('loadRetainedSuspendedSnapshots:', error);
+    return [];
+  }
+  if (!data?.length) {
+    return [];
+  }
+
+  return data.map((row) => ({
+    nickname: row.nickname,
+    full_name: row.full_name,
+    website: null,
+    bio: null,
+    social_links: null,
+    signalIp: row.ip_address,
+    retainedLinkHosts: row.link_hosts,
+  }));
+}
 
 async function loadSuspendedSnapshots(): Promise<SuspendedSnapshot[]> {
   const { data: profiles, error } = await adminSupabase
@@ -127,7 +162,7 @@ async function loadSuspendedSnapshots(): Promise<SuspendedSnapshot[]> {
     if (row.ip_address) ipByProfile.set(row.profile_id, row.ip_address);
   }
 
-  return profiles.map((p) => ({
+  const active = profiles.map((p) => ({
     nickname: p.nickname,
     full_name: p.full_name,
     website: p.website,
@@ -135,6 +170,9 @@ async function loadSuspendedSnapshots(): Promise<SuspendedSnapshot[]> {
     social_links: p.social_links,
     signalIp: ipByProfile.get(p.id) ?? null,
   }));
+
+  const retained = await loadRetainedSuspendedSnapshots();
+  return [...active, ...retained];
 }
 
 function normalizeName(name: string | null | undefined): string | null {
@@ -143,6 +181,9 @@ function normalizeName(name: string | null | undefined): string | null {
 }
 
 function hostsFromSnapshot(row: SuspendedSnapshot): string[] {
+  if (row.retainedLinkHosts && row.retainedLinkHosts.length > 0) {
+    return [...row.retainedLinkHosts];
+  }
   const socialLinks = Array.isArray(row.social_links)
     ? (row.social_links as { url?: string }[])
       .filter((l) => typeof l?.url === 'string')

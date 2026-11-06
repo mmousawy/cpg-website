@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AttendeeMessageEmail } from '@/emails/attendee-message';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { isServiceAccountUserId } from '@/lib/auth/serviceAccount';
 import { createNotification } from '@/lib/notifications/create';
 import { encrypt } from '@/utils/encrypt';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -95,7 +96,11 @@ export async function POST(request: NextRequest) {
   // Add RSVPs
   if (rsvps) {
     rsvps.forEach((rsvp) => {
-      if (rsvp.email && !isTestEmail(rsvp.email)) {
+      if (
+        rsvp.email
+        && !isTestEmail(rsvp.email)
+        && !(rsvp.user_id && isServiceAccountUserId(rsvp.user_id))
+      ) {
         recipientMap.set(rsvp.email.toLowerCase(), {
           email: rsvp.email,
           name: rsvp.name || rsvp.email.split('@')[0] || 'Friend',

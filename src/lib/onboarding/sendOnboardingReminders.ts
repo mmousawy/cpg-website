@@ -32,6 +32,7 @@ export async function sendOnboardingReminders(): Promise<OnboardingReminderResul
     .is('onboarding_reminder_sent_at', null)
     .is('deletion_scheduled_at', null)
     .is('suspended_at', null)
+    .eq('is_service_account', false)
     .not('email', 'is', null)
     .not('last_logged_in', 'is', null)
     .lte('created_at', cutoffISO);
@@ -50,7 +51,7 @@ export async function sendOnboardingReminders(): Promise<OnboardingReminderResul
   const prepared = await Promise.all(
     profiles.map(async (profile) => {
       const email = profile.email;
-      if (!email || shouldSkipNotificationsAndEmails(email)) {
+      if (!email || shouldSkipNotificationsAndEmails(email, { userId: profile.id })) {
         result.skipped += 1;
         skippedIds.push(profile.id);
         return null;
