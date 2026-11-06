@@ -1,5 +1,8 @@
 import { extractUrlsFromText, type ProfileUrlCheckResult } from '@/lib/profileUrl/checkProfileUrl';
-import { isServiceOfferText } from '@/lib/profileUrl/classifyPageContent';
+import {
+  isServiceOfferText,
+  looksLikeCommercialProfileText,
+} from '@/lib/profileUrl/classifyPageContent';
 import { urlMatchesSuspendedHost } from '@/lib/profileUrl/suspendedLinkHosts';
 
 export type OnboardingModerationOutcome = 'publish' | 'under_review' | 'suspend';
@@ -82,6 +85,14 @@ export function assessOnboardingModeration(input: {
   }
 
   if (checks.length > 0 && checks.some(isUrlPending)) {
+    return {
+      outcome: 'under_review',
+      suspendedReason: null,
+      checks,
+    };
+  }
+
+  if (fullName && looksLikeCommercialProfileText(fullName)) {
     return {
       outcome: 'under_review',
       suspendedReason: null,

@@ -1,3 +1,4 @@
+import type { OnboardingModerationResult } from '@/lib/memberReview/assessOnboardingModeration';
 import type { ProfileUrlCheckResult } from '@/lib/profileUrl/checkProfileUrl';
 import {
   LINK_CHECK_REPORTER_NAME,
@@ -28,16 +29,14 @@ function reportDetails(checks: ProfileUrlCheckResult[]): string {
 }
 
 /**
- * Opens or updates a pending profile report, the same queue admins use for member reports.
+ * Opens or updates a pending automated profile report.
  * A second save while that report is still pending updates the details and does not notify again.
  */
-export async function fileProfileLinkReport(
+export async function fileAutomatedProfileReport(
   userId: string,
-  checks: ProfileUrlCheckResult[],
+  reason: string,
+  details: string,
 ): Promise<void> {
-  const suspicious = checks.filter((check) => check.verdict !== 'allow');
-  if (suspicious.length === 0) return;
-
   const { data: profile } = await adminSupabase
     .from('profiles')
     .select('email')
@@ -45,9 +44,6 @@ export async function fileProfileLinkReport(
     .maybeSingle();
 
   if (isTestEmail(profile?.email)) return;
-
-  const reason = reportReason(suspicious);
-  const details = reportDetails(suspicious);
 
   const { data: existing } = await adminSupabase
     .from('reports')
@@ -96,4 +92,38 @@ export async function fileProfileLinkReport(
   }
 
   await notifyAdminsOfReport(report.id);
+}
+
+export async function fileProfileLinkReport(
+  userId: string,
+  checks: ProfileUrlCheckResult[],
+): Promise<void> {
+  const suspicious = checks.filter((check) => check.verdict !== 'allow');
+  if (suspicious.length === 0) return;
+  await fileAutomatedProfileReport(userId, reportReason(suspicious), reportDetails(suspicious));
+}
+
+export async function fileModerationReport(
+  userId: string,
+  moderation: OnboardingModerationResult,
+  labels: { fullName: string | null; bio: string | null },
+): Promise<void> {
+  if (moderation.outcome === 'publish') return;
+
+  const suspicious = moderation.checks.filter((check) => check.verdict !== 'allow');
+  if (suspicious.length > 0) {
+    await fileProfileLinkReport(userId, moderation.checks);
+    return;
+  }
+
+  const lines = [
+    labels.fullName?.trim() ? `Name: ${labels.fullName.trim()}` : null,
+    labels.bio?.trim() ? `Bio: ${labels.bio.trim()}` : null,
+  ].filter((line): line is string => !!line);
+
+  await fileAutomatedProfileReport(
+    userId,
+    moderation.suspendedReason ?? 'Profile looks like advertising',
+    (lines.join('\n') || 'Display name or bio looks like advertising').slice(0, 1000),
+  );
 }
