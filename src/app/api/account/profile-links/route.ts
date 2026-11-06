@@ -1,9 +1,12 @@
 import type { Json } from '@/database.types';
+import { evaluateProfileModeration } from '@/lib/memberReview/evaluateProfileModeration';
+import { persistProfileModeration } from '@/lib/memberReview/persistProfileModeration';
+import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
 import { buildLinkPublishState } from '@/lib/profileUrl/buildLinkPublishState';
-import { fileProfileLinkReport } from '@/lib/profileUrl/fileProfileLinkReport';
+import { fileModerationReport } from '@/lib/profileUrl/fileProfileLinkReport';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
-import { NextRequest, NextResponse, after } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 type SocialLinkBody = { label: string; url: string };
 
@@ -48,14 +51,27 @@ export async function POST(request: NextRequest) {
 
     const { data: profileJson } = await supabase.rpc('get_own_profile');
     const profile = profileJson && typeof profileJson === 'object' && !Array.isArray(profileJson)
-      ? profileJson as { full_name?: string | null }
+      ? profileJson as {
+        nickname?: string | null;
+        full_name?: string | null;
+        suspended_at?: string | null;
+      }
       : null;
+
+    if (profile?.suspended_at) {
+      return NextResponse.json({ message: 'Account suspended' }, { status: 403 });
+    }
+
+    const fullName = typeof body?.fullName === 'string'
+      ? body.fullName.trim() || null
+      : (profile?.full_name ?? null);
+    const nickname = profile?.nickname?.trim() || '';
 
     const { state, checks } = await buildLinkPublishState({
       website: website || null,
       socialLinks,
       bio: bio || null,
-      memberFullName: profile?.full_name ?? null,
+      memberFullName: fullName,
     });
 
     const admin = createAdminClient();
@@ -80,11 +96,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Failed to save profile links' }, { status: 500 });
     }
 
-    after(() => {
-      void fileProfileLinkReport(user.id, checks).catch((err) => {
-        console.error('Error filing profile link report:', err);
-      });
-    });
+    const clientMeta = getRequestClientMeta(request);
+    const moderation = nickname
+      ? await evaluateProfileModeration({
+        nickname,
+        fullName,
+        website: website || null,
+        bio: bio || null,
+        socialLinks,
+        checks,
+        clientIp: clientMeta.ip,
+      })
+      : { outcome: 'publish' as const, suspendedReason: null, checks };
+
+    await persistProfileModeration(user.id, moderation);
+    await fileModerationReport(user.id, moderation, { fullName, bio: bio || null });
 
     const blocked: {
       website?: string;
@@ -107,6 +133,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      outcome: moderation.outcome,
       state,
       blocked: Object.keys(blocked).length > 0 ? blocked : undefined,
       checks: checks.map((c) => ({

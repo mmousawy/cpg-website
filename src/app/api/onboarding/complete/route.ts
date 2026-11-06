@@ -1,15 +1,13 @@
 import type { Json, TablesUpdate } from '@/database.types';
 import { revalidateAll } from '@/app/actions/revalidate';
-import { assessOnboardingModeration, type OnboardingModerationResult } from '@/lib/memberReview/assessOnboardingModeration';
+import { evaluateProfileModeration } from '@/lib/memberReview/evaluateProfileModeration';
 import {
   blockClientIpsForProfile,
-  matchesSuspendedRepeat,
   upsertSignupSignal,
 } from '@/lib/memberReview/ipBlocking';
 import { getRequestClientMeta } from '@/lib/memberReview/requestClientMeta';
 import { buildLinkPublishState } from '@/lib/profileUrl/buildLinkPublishState';
-import { fileProfileLinkReport } from '@/lib/profileUrl/fileProfileLinkReport';
-import { getSuspendedProfileLinkHosts } from '@/lib/profileUrl/suspendedLinkHosts';
+import { fileModerationReport } from '@/lib/profileUrl/fileProfileLinkReport';
 import { notifyAdminsOfMemberJoined } from '@/lib/notifications/notifyAdminsOfMemberJoined';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -69,36 +67,18 @@ export async function POST(request: NextRequest) {
       memberFullName: fullName,
     });
 
-    const suspendedLinkHosts = await getSuspendedProfileLinkHosts();
     const clientMeta = getRequestClientMeta(request);
     await upsertSignupSignal(user.id, clientMeta, 'onboarding_complete');
 
-    let moderation: OnboardingModerationResult;
-    const isRepeat = await matchesSuspendedRepeat({
+    const moderation = await evaluateProfileModeration({
       nickname,
       fullName,
       website: website || null,
       bio: bio || null,
       socialLinks,
+      checks,
       clientIp: clientMeta.ip,
     });
-
-    if (isRepeat) {
-      moderation = {
-        outcome: 'suspend',
-        suspendedReason: 'Repeat of a suspended account',
-        checks,
-      };
-    } else {
-      moderation = assessOnboardingModeration({
-        fullName,
-        bio: bio || null,
-        website: website || null,
-        socialLinks,
-        checks,
-        suspendedLinkHosts,
-      });
-    }
 
     const admin = createAdminClient();
     const profileUpdate: TablesUpdate<'profiles'> = {
@@ -148,9 +128,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    if (moderation.checks.some((c) => c.verdict !== 'allow')) {
-      await fileProfileLinkReport(user.id, moderation.checks);
-    }
+    await fileModerationReport(user.id, moderation, { fullName, bio: bio || null });
 
     if (moderation.outcome === 'suspend') {
       await blockClientIpsForProfile(user.id, moderation.suspendedReason);

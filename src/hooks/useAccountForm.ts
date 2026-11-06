@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppTheme } from '@/hooks/useAppTheme';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createElement, useContext, useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -135,10 +135,11 @@ export type AccountStats = {
 };
 
 export function useAccountForm() {
-  const { user, profile: authProfile, refreshProfile: refreshAuthProfile } = useAuth();
+  const { user, profile: authProfile, refreshProfile: refreshAuthProfile, signOut } = useAuth();
   const { theme, setTheme, resolvedTheme } = useAppTheme();
   const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -874,10 +875,12 @@ export function useAccountForm() {
           website: data.website || '',
           bio: data.bio || '',
           socialLinks: validSocialLinks,
+          fullName: data.fullName || null,
         }),
       });
       const linkSavePayload = (await linkSaveResponse.json()) as {
         message?: string;
+        outcome?: 'publish' | 'under_review' | 'suspend';
         blocked?: {
           website?: string;
           bio?: string;
@@ -888,6 +891,21 @@ export function useAccountForm() {
       if (!linkSaveResponse.ok) {
         setSubmitError(linkSavePayload.message || 'Failed to verify profile links');
         setIsSaving(false);
+        return;
+      }
+
+      if (linkSavePayload.outcome === 'suspend') {
+        try {
+          await signOut();
+        } catch (signOutErr) {
+          console.error('Error signing out suspended account:', signOutErr);
+        }
+        router.replace('/login?error=suspended');
+        return;
+      }
+
+      if (linkSavePayload.outcome === 'under_review') {
+        router.replace('/under-review');
         return;
       }
 
