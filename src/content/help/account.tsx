@@ -212,12 +212,12 @@ export const accountFAQ: FAQSection = {
           <p
             className="mb-4"
           >
-            When you finish onboarding, we check your links and profile text. If everything looks like a normal photographer profile, your page goes public right away.
+            When you finish onboarding, we check your profile text and any links. If everything looks like a normal photographer profile, your page goes public right away. A display name that looks like a business can be held for review even if you have not added a website yet.
           </p>
           <p
             className="mb-4"
           >
-            If a link needs a closer look, you stay signed in and can browse the site, but likes, comments, follows, and other interactions stay locked. Your profile is not public yet and account pages stay locked until a moderator approves you.
+            If a link or your display name needs a closer look, you stay signed in and can browse the site, but likes, comments, follows, and other interactions stay locked. Your profile is not public yet and account pages stay locked until a moderator approves you. The same review can run later if you add a website from your account.
           </p>
           <p>
             Accounts that look like spam or advertising, or that closely match a suspended account, are not allowed on the site. If access from your network was blocked after a suspension, contact us through the Contact page and we can help.

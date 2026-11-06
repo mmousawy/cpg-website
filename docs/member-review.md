@@ -9,15 +9,15 @@ Onboarding finishes through [`POST /api/onboarding/complete`](../src/app/api/onb
 | Outcome | When | Member experience |
 |--------|------|-------------------|
 | **Publish** | No advertising signal and no inconclusive URL | Public profile; admins get member-joined notification |
-| **Under review** | A URL was checked and the verdict was inconclusive | Signed in and can browse; likes, comments, follows, RSVPs, and other writes are blocked; `/account` and their public profile stay locked until an admin approves |
+| **Under review** | A URL was checked and the verdict was inconclusive, or the display name/bio looks like a business | Signed in and can browse; likes, comments, follows, RSVPs, and other writes are blocked; `/account` and their public profile stay locked until an admin approves |
 | **Suspend** | Clear advertising, unsafe URL, repeat of a suspended member, or overlapping host/name/IP | Signed out; `suspended_at` set; automated report filed |
 
-Existing members who later save a bad link only get link hiding and a report. They are not auto-suspended.
+Saving website, bio, or social links later ([`POST /api/account/profile-links`](../src/app/api/account/profile-links/route.ts)) runs the same hold/suspend checks. Clear ads still hide the link; the member is also held or suspended so they cannot stay public after adding the site.
 
 ## Link and text checks (Phase 1)
 
 - Website, social links, and URLs in the bio are fetched and classified ([`src/lib/profileUrl/`](../src/lib/profileUrl/)).
-- Display name and bio are scanned with the same service-offer patterns as page titles ([`isServiceOfferText`](../src/lib/profileUrl/classifyPageContent.ts)).
+- Display name and bio are scanned for service pitches ([`isServiceOfferText`](../src/lib/profileUrl/classifyPageContent.ts)) and weaker business-like wording ([`looksLikeCommercialProfileText`](../src/lib/profileUrl/classifyPageContent.ts)). A name like “Great Tibet Tour” is held even with no website.
 - Hosts already used on a **suspended** profile are treated as advertising.
 
 Local URL testing: `pnpm check:urls scripts/example-profile-urls.txt`
