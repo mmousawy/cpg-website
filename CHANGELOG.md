@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.47.3](https://github.com/mmousawy/cpg-website/compare/v1.47.2...v1.47.3) (2026-11-07)
+
+
+### ♻️ Refactoring
+
+* update account deletion notification logic and email templates ([4a9d67d](https://github.com/mmousawy/cpg-website/commit/4a9d67d9bf74945b3af2ef04d13f9325394be141))
+
 ## [1.47.2](https://github.com/mmousawy/cpg-website/compare/v1.47.1...v1.47.2) (2026-11-07)
 
 

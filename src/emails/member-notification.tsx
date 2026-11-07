@@ -24,8 +24,6 @@ export const MemberNotificationEmail = ({
   profileLink = null,
   membersLink = '',
   deletionDate,
-  initiatedByAdmin,
-  initiatedByName,
 }: {
   preview?: boolean;
   kind?: MemberNotificationKind;
@@ -37,8 +35,6 @@ export const MemberNotificationEmail = ({
   profileLink?: string | null;
   membersLink?: string;
   deletionDate?: string;
-  initiatedByAdmin?: boolean;
-  initiatedByName?: string | null;
 }) => {
   if (preview) {
     adminName = 'Admin User';
@@ -49,8 +45,6 @@ export const MemberNotificationEmail = ({
     profileLink = 'https://creativephotography.group/@janedoe';
     membersLink = 'https://creativephotography.group/admin/members';
     deletionDate = 'September 14, 2026';
-    initiatedByAdmin = false;
-    initiatedByName = null;
   }
 
   const isDeleted = kind === 'deleted';
@@ -58,7 +52,7 @@ export const MemberNotificationEmail = ({
   let heading = 'New member joined';
   let previewText = `${memberName} joined the community`;
   if (isDeleted) {
-    heading = 'Member account scheduled for deletion';
+    heading = 'Member scheduled account for deletion';
     previewText = `${memberName} scheduled their account for deletion`;
   } else if (isSignedUp) {
     heading = 'New signup';
@@ -68,9 +62,7 @@ export const MemberNotificationEmail = ({
   const ctaLabel = isDeleted || isSignedUp ? 'View members' : 'View profile';
   let introText = `${memberName} has completed onboarding and joined the community.`;
   if (isDeleted) {
-    introText = initiatedByAdmin
-      ? `${initiatedByName || 'An admin'} scheduled ${memberName}'s account for deletion.`
-      : `${memberName} has scheduled their account for deletion.`;
+    introText = `${memberName} has scheduled their account for deletion.`;
   } else if (isSignedUp) {
     introText = `${memberName} signed up and hasn't finished setting up their profile yet.`;
   }

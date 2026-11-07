@@ -21,8 +21,6 @@ export type QueuedMemberNotificationItem = {
   profileLink: string | null;
   membersLink: string;
   deletionDate?: string;
-  initiatedByAdmin?: boolean;
-  initiatedByName?: string | null;
 };
 
 export type QueuedReportNotificationItem = {
