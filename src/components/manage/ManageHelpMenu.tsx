@@ -6,12 +6,6 @@ import Link from 'next/link';
 import Popover from '@/components/shared/Popover';
 import QuestionMarkCircleSVG from 'public/icons/question-mark-circle.svg';
 
-const sizeMap = {
-  sm: { wrapper: 'size-5 ml-1', icon: 'size-4' },
-  md: { wrapper: 'size-5 ml-1', icon: 'size-4.5' },
-  lg: { wrapper: 'ml-0.5 mt-1', icon: 'size-5.5' },
-};
-
 const menuItemClass =
   'flex w-full items-center px-3 py-2 text-left text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
 
@@ -19,7 +13,6 @@ type ManageHelpMenuProps = {
   id?: string;
   helpHref: string;
   helpLabel: string;
-  size?: keyof typeof sizeMap;
   onShowGuide?: () => void;
   showGuideHref?: string;
 };
@@ -28,13 +21,11 @@ export default function ManageHelpMenu({
   id,
   helpHref,
   helpLabel,
-  size = 'sm',
   onShowGuide,
   showGuideHref,
 }: ManageHelpMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const resolvedHelpHref = helpHref.startsWith('/') ? helpHref : `/help#${helpHref}`;
-  const { wrapper, icon } = sizeMap[size];
 
   const closeThen = (action: () => void) => {
     setIsOpen(false);
@@ -50,18 +41,22 @@ export default function ManageHelpMenu({
       trigger={(
         <span
           id={id}
-          title="Help"
-          className={`inline-flex ${wrapper} shrink-0 items-center justify-center rounded-full text-foreground/50 transition-colors hover:text-primary`}
+          className="btn-skeuo btn-skeuo-secondary inline-flex items-center justify-center gap-2 rounded-md border border-border-color-strong bg-background-raised px-3 py-1.5 font-(family-name:--font-geist-mono) text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))]"
         >
+          <QuestionMarkCircleSVG
+            className="block size-5 -ml-0.5"
+            aria-hidden
+          />
           <span
-            className="sr-only"
+            className="sr-only lg:hidden"
           >
             Help
           </span>
-          <QuestionMarkCircleSVG
-            className={`inline ${icon}`}
-            aria-hidden
-          />
+          <span
+            className="hidden lg:inline"
+          >
+            Help
+          </span>
         </span>
       )}
     >

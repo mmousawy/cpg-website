@@ -606,10 +606,10 @@ export default function AlbumDetailClient() {
                 className="size-5 -ml-0.5"
               />}
               variant="secondary"
-              className="hidden md:flex"
+              className="hidden lg:flex"
             >
               <span
-                className="hidden md:inline-block"
+                className="hidden lg:inline-block"
               >
                 Add from library
               </span>
@@ -625,7 +625,7 @@ export default function AlbumDetailClient() {
                   variant="primary"
                 >
                   <span
-                    className="hidden md:inline"
+                    className="hidden lg:inline"
                   >
                     {isUploading ? 'Uploading...' : 'Upload'}
                   </span>

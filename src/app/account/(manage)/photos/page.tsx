@@ -531,7 +531,7 @@ function PhotosPageContent() {
               }
             >
               <span
-                className="hidden md:inline"
+                className="hidden lg:inline"
               >
                 Filter
               </span>
@@ -554,7 +554,7 @@ function PhotosPageContent() {
               variant="primary"
             >
               <span
-                className="hidden md:inline-block"
+                className="hidden lg:inline-block"
               >
                 {isUploading ? 'Uploading...' : 'Upload'}
               </span>
