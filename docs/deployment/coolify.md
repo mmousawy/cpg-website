@@ -128,4 +128,4 @@ Verify: `pnpm verify:image-icc -- "<object-public-url>"`
 | OAuth redirect error | Supabase + provider URLs include correct hostname |
 | Build OOM | More RAM or Coolify remote builder |
 | `pnpm install` / Corepack **503** from `registry.npmjs.org` | Transient npm outage or VPS network; **redeploy**. Dockerfile installs `pnpm` globally with retries (no Corepack on-demand download). |
-| Coolify warns `NODE_ENV=production` at build-time | Safe to ignore for this Dockerfile (deps stage uses `CI=true` and installs devDependencies). Prefer runtime-only for secrets; keep `NEXT_PUBLIC_*` at build-time. |
+| Coolify warns `NODE_ENV` at build-time | Uncheck **Available at Buildtime** for `NODE_ENV` on staging and production. The runner stage sets `ENV NODE_ENV=production`. pnpm 11 does not skip devDependencies because of `NODE_ENV`, so the warning is not a failed install. Keep `NEXT_PUBLIC_*` available at build time. |

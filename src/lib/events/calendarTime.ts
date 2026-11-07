@@ -93,3 +93,27 @@ export function getCalendarDateTimes(
     outlookEndDate: outlookDateTime(end, endMs),
   };
 }
+
+/** ISO-8601 datetime in Europe/Amsterdam, including the offset. */
+export function toAmsterdamIsoDateTime(date: string, time: string): string {
+  return getCalendarDateTimes(date, time, 0).outlookStartDate;
+}
+
+/**
+ * Schema.org Event dates. Timed events include the Amsterdam offset;
+ * date-only events omit midnight so crawlers do not treat them as 00:00.
+ */
+export function getEventSchemaDateTimes(
+  date: string | null | undefined,
+  time: string | null | undefined,
+  durationHours = 3,
+): { startDate: string | null; endDate: string | null } {
+  if (!date) return { startDate: null, endDate: null };
+  if (!time) return { startDate: date, endDate: null };
+
+  const calendar = getCalendarDateTimes(date, time, durationHours);
+  return {
+    startDate: calendar.outlookStartDate,
+    endDate: calendar.outlookEndDate,
+  };
+}

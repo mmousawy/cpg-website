@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 import BlurImage from '@/components/shared/BlurImage';
 import EventPhotoCount from '@/components/events/EventPhotoCount';
+import { getEventSchemaDateTimes } from '@/lib/events/calendarTime';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getEventStatus, type EventStatus } from '@/lib/events/status';
 import { formatEventLocation } from '@/utils/formatLocation';
@@ -203,7 +204,11 @@ export default function EventCard({
               <CalendarSVG
                 className="size-3.5 fill-foreground/80"
               />
-              {formatEventDate(event.date)}
+              <time
+                dateTime={event.date}
+              >
+                {formatEventDate(event.date)}
+              </time>
             </span>
           )}
           {event.time && (
@@ -213,12 +218,16 @@ export default function EventCard({
               <TimeSVG
                 className="size-3.5 fill-foreground/80"
               />
-              {formatEventTime(event.time)}
+              <time
+                dateTime={getEventSchemaDateTimes(event.date, event.time).startDate ?? undefined}
+              >
+                {formatEventTime(event.time)}
+              </time>
             </span>
           )}
           {event.location && (
-            <span
-              className="flex items-center gap-1"
+            <address
+              className="m-0 flex items-center gap-1 not-italic"
             >
               <LocationSVG
                 className="size-3.5 fill-foreground/80"
@@ -228,7 +237,7 @@ export default function EventCard({
               >
                 {formatEventLocation(event.location)}
               </span>
-            </span>
+            </address>
           )}
         </div>
 

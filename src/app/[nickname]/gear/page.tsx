@@ -1,5 +1,6 @@
 import PageContainer from '@/components/layout/PageContainer';
 import GearPageClient from '@/components/gear/GearPageClient';
+import JsonLd from '@/components/shared/JsonLd';
 import {
   ProfileBackToProfileLink,
   ProfileHeroBanner,
@@ -7,11 +8,12 @@ import {
 import ProfileGearSummary from '@/components/profile/ProfileGearSummary';
 import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
-import { getUserGearByNickname } from '@/lib/data/gear';
+import { getGearCatalogBrands, getUserGearByNickname } from '@/lib/data/gear';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import { getProfileByNickname } from '@/lib/data/profiles';
+import { buildGearCollectionJsonLd } from '@/lib/gear/jsonLd';
 import { EMPTY_GEAR_PROFILE } from '@/lib/gear/types';
-import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
+import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
@@ -78,9 +80,26 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
   ]);
   const profileNickname = profile.nickname || nickname;
   const profileTitle = formatProfileDisplayName(profile.full_name, profile.nickname);
+  const resolvedGear = gearProfile ?? { ...EMPTY_GEAR_PROFILE };
+  const brandsByCatalogId = await getGearCatalogBrands([
+    resolvedGear.dailyDriverBodyCatalogId,
+    resolvedGear.dailyDriverLensCatalogId,
+    ...resolvedGear.items.map((item) => item.catalogId),
+  ]);
+  const gearJsonLd = buildGearCollectionJsonLd({
+    name: `${profileTitle}'s gear list`,
+    url: getAbsoluteUrl(`/@${encodeURIComponent(nickname)}/gear`),
+    creatorNickname: profileNickname,
+    creatorName: profile.full_name?.trim() || `@${profileNickname}`,
+    profile: resolvedGear,
+    brandsByCatalogId,
+  });
 
   return (
     <>
+      <JsonLd
+        data={gearJsonLd}
+      />
       <ProfileViewTracker
         profileId={profile.id}
       />
@@ -107,13 +126,13 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
         </h1>
         <ProfileGearSummary
           profileNickname={profileNickname}
-          profile={gearProfile ?? { ...EMPTY_GEAR_PROFILE }}
+          profile={resolvedGear}
           showGearListLink={false}
           separatorBeforeList
         />
         <GearPageClient
           profileNickname={profileNickname}
-          initialProfile={gearProfile ?? { ...EMPTY_GEAR_PROFILE }}
+          initialProfile={resolvedGear}
           categoryHeadingLevel="h2"
         />
       </PageContainer>

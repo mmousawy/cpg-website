@@ -1,5 +1,6 @@
 'use client';
 
+import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
 import clsx from 'clsx';
 import { cloneElement, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -159,7 +160,8 @@ export default function Tooltip({
           <div
             ref={tooltipRef}
             className={clsx(
-              'fixed z-100 rounded-md bg-gray-900 px-2 py-1.5 text-xs text-white shadow-lg',
+              'fixed rounded-md bg-gray-900 px-2 py-1.5 text-xs text-white shadow-lg',
+              pageFloatingZClassName,
               maxWidth,
             )}
             style={

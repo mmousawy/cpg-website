@@ -1,5 +1,6 @@
 'use client';
 
+import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
 import { getOverlayPortalRoot, PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
 import clsx from 'clsx';
 import {
@@ -258,7 +259,8 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
         ref={menuRef}
         {...{ [PORTAL_OVERLAY_ATTR]: '' }}
         className={clsx(
-          'fixed z-100 overflow-hidden rounded-md border border-border-color-strong',
+          'fixed overflow-hidden rounded-md border border-border-color-strong',
+          pageFloatingZClassName,
           'bg-background-medium bg-no-noise font-sans shadow-lg shadow-black/15 ring-1 ring-black/5 dark:shadow-black/35 dark:ring-white/10',
         )}
         style={{

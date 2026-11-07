@@ -1,5 +1,6 @@
 'use client';
 
+import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
 import BlurImage from '@/components/shared/BlurImage';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { formatAperture, formatExposure, formatFocalLength, formatISO } from '@/utils/exif';
@@ -383,7 +384,10 @@ export default function PhotoListItem({
           {showPrivateTooltip && privateLinkRef.current && typeof window !== 'undefined' &&
             createPortal(
               <div
-                className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80"
+                className={clsx(
+                  'fixed w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80',
+                  pageFloatingZClassName,
+                )}
                 style={{
                   top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
                   right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,
@@ -439,7 +443,10 @@ export default function PhotoListItem({
                 createPortal(
                   <div
                     ref={popoverRef}
-                    className="fixed z-100 w-64 bg-background-light border border-border-color rounded-lg shadow-lg p-2 max-h-96 overflow-y-auto"
+                    className={clsx(
+                      'fixed w-64 bg-background-light border border-border-color rounded-lg shadow-lg p-2 max-h-96 overflow-y-auto',
+                      pageFloatingZClassName,
+                    )}
                     style={{
                       top: `${popoverPosition.top}px`,
                       right: `${popoverPosition.right}px`,

@@ -32,7 +32,10 @@ ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
-RUN ./node_modules/.bin/next build
+# Persist `.next/cache` across image builds (not copied into the runner).
+# Locked so staging and production on one host cannot write it at once.
+RUN --mount=type=cache,id=cpg-website-next,target=/app/.next/cache,sharing=locked \
+    ./node_modules/.bin/next build
 
 FROM base AS runner
 ENV NODE_ENV=production

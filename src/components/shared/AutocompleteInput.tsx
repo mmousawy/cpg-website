@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
 import { getOverlayPortalRoot, PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
 import Input from './Input';
 
@@ -182,23 +183,23 @@ export default function AutocompleteInput({
     && (loading || filtered.length > 0)
     && (inlineSuggestions || dropdownPosition !== null);
 
+  const dropdownStyle = inlineSuggestions || !dropdownPosition
+    ? undefined
+    : {
+      top: dropdownPosition.top,
+      left: dropdownPosition.left,
+      width: dropdownPosition.width,
+    };
+
   const dropdown = showDropdown ? (
     <div
       ref={dropdownRef}
       {...{ [PORTAL_OVERLAY_ATTR]: '' }}
       className={clsx(
         'rounded-md border border-border-color-strong bg-background-medium bg-no-noise shadow-lg shadow-black/15 ring-1 ring-black/5 dark:shadow-black/35 dark:ring-white/10',
-        inlineSuggestions ? 'relative mt-1 w-full' : 'fixed z-100',
+        inlineSuggestions ? 'relative mt-1 w-full' : ['fixed', pageFloatingZClassName],
       )}
-      style={
-        inlineSuggestions || !dropdownPosition
-          ? undefined
-          : {
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-            width: dropdownPosition.width,
-      }
-      }
+      style={dropdownStyle}
     >
       <ul
         className="max-h-48 overflow-y-auto p-1"
@@ -216,8 +217,10 @@ export default function AutocompleteInput({
           >
             <button
               type="button"
-              className={`w-full rounded-sm px-3 py-2 text-left text-sm hover:bg-background-light ${index === highlightedIndex ? 'bg-background-light' : ''
-              }`}
+              className={clsx(
+                'w-full rounded-sm px-3 py-2 text-left text-sm hover:bg-background-light',
+                index === highlightedIndex && 'bg-background-light',
+              )}
               onClick={() => handleSelect(suggestion)}
               onMouseEnter={() => setHighlightedIndex(index)}
             >

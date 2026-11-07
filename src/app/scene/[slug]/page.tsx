@@ -9,6 +9,7 @@ import SceneCoverImage from '@/components/scene/SceneCoverImage';
 import ArrowLink from '@/components/shared/ArrowLink';
 import AuthorRow from '@/components/shared/AuthorRow';
 import BlurImage from '@/components/shared/BlurImage';
+import JsonLd from '@/components/shared/JsonLd';
 import { routes } from '@/config/routes';
 import { getServerNow } from '@/lib/cache/serverNow';
 import {
@@ -18,6 +19,7 @@ import {
   getSceneEventInterests,
   type SceneEventWithSubmitter,
 } from '@/lib/data/scene';
+import { buildSceneEventJsonLd, getSceneEventSchemaDates } from '@/lib/scene/jsonLd';
 import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getSceneCategoryStyle,
@@ -26,7 +28,7 @@ import {
 } from '@/types/scene';
 import { getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 import { formatPrice } from '@/utils/formatPrice';
-import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 
 import { RichDescription } from '@/components/shared/RichDescription';
 
@@ -178,15 +180,17 @@ export default async function SceneEventDetailPage({
   const serverNow = await getServerNow();
   const currentYear = new Date(serverNow).getFullYear();
   const dateStr = formatDateRange(event.start_date, event.end_date, currentYear);
-  const timeStr = formatTimeRange(
-    event.start_time,
-    (event as { end_time?: string | null }).end_time,
-  );
+  const timeStr = formatTimeRange(event.start_time, event.end_time);
   const categoryLabel = getCategoryLabel(event.category);
   const submitter = (event as SceneEventWithSubmitter).submitter;
+  const schemaDates = getSceneEventSchemaDates(event);
+  const pageUrl = getAbsoluteUrl(`/scene/${slug}`);
 
   return (
     <>
+      <JsonLd
+        data={buildSceneEventJsonLd(event, pageUrl)}
+      />
       {/* Hero Section with Cover Image */}
       {event.cover_image_url && (
         <div
@@ -316,7 +320,13 @@ export default async function SceneEventDetailPage({
                 <HeroCalendarSVG
                   className="size-5 shrink-0 fill-foreground mt-0.5"
                 />
-                {dateStr}
+                {schemaDates.startDate ? (
+                  <time
+                    dateTime={schemaDates.startDate}
+                  >
+                    {dateStr}
+                  </time>
+                ) : dateStr}
               </div>
               {timeStr && (
                 <div
@@ -325,7 +335,13 @@ export default async function SceneEventDetailPage({
                   <ClockSolidMiniSVG
                     className="size-5 shrink-0 fill-foreground mt-0.4"
                   />
-                  {timeStr}
+                  {schemaDates.startDate ? (
+                    <time
+                      dateTime={schemaDates.startDate}
+                    >
+                      {timeStr}
+                    </time>
+                  ) : timeStr}
                 </div>
               )}
               <a
@@ -342,7 +358,9 @@ export default async function SceneEventDetailPage({
                 <HeroMapPinSVG
                   className="size-5 shrink-0 fill-current mt-0.5"
                 />
-                <div>
+                <address
+                  className="m-0 not-italic"
+                >
                   <p
                     className="group-hover:underline underline-offset-4"
                   >
@@ -355,7 +373,7 @@ export default async function SceneEventDetailPage({
                       ? `${event.location_address} · ${event.location_city}`
                       : event.location_city}
                   </p>
-                </div>
+                </address>
               </a>
               <div
                 className="flex items-start gap-2 text-[15px] font-semibold"

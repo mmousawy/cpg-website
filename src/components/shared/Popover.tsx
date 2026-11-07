@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
 import { subscribeRouteChange } from '@/lib/routeChange';
 
 type PopoverAlign = 'left' | 'right' | 'center' | 'auto';
@@ -214,7 +215,8 @@ export default function Popover({
       <div
         ref={panelRef}
         className={clsx(
-          'absolute z-50',
+          'absolute',
+          pageFloatingZClassName,
           sideClasses,
           widthClasses,
           alignmentClasses[resolvedAlign],

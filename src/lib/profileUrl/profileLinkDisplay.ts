@@ -12,9 +12,9 @@ export function profileOutboundLinkLabel(url: string, isWebsiteField: boolean): 
 }
 
 export function profileSocialLinkRel(): string {
-  return 'nofollow ugc noopener noreferrer';
+  return 'me nofollow ugc noopener noreferrer';
 }
 
 export function profileWebsiteRel(): string {
-  return 'noopener noreferrer';
+  return 'me noopener noreferrer';
 }

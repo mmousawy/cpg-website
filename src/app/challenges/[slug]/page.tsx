@@ -175,6 +175,8 @@ export default async function ChallengePage({
     url: challengeUrl,
     ...(challenge.cover_image_url && { image: challenge.cover_image_url }),
     ...(challenge.created_at && { dateCreated: challenge.created_at }),
+    ...(challenge.starts_at && { startDate: challenge.starts_at }),
+    ...(challenge.ends_at && { endDate: challenge.ends_at }),
     author: {
       '@type': 'Organization',
       name: siteConfig.name,
@@ -388,7 +390,13 @@ export default async function ChallengePage({
                     />
                     Ended on
                     {' '}
-                    {formatDate(challenge.ends_at, currentYear)}
+                    {challenge.ends_at ? (
+                      <time
+                        dateTime={challenge.ends_at}
+                      >
+                        {formatDate(challenge.ends_at, currentYear)}
+                      </time>
+                    ) : formatDate(challenge.ends_at, currentYear)}
                   </span>
                 ) : deadline ? (
                   <span
@@ -399,7 +407,13 @@ export default async function ChallengePage({
                     />
                     Ends on:
                     {' '}
-                    {formatDate(challenge.ends_at, currentYear)}
+                    {challenge.ends_at ? (
+                      <time
+                        dateTime={challenge.ends_at}
+                      >
+                        {formatDate(challenge.ends_at, currentYear)}
+                      </time>
+                    ) : formatDate(challenge.ends_at, currentYear)}
                   </span>
                 ) : (
                   <span

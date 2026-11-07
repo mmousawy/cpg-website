@@ -12,7 +12,7 @@ import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadgesWrapper';
 import { getPublishedProfileFields } from '@/lib/profileUrl/linkPublishState';
-import { isKnownSocialHost } from '@/lib/profileUrl/socialHosts';
+import { buildProfilePageJsonLd } from '@/lib/profile/jsonLd';
 
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
@@ -36,7 +36,7 @@ import {
   PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE,
   PROFILE_PHOTOSTREAM_LIMIT_COMPACT,
 } from '@/utils/displayPreferences';
-import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
+import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 // Pre-render all public profiles at build time for optimal caching
@@ -141,23 +141,22 @@ async function ProfileContent({ nickname }: { nickname: string }) {
     profile.created_at || null,
   );
 
-  const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);
   const published = getPublishedProfileFields(profile);
-  const sameAs = published.socialLinks
-    .filter((l) => isKnownSocialHost(l.url))
-    .map((l) => l.url);
-  const profileJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ProfilePage',
-    mainEntity: {
-      '@type': 'Person',
-      name: profile.full_name || `@${profile.nickname}`,
-      url: profileUrl,
-      ...(published.bio && { description: published.bio }),
-      ...(profile.avatar_url && { image: profile.avatar_url }),
-      ...(sameAs.length > 0 && { sameAs }),
-    },
-  };
+  const profileJsonLd = buildProfilePageJsonLd({
+    nickname,
+    fullName: profile.full_name,
+    avatarUrl: profile.avatar_url,
+    createdAt: profile.created_at,
+    website: profile.website,
+    socialLinks: profile.social_links,
+    bio: profile.bio,
+    linkPublishState: profile.link_publish_state,
+    interests: profile.interests,
+    followerCount: followCounts.followerCount,
+    followingCount: followCounts.followingCount,
+    publicPhotoCount: totalPhotos,
+    likesGiven: publicStats.likesGiven,
+  });
 
   return (
     <>

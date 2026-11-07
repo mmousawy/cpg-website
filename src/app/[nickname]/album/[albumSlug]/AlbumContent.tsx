@@ -12,6 +12,7 @@ import DetailSidebar, {
   DetailSidebarTitle,
 } from '@/components/shared/DetailSidebar';
 import EmptyState from '@/components/shared/EmptyState';
+import JsonLd from '@/components/shared/JsonLd';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewTracker from '@/components/shared/ViewTracker';
@@ -25,6 +26,7 @@ import ImageSVG from 'public/icons/image.svg';
 import PhotoStackIcon from 'public/icons/photo-stack.svg';
 
 import type { AlbumBySlugResult } from '@/lib/data/albums';
+import { buildImageGalleryJsonLd } from '@/lib/albums/jsonLd';
 import { formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 
 type AlbumContentProps = {
@@ -81,9 +83,21 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
     title: `Album: ${album.title} by ${ownerName}`,
     image: getSocialImageUrl(firstPhotoUrl),
   };
+  const galleryJsonLd = buildImageGalleryJsonLd({
+    name: album.title,
+    description: album.description,
+    url: shareData.url,
+    coverImageUrl: firstPhotoUrl,
+    creatorNickname: nickname,
+    creatorName: album.profile?.full_name?.trim() || `@${nickname}`,
+    numberOfItems: photos.length,
+  });
 
   return (
     <>
+      <JsonLd
+        data={galleryJsonLd}
+      />
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
         className={clsx(
