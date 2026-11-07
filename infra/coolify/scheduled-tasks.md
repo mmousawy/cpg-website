@@ -17,7 +17,7 @@ Use `http://127.0.0.1:3000` — the **container** port (always 3000), not the ho
 | Weekly digest | `0 8 * * 0` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/weekly-digest` |
 | Revalidate events | `1 * * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/revalidate-events` |
 | Cleanup deleted content | `0 3 * * 0` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/cleanup-deleted-content` |
-| Schedule inactive deletions | `15 3 * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/schedule-inactive-deletions` |
+| Schedule inactive deletions | `15 8 * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/schedule-inactive-deletions` |
 | Flush notification emails | `*/5 * * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/send-pending-notification-emails` |
 | Refresh gear catalog | `0 4 * * 1` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/refresh-gear-catalog` |
 

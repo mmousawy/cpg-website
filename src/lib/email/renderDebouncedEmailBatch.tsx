@@ -136,9 +136,7 @@ export async function renderDebouncedEmailBatch(
       if (parsed.length === 1) {
         const item = parsed[0];
         const subject = item.kind === 'deleted'
-          ? item.initiatedByAdmin
-            ? `Account deletion scheduled: ${item.memberName}`
-            : `${item.memberName} scheduled their account for deletion`
+          ? `${item.memberName} scheduled their account for deletion`
           : item.kind === 'signed_up'
             ? `New signup: ${item.memberName}`
             : `New member: ${item.memberName}`;
@@ -155,14 +153,16 @@ export async function renderDebouncedEmailBatch(
               profileLink: item.profileLink,
               membersLink: item.membersLink,
               deletionDate: item.deletionDate,
-              initiatedByAdmin: item.initiatedByAdmin,
-              initiatedByName: item.initiatedByName,
             }),
           ),
         };
       }
       const kind = parsed[0]?.kind ?? 'joined';
-      const heading = kind === 'signed_up' ? 'New signups' : kind === 'deleted' ? 'Account deletions' : 'New members';
+      const heading = kind === 'signed_up'
+        ? 'New signups'
+        : kind === 'deleted'
+          ? 'Member self-deletions'
+          : 'New members';
       return {
         subject: `${parsed.length} ${heading.toLowerCase()}`,
         html: await render(

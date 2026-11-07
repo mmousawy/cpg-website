@@ -119,7 +119,7 @@ All user-triggered social notifications use a unified **30-second delay** before
 
 **Delayed types:** `like_photo`, `like_album`, `comment_*`, `comment_reply`, `follow`, `followed_upload`, `shared_album_*`
 
-**Immediate types:** `event_reminder`, `event_announcement`, `challenge_announced`, `new_submission`, `submission_*`, `admin_message`, `report_*`, `feedback_submitted`, `member_signed_up`, `member_joined`, `member_deleted`
+**Immediate types:** `event_reminder`, `event_announcement`, `challenge_announced`, `new_submission`, `submission_*`, `admin_message`, `report_*`, `feedback_submitted`, `member_signed_up`, `member_joined`, `member_deleted` (member self-deletion only)
 
 **Anti-spam rules:**
 - **30s debounce:** Upserting a pending notification resets the delivery timer

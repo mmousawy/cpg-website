@@ -3,7 +3,7 @@ import { revalidateAll } from '@/app/actions/revalidate';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { isServiceAccountFromProfileRow } from '@/lib/auth/serviceAccount';
-import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
+import { notifyAdminsOfMemberSelfDeletion } from '@/lib/notifications/notifyAdminsOfMemberSelfDeletion';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
@@ -104,8 +104,8 @@ export async function POST() {
     }
 
     after(() => {
-      void notifyAdminsOfAccountDeletion(user.id).catch((err) => {
-        console.error('Error notifying admins of account deletion:', err);
+      void notifyAdminsOfMemberSelfDeletion(user.id).catch((err) => {
+        console.error('Error notifying admins of member self-deletion:', err);
       });
     });
 

@@ -177,12 +177,7 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
     return `${actor || email || 'Someone'} signed up`;
   },
   member_joined: (actor) => `${actor || 'Someone'} joined the community`,
-  member_deleted: (actor, data) => {
-    if (data?.initiatedByAdmin) {
-      return `${actor || 'A member'}'s account was scheduled for deletion`;
-    }
-    return `${actor || 'Someone'} scheduled their account for deletion`;
-  },
+  member_deleted: (actor) => `${actor || 'Someone'} scheduled their account for deletion`,
 };
 
 type NotificationContentProps = {

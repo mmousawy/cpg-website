@@ -3,10 +3,8 @@ import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { notifyAdmins } from '@/lib/notifications/notifyAdmins';
 import { adminSupabase } from '@/utils/supabase/admin';
 
-export async function notifyAdminsOfAccountDeletion(
-  userId: string,
-  options: { initiatedByAdminId?: string } = {},
-): Promise<void> {
+/** Notify admins when a member schedules their own account for deletion (not when an admin does). */
+export async function notifyAdminsOfMemberSelfDeletion(userId: string): Promise<void> {
   const { data: profile, error: profileError } = await adminSupabase
     .from('profiles')
     .select('id, full_name, nickname, email, avatar_url, deletion_scheduled_at')
@@ -14,7 +12,7 @@ export async function notifyAdminsOfAccountDeletion(
     .single();
 
   if (profileError || !profile) {
-    console.error('Error fetching profile for account deletion notify:', profileError);
+    console.error('Error fetching profile for member self-deletion notify:', profileError);
     return;
   }
 
@@ -37,23 +35,8 @@ export async function notifyAdminsOfAccountDeletion(
     day: 'numeric',
   });
 
-  let initiatedByName: string | null = null;
-  if (options.initiatedByAdminId) {
-    const { data: adminProfile } = await adminSupabase
-      .from('profiles')
-      .select('full_name, nickname')
-      .eq('id', options.initiatedByAdminId)
-      .single();
-
-    initiatedByName = adminProfile?.full_name || adminProfile?.nickname || 'An admin';
-  }
-
-  const initiatedByAdmin = Boolean(options.initiatedByAdminId);
-
   await notifyAdmins({
-    excludeUserIds: [userId, options.initiatedByAdminId].filter(
-      (id): id is string => Boolean(id),
-    ),
+    excludeUserIds: [userId],
     notification: {
       actorId: userId,
       type: 'member_deleted',
@@ -66,8 +49,7 @@ export async function notifyAdminsOfAccountDeletion(
         actorName: memberName,
         actorNickname: profile.nickname,
         actorAvatar: profile.avatar_url,
-        initiatedByAdmin,
-        initiatedByName,
+        initiatedByAdmin: false,
         deletionDate,
       },
     },
@@ -82,8 +64,6 @@ export async function notifyAdminsOfAccountDeletion(
         profileLink: profileLinkRelative ? `${baseUrl}${profileLinkRelative}` : null,
         membersLink: `${baseUrl}${membersLinkRelative}`,
         deletionDate,
-        initiatedByAdmin,
-        initiatedByName,
       }),
     },
   });
