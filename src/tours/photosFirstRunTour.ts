@@ -77,7 +77,7 @@ export function createPhotosFirstRunTourSteps(): DriveStep[] {
       popover: {
         title: 'More help',
         description:
-          'Open the help link anytime for written guides on uploading and organizing photos.',
+          'Open this anytime for written guides, or to play this tour again.',
         side: 'bottom',
         align: 'end',
         doneBtnText: 'Finish',

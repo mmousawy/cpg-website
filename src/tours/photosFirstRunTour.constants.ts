@@ -1,6 +1,8 @@
 export const PHOTOS_TOUR_QUERY_PARAM = 'tour';
 export const PHOTOS_TOUR_QUERY_VALUE = 'photos';
 export const PHOTOS_MANAGE_TOUR_QUERY_VALUE = 'photos-edit';
+export const PHOTOS_TOUR_REPLAY_QUERY_VALUE = 'replay';
+export const PHOTOS_TOUR_REPLAY_HREF = `/account/photos?${PHOTOS_TOUR_QUERY_PARAM}=${PHOTOS_TOUR_REPLAY_QUERY_VALUE}`;
 
 export const PHOTOS_TOUR_TARGETS = {
   library: '#photos-tour-library',
@@ -29,5 +31,11 @@ export function isPhotosManageTourMockMode(
   searchParams: Pick<URLSearchParams, 'get'> | null | undefined,
 ): boolean {
   return searchParams?.get(PHOTOS_TOUR_QUERY_PARAM) === PHOTOS_MANAGE_TOUR_QUERY_VALUE;
+}
+
+export function isPhotosTourReplayMode(
+  searchParams: Pick<URLSearchParams, 'get'> | null | undefined,
+): boolean {
+  return searchParams?.get(PHOTOS_TOUR_QUERY_PARAM) === PHOTOS_TOUR_REPLAY_QUERY_VALUE;
 }
 

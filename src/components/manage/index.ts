@@ -23,6 +23,7 @@ export { default as AlbumListItem, getAlbumDisplayName, type AlbumListItemVarian
 export { default as AlbumSwitcher } from './AlbumSwitcher';
 
 // Shared components
+export { default as ManageHelpMenu } from './ManageHelpMenu';
 export { default as ManageLayout } from './ManageLayout';
 export { default as MobileActionBar } from './MobileActionBar';
 export { default as SidebarPanel } from './SidebarPanel';

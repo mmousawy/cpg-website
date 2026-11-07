@@ -8,15 +8,15 @@ import {
   type AlbumFormData,
   type BulkAlbumFormData,
 } from '@/components/manage';
+import ManageAlbumSectionsSkeleton from '@/components/manage/ManageAlbumSectionsSkeleton';
+import ManageHelpMenu from '@/components/manage/ManageHelpMenu';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
-import ManageAlbumSectionsSkeleton from '@/components/manage/ManageAlbumSectionsSkeleton';
 import type { SharedAlbumFormData } from '@/components/manage/SharedAlbumEditForm';
 import SidebarPanel from '@/components/manage/SidebarPanel';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
-import HelpLink from '@/components/shared/HelpLink';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import {
@@ -40,6 +40,7 @@ import {
   useYourSharedAlbums,
 } from '@/hooks/useAlbums';
 import { useAuth } from '@/hooks/useAuth';
+import { PHOTOS_TOUR_REPLAY_HREF } from '@/tours/photosFirstRunTour.constants';
 import { confirmDeleteAlbums, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -417,10 +418,10 @@ export default function AlbumsPage() {
       <ManageLayout
         actions={
           <>
-            <HelpLink
-              href="manage-albums"
-              label="How to my albums"
-              size="sm"
+            <ManageHelpMenu
+              helpHref="manage-albums"
+              helpLabel="How to my albums"
+              showGuideHref={PHOTOS_TOUR_REPLAY_HREF}
             />
             <Button
               onClick={handleCreateNewAlbum}
@@ -856,7 +857,7 @@ function CollapsibleContent({
   return (
     <div
       ref={containerRef}
-      className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+      className="relative z-0 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
     >
       <div
         ref={contentRef}
@@ -890,12 +891,11 @@ function SharedWithMeCard({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       disabled={isOpening}
-      className={`relative overflow-hidden bg-background-light transition-all border block w-full text-left ${
-        isOpening
-          ? 'pointer-events-none ring-2 ring-primary/40'
-          : isSelected
-            ? 'border-primary ring-2 ring-primary/50'
-            : 'border-border-color hover:ring-2 hover:ring-primary/50'
+      className={`relative overflow-hidden bg-background-light transition-all border block w-full text-left ${isOpening
+        ? 'pointer-events-none ring-2 ring-primary/40'
+        : isSelected
+          ? 'border-primary ring-2 ring-primary/50'
+          : 'border-border-color hover:ring-2 hover:ring-primary/50'
       }`}
     >
       <div
@@ -1044,10 +1044,9 @@ function PendingInviteCard({
     <button
       type="button"
       onClick={onClick}
-      className={`relative overflow-hidden bg-background-light transition-all border block w-full text-left ${
-        isSelected
-          ? 'border-primary ring-2 ring-primary/50'
-          : 'border-amber-500/50 ring-1 ring-amber-500/20 hover:ring-2 hover:ring-primary/50'
+      className={`relative overflow-hidden bg-background-light transition-all border block w-full text-left ${isSelected
+        ? 'border-primary ring-2 ring-primary/50'
+        : 'border-amber-500/50 ring-1 ring-amber-500/20 hover:ring-2 hover:ring-primary/50'
       }`}
     >
       <div

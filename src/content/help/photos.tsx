@@ -25,7 +25,7 @@ export const photosFAQ: FAQSection = {
             </li>
           </ul>
           <p>
-            Supported formats include JPEG, PNG, GIF, and WebP. After uploading, you can add titles, descriptions, and tags, and organize photos into albums.
+            Supported formats include JPEG, PNG, GIF, and WebP. After uploading, you can add titles, descriptions, and tags, and organize photos into albums. To replay the interactive walkthrough, open the question-mark menu on My photos (or My albums) and choose Show guide.
           </p>
         </>
       ),
@@ -132,7 +132,16 @@ export const photosFAQ: FAQSection = {
       title: 'Liking and commenting on photos',
       content: (
         <p>
-          You can like photos by clicking the heart icon and leave comments to share feedback. Likes and comments are visible to the photo owner and other viewers. Be respectful and constructive in your comments.
+          You can like photos by clicking the heart icon and leave comments to share feedback. Reply to a comment to keep the conversation threaded — replies show who they&apos;re answering. You can edit your own comments after posting. The photo owner (and anyone you reply to) gets a notification. Be respectful and constructive.
+        </p>
+      ),
+    },
+    {
+      id: 'sharing',
+      title: 'Sharing photos and challenges',
+      content: (
+        <p>
+          Photo, challenge, and event pages have a share button. Copy the link, or share to Facebook, X, WhatsApp, or Pinterest. On phones, you can also use your device&apos;s share sheet.
         </p>
       ),
     },
@@ -140,9 +149,28 @@ export const photosFAQ: FAQSection = {
       id: 'exif',
       title: 'EXIF data and camera info',
       content: (
-        <p>
-          When you upload photos, we automatically extract EXIF data (camera, lens, and settings). This info is displayed to viewers on the photo detail page, so others can see how you captured the shot.
-        </p>
+        <>
+          <p
+            className="mb-3"
+          >
+            When you upload photos, we automatically extract EXIF data: camera, lens, settings, capture time, and GPS if the file includes it. Viewers see a compact summary on the photo page; tap
+            {' '}
+            <strong>
+              See more
+            </strong>
+            {' '}
+            for full details. If the photo has GPS coordinates, that includes a map and a link to open the location in Google Maps.
+          </p>
+          <p>
+            You can edit capture details from
+            {' '}
+            <strong>
+              My photos
+            </strong>
+            {' '}
+            (select a photo and open Capture details). Change camera, lens, settings, or location — including choosing a point on a map. Select several photos to update capture details in bulk.
+          </p>
+        </>
       ),
     },
     {
@@ -166,7 +194,19 @@ export const photosFAQ: FAQSection = {
       title: 'View counts and trending',
       content: (
         <p>
-          Photos and albums track view counts. The gallery page features &quot;Most viewed this week&quot; (popular photos from the last 7 days) and &quot;Trending albums&quot; so you can discover what the community is enjoying.
+          Photos and albums track view counts. The gallery homepage features &quot;Most viewed this week&quot; (popular photos from the last 7 days) and &quot;Trending albums&quot;. On the gallery Photos and Albums pages, use the
+          {' '}
+          <strong>
+            Recent
+          </strong>
+          {' '}
+          and
+          {' '}
+          <strong>
+            Popular
+          </strong>
+          {' '}
+          buttons to switch between newest first and most viewed.
         </p>
       ),
     },
@@ -176,6 +216,26 @@ export const photosFAQ: FAQSection = {
       content: (
         <p>
           On the my photos and my albums pages, you can select multiple items (single or multi-select). Use the sidebar or action bar to edit, delete, or add photos to albums in bulk. This saves time when organizing large collections.
+        </p>
+      ),
+    },
+    {
+      id: 'photo-library-filters',
+      title: 'Filtering your photo library',
+      content: (
+        <p>
+          On
+          {' '}
+          <strong>
+            My photos
+          </strong>
+          , tap
+          {' '}
+          <strong>
+            Filter
+          </strong>
+          {' '}
+          to narrow your library by camera, lens, tags, albums, challenges, license, visibility, title, or upload date. You can also sort by custom order, upload date, or title. Filters stay applied until you clear them.
         </p>
       ),
     },

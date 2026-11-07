@@ -155,10 +155,18 @@ export default function SharedAlbumEditForm({
     onDirtyChange?.(isDirty);
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
+  // Reset local state when album changes (React-recommended "adjusting state during rendering" pattern)
+  const [prevAlbumId, setPrevAlbumId] = useState(album?.id);
+  const [prevIsNewAlbum, setPrevIsNewAlbum] = useState(isNewAlbum);
+  if (prevAlbumId !== album?.id || prevIsNewAlbum !== isNewAlbum) {
+    setPrevAlbumId(album?.id);
+    setPrevIsNewAlbum(isNewAlbum);
+    setHasEditedSlug(false);
+  }
+
   useEffect(() => {
     if (!album || isNewAlbum) {
       reset(formDefaultValues);
-      setHasEditedSlug(false);
       return;
     }
 
@@ -179,7 +187,6 @@ export default function SharedAlbumEditForm({
       joinPolicy: (album.join_policy === 'open' || album.join_policy === 'closed') ? album.join_policy : 'open',
       maxPhotosPerUser: maxPhotos != null ? String(maxPhotos) : ('' as SharedAlbumFormInput['maxPhotosPerUser']),
     });
-    setHasEditedSlug(false);
   }, [album, isNewAlbum, reset]);
 
   const handleDelete = async () => {
@@ -575,6 +582,7 @@ export default function SharedAlbumEditForm({
               type="number"
               min={1}
               placeholder="Unlimited"
+              className="max-w-36"
               {...register('maxPhotosPerUser')}
             />
             <p

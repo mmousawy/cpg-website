@@ -11,6 +11,7 @@ import {
   type BulkPhotoFormData,
   type PhotoFormData,
 } from '@/components/manage';
+import ManageHelpMenu from '@/components/manage/ManageHelpMenu';
 import ManageLayout from '@/components/manage/ManageLayout';
 import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
 import ManageSidebarSkeleton from '@/components/manage/ManageSidebarSkeleton';
@@ -20,7 +21,6 @@ import Button from '@/components/shared/Button';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DropZone from '@/components/shared/DropZone';
 import EmptyState from '@/components/shared/EmptyState';
-import HelpLink from '@/components/shared/HelpLink';
 import { useManageScrollContainer } from '@/context/ManageScrollContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useManagePhotoDeepLink } from '@/hooks/useManagePhotoDeepLink';
@@ -52,11 +52,14 @@ import { useSupabase } from '@/hooks/useSupabase';
 import {
   isPhotosManageTourMockMode,
   isPhotosTourMockMode,
+  isPhotosTourReplayMode,
+  PHOTOS_TOUR_QUERY_PARAM,
+  PHOTOS_TOUR_REPLAY_QUERY_VALUE,
 } from '@/tours/photosFirstRunTour.constants';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Suspense,
   startTransition,
@@ -117,10 +120,12 @@ function PhotosPageContent() {
   const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalContext = useContext(ModalContext);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const photoIdFromUrl = searchParams.get('photo');
   const isPhotosUploadTourMock = isPhotosTourMockMode(searchParams);
   const isPhotosManageTourMock = isPhotosManageTourMockMode(searchParams);
+  const isPhotosTourReplay = isPhotosTourReplayMode(searchParams);
   const photoEditDirtyRef = useRef(false);
   const { setHasUnsavedChanges } = useUnsavedChanges();
   const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
@@ -451,7 +456,15 @@ function PhotosPageContent() {
     });
   }, [photos]);
 
-  usePhotosFirstRunTour({
+  const consumeTourReplayQuery = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (params.get(PHOTOS_TOUR_QUERY_PARAM) !== PHOTOS_TOUR_REPLAY_QUERY_VALUE) return;
+    params.delete(PHOTOS_TOUR_QUERY_PARAM);
+    const query = params.toString();
+    router.replace(query ? `/account/photos?${query}` : '/account/photos', { scroll: false });
+  }, [router, searchParams]);
+
+  const { replayTour } = usePhotosFirstRunTour({
     userId: user?.id,
     profile,
     refreshProfile,
@@ -461,6 +474,8 @@ function PhotosPageContent() {
     manageTourActive,
     isManageTourMock: isPhotosManageTourMock,
     prepareManageTour,
+    forceReplay: isPhotosTourReplay,
+    onForceReplayConsumed: consumeTourReplayQuery,
   });
 
   const handleMobileEdit = () => {
@@ -491,11 +506,11 @@ function PhotosPageContent() {
       <ManageLayout
         actions={
           <>
-            <HelpLink
+            <ManageHelpMenu
               id="photos-tour-help"
-              href="upload-photos"
-              label="How to upload photos"
-              size="sm"
+              helpHref="upload-photos"
+              helpLabel="How to upload photos"
+              onShowGuide={replayTour}
             />
             <Button
               id="photos-tour-filter"

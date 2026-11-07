@@ -156,7 +156,8 @@ function SortableGridItemInner<T>({
       role="button"
       tabIndex={0}
       className={clsx(
-        'relative group outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        // isolate: keep checkbox/overlay z-index inside the card so they cannot cover sticky section headings
+        'relative isolate group outline-none focus-visible:ring-2 focus-visible:ring-primary',
         isDragging && !isMultiDragActive && 'z-50',
         !disabled && (
           isSelected

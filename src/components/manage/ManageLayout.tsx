@@ -134,7 +134,7 @@ function ManageLayoutContent({
           >
             {/* Header */}
             <div
-              className="z-20 shrink-0 border-b border-border-color bg-background-light px-2 py-2"
+              className="relative z-30 shrink-0 border-b border-border-color bg-background-light px-2 py-2"
             >
               <div
                 className="flex items-center justify-between gap-4"

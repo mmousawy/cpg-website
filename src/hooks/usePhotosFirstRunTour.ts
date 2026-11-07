@@ -12,7 +12,7 @@ import {
   PHOTOS_TOUR_TARGETS,
 } from '@/tours/photosFirstRunTour.constants';
 import type { Driver } from 'driver.js';
-import { useContext, useEffect, useRef } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 type UsePhotosFirstRunTourOptions = {
   userId?: string;
@@ -27,6 +27,10 @@ type UsePhotosFirstRunTourOptions = {
   isManageTourMock: boolean;
   /** Select the first photo so edit / action-bar targets exist. */
   prepareManageTour: () => void;
+  /** Skip dismissed/finished checks and start the matching tour. */
+  forceReplay?: boolean;
+  /** Called after a forced replay actually starts, so the URL can drop `?tour=replay`. */
+  onForceReplayConsumed?: () => void;
 };
 
 function waitForSelector(selector: string, maxFrames = 10): Promise<boolean> {
@@ -58,16 +62,28 @@ export function usePhotosFirstRunTour({
   manageTourActive,
   isManageTourMock,
   prepareManageTour,
+  forceReplay = false,
+  onForceReplayConsumed,
 }: UsePhotosFirstRunTourOptions) {
   const { isOpen: isModalOpen } = useContext(ModalContext);
   const driverRef = useRef<Driver | null>(null);
   const uploadStartedRef = useRef(false);
   const manageStartedRef = useRef(false);
+  const forceReplayRef = useRef(false);
+  const [replayTick, setReplayTick] = useState(0);
 
   const destroyDriver = () => {
     driverRef.current?.destroy();
     driverRef.current = null;
   };
+
+  const replayTour = useCallback(() => {
+    destroyDriver();
+    uploadStartedRef.current = false;
+    manageStartedRef.current = false;
+    forceReplayRef.current = true;
+    setReplayTick((tick) => tick + 1);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -76,6 +92,12 @@ export function usePhotosFirstRunTour({
       manageStartedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (forceReplay) {
+      forceReplayRef.current = true;
+    }
+  }, [forceReplay]);
 
   // Tear down upload tour when empty chrome goes away (e.g. first upload).
   useEffect(() => {
@@ -90,6 +112,7 @@ export function usePhotosFirstRunTour({
 
     const shouldRunUpload = uploadTourActive;
     const shouldRunManage = manageTourActive;
+    const skipDismissedCheck = forceReplayRef.current;
 
     if (!shouldRunUpload && !shouldRunManage) return;
     if (shouldRunUpload && shouldRunManage) return;
@@ -97,7 +120,7 @@ export function usePhotosFirstRunTour({
     if (shouldRunUpload) {
       if (!isUploadTourMock && !profile) return;
       if (!isUploadTourMock && photosPending) return;
-      if (!isUploadTourMock && isPhotosUploadTourDismissed(profile)) return;
+      if (!isUploadTourMock && !skipDismissedCheck && isPhotosUploadTourDismissed(profile)) return;
       if (uploadStartedRef.current) return;
 
       const frame = requestAnimationFrame(() => {
@@ -107,6 +130,10 @@ export function usePhotosFirstRunTour({
           if (!ready) return;
 
           uploadStartedRef.current = true;
+          if (forceReplayRef.current) {
+            forceReplayRef.current = false;
+            onForceReplayConsumed?.();
+          }
           destroyDriver();
           driverRef.current = startPhotosFirstRunTour({
             persistDismissOnEnd: !isUploadTourMock,
@@ -123,7 +150,7 @@ export function usePhotosFirstRunTour({
     if (shouldRunManage) {
       if (!isManageTourMock && !profile) return;
       if (!isManageTourMock && photosPending) return;
-      if (!isManageTourMock && isPhotosManageTourDismissed(profile)) return;
+      if (!isManageTourMock && !skipDismissedCheck && isPhotosManageTourDismissed(profile)) return;
       if (manageStartedRef.current) return;
 
       prepareManageTour();
@@ -146,6 +173,10 @@ export function usePhotosFirstRunTour({
           if (!secondaryReady || !tertiaryReady) return;
 
           manageStartedRef.current = true;
+          if (forceReplayRef.current) {
+            forceReplayRef.current = false;
+            onForceReplayConsumed?.();
+          }
           destroyDriver();
           driverRef.current = startPhotosManageTour({
             persistDismissOnEnd: !isManageTourMock,
@@ -169,5 +200,10 @@ export function usePhotosFirstRunTour({
     manageTourActive,
     isManageTourMock,
     prepareManageTour,
+    forceReplay,
+    onForceReplayConsumed,
+    replayTick,
   ]);
+
+  return { replayTour };
 }
