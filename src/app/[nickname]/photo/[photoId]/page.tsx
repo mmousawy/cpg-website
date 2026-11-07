@@ -4,6 +4,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getPhotoByShortId } from '@/lib/data/profiles';
+import { buildImageObjectJsonLd } from '@/lib/photos/jsonLd';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
@@ -103,20 +104,18 @@ async function CachedPhotoPage({
   const photoUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}/photo/${encodeURIComponent(result.photo.short_id || '')}`);
   const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);
 
-  const imageJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ImageObject',
+  const creatorName = result.profile.full_name || `@${nickname}`;
+  const imageJsonLd = buildImageObjectJsonLd({
     name: result.photo.title || 'Photo',
     description: result.photo.description || `Photo by @${nickname}`,
     contentUrl: result.photo.url,
-    url: photoUrl,
-    creator: {
-      '@type': 'Person',
-      name: result.profile.full_name || `@${nickname}`,
-      url: profileUrl,
-    },
-    ...(result.photo.created_at && { dateCreated: result.photo.created_at }),
-  };
+    pageUrl: photoUrl,
+    creatorNickname: nickname,
+    creatorName,
+    dateCreated: result.photo.created_at,
+    license: result.photo.license,
+    copyrightNotice: result.photo.copyright_notice,
+  });
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',

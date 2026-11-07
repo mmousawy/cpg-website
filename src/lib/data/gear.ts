@@ -83,4 +83,21 @@ export async function getUserGearByNickname(
   return getUserGearByNicknameCached(nickname, includeTestContent);
 }
 
+export async function getGearCatalogBrands(
+  ids: Array<string | null | undefined>,
+): Promise<Record<string, string>> {
+  const catalogIds = [...new Set(ids.filter((id): id is string => !!id))];
+  if (catalogIds.length === 0) return {};
+
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from('gear_catalog')
+    .select('id, brand')
+    .in('id', catalogIds);
+
+  return Object.fromEntries(
+    (data ?? []).flatMap((row) => (row.brand ? [[row.id, row.brand]] : [])),
+  );
+}
+
 export { isGearProfileEmpty } from '@/lib/gear/types';

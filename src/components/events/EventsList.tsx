@@ -8,6 +8,7 @@ import type { CPGEvent, EventAttendee } from '@/types/events';
 import clsx from 'clsx';
 import Link from 'next/link';
 
+import { getEventSchemaDateTimes } from '@/lib/events/calendarTime';
 import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { getEventStatus, isEventPast } from '@/lib/events/status';
 import { formatEventLocation } from '@/utils/formatLocation';
@@ -201,7 +202,7 @@ export default function EventsList({
               >
                 <BlurImage
                   fill
-                  sizes="100vw"
+                  sizes="(max-width: 640px) 100vw, 320px"
                   loading='eager'
                   quality={THUMBNAIL_IMAGE_QUALITY}
                   alt={event.title || 'Event cover image'}
@@ -265,7 +266,13 @@ export default function EventsList({
                       <CalendarSVG
                         className="shrink-0 fill-foreground"
                       />
-                      {formatEventDate(event.date!, { includeYear: true, now: serverNow })}
+                      {event.date ? (
+                        <time
+                          dateTime={event.date}
+                        >
+                          {formatEventDate(event.date, { includeYear: true, now: serverNow })}
+                        </time>
+                      ) : null}
                     </span>
                     <span
                       className='flex gap-2'
@@ -273,12 +280,18 @@ export default function EventsList({
                       <TimeSVG
                         className="shrink-0 fill-foreground"
                       />
-                      {event.time ? formatEventTime(event.time) : ''}
+                      {event.time ? (
+                        <time
+                          dateTime={getEventSchemaDateTimes(event.date, event.time).startDate ?? undefined}
+                        >
+                          {formatEventTime(event.time)}
+                        </time>
+                      ) : ''}
                     </span>
                   </span>
                   {event.location && (
-                    <span
-                      className="mb-5 sm:mb-6 flex items-start gap-2 text-[15px] font-semibold leading-6"
+                    <address
+                      className="mx-0 mt-0 mb-5 sm:mb-6 flex items-start gap-2 text-[15px] font-semibold leading-6 not-italic"
                     >
                       <LocationSVG
                         className="shrink-0 fill-foreground"
@@ -288,11 +301,11 @@ export default function EventsList({
                       >
                         {formatEventLocation(event.location)}
                       </span>
-                    </span>
+                    </address>
                   )}
                   <RichDescriptionView
                     html={event.description ?? ''}
-                    className="whitespace-pre-line line-clamp-5 text-[15px]"
+                    className="line-clamp-5 text-[15px]"
                   />
                 </div>
                 <div

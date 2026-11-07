@@ -431,7 +431,7 @@ export default function AlbumsPage() {
               variant="primary"
             >
               <span
-                className="hidden md:inline-block"
+                className="hidden lg:inline-block"
               >
                 New album
               </span>

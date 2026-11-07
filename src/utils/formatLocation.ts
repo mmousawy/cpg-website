@@ -61,6 +61,88 @@ export function formatEventLocation(location: string | null | undefined): string
   return `${venue}, ${city}`;
 }
 
+const NL_POSTAL_WITH_CITY = /^(\d{4}\s?[A-Za-z]{2})(?:\s+|,\s*)(.+)$/;
+const NL_POSTAL_ONLY = /^(\d{4}\s?[A-Za-z]{2})$/;
+
+function normalizeNlPostal(value: string): string {
+  const compact = value.replace(/\s+/g, '');
+  const match = compact.match(/^(\d{4})([A-Za-z]{2})$/);
+  if (!match) return value.trim();
+  return `${match[1]} ${match[2].toUpperCase()}`;
+}
+
+function parseNlPostalCity(line: string): { postalCode?: string; city?: string } {
+  const withCity = line.match(NL_POSTAL_WITH_CITY);
+  if (withCity) {
+    return {
+      postalCode: normalizeNlPostal(withCity[1] ?? ''),
+      city: withCity[2]?.trim(),
+    };
+  }
+
+  const postalOnly = line.match(NL_POSTAL_ONLY);
+  if (postalOnly) {
+    return { postalCode: normalizeNlPostal(postalOnly[1] ?? '') };
+  }
+
+  return {};
+}
+
+export type EventPostalAddress = {
+  '@type': 'PostalAddress';
+  addressCountry: 'NL';
+  name?: string;
+  streetAddress?: string;
+  postalCode?: string;
+  addressLocality?: string;
+};
+
+/** Venue name plus a PostalAddress parsed from a CPG multiline location string. */
+export function parseEventLocation(location: string): {
+  name: string;
+  address: EventPostalAddress;
+} {
+  const lines = locationLines(location);
+  const venue = lines[0] ?? location.trim();
+  const rest = lines.slice(1);
+  const oneLine = lines.join(', ') || venue;
+
+  if (rest.length === 0) {
+    return {
+      name: venue,
+      address: {
+        '@type': 'PostalAddress',
+        name: venue,
+        addressCountry: 'NL',
+      },
+    };
+  }
+
+  const last = rest[rest.length - 1] ?? '';
+  const parsedLast = parseNlPostalCity(last);
+  const cityFromLast = parsedLast.city
+    || (!parsedLast.postalCode && !/\d/.test(last) ? last : undefined);
+  const streetLines = parsedLast.postalCode || cityFromLast
+    ? rest.slice(0, -1)
+    : rest;
+  const streetAddress = streetLines.join(', ') || undefined;
+
+  const address: EventPostalAddress = {
+    '@type': 'PostalAddress',
+    addressCountry: 'NL',
+  };
+
+  if (streetAddress) address.streetAddress = streetAddress;
+  if (cityFromLast) address.addressLocality = cityFromLast;
+  if (parsedLast.postalCode) address.postalCode = parsedLast.postalCode;
+
+  if (!streetAddress || !cityFromLast) {
+    address.name = oneLine;
+  }
+
+  return { name: venue, address };
+}
+
 export function formatLocation(
   locationName: string | null,
   locationCity: string,

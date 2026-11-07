@@ -27,11 +27,12 @@ import {
   getEventBySlug,
 } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
+import { getEventSchemaDateTimes } from '@/lib/events/calendarTime';
 import { formatEventDate, formatEventPageTitle, formatEventTime } from '@/lib/events/format';
+import { buildCpgEventJsonLd } from '@/lib/events/jsonLd';
 import { ensureStaticParams } from '@/lib/staticParams';
 import { getGoogleMapsEmbedUrl, getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
-import { stripHtml } from '@/utils/stripHtml';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -175,13 +176,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   const status = getEventStatus(event.date, event.time, serverNow);
   const isPastEvent = status === 'past';
 
-  // Build ISO startDate for Event schema (date + time)
-  const startDate = event.date
-    ? event.time
-      ? `${event.date}T${event.time.length === 5 ? `${event.time}:00` : event.time}`
-      : `${event.date}T00:00:00`
-    : null;
-
+  const schemaDates = getEventSchemaDateTimes(event.date, event.time);
   const mapsEmbedUrl = event.location ? getGoogleMapsEmbedUrl(event.location) : null;
   const eventUrl = getAbsoluteUrl(`/events/${event.slug}`);
   const eventShareTitle = formatEventPageTitle({
@@ -190,28 +185,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     time: event.time,
     now: serverNow,
   });
-  const eventJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Event',
-    name: event.title,
-    description: stripHtml(event.description ?? '') || `Join us for ${event.title || 'this event'}`,
-    ...(startDate && { startDate }),
-    url: eventUrl,
-    ...(event.cover_image && { image: getAbsoluteUrl(event.cover_image) }),
-    organizer: {
-      '@type': 'Organization',
-      name: siteConfig.name,
-      url: siteConfig.url,
-    },
-    eventStatus: 'https://schema.org/EventScheduled',
-    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    ...(event.location && {
-      location: {
-        '@type': 'Place',
-        name: event.location,
-      },
-    }),
-  };
+  const eventJsonLd = buildCpgEventJsonLd(event, eventUrl, attendees.length);
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -374,7 +348,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                   <CalendarSVG
                     className="size-5 shrink-0 fill-foreground"
                   />
-                  {formattedDate}
+                  {event.date ? (
+                    <time
+                      dateTime={event.date}
+                    >
+                      {formattedDate}
+                    </time>
+                  ) : formattedDate}
                 </span>
                 <span
                   className="flex items-center gap-2 text-[15px] font-semibold"
@@ -382,7 +362,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                   <TimeSVG
                     className="size-5 shrink-0 fill-foreground"
                   />
-                  {formattedTime}
+                  {event.time && schemaDates.startDate ? (
+                    <time
+                      dateTime={schemaDates.startDate}
+                    >
+                      {formattedTime}
+                    </time>
+                  ) : formattedTime}
                 </span>
               </div>
 
@@ -398,11 +384,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                   <LocationSVG
                     className="size-5 shrink-0 fill-current mt-0.5"
                   />
-                  <span
-                    className="whitespace-pre-wrap group-hover:underline underline-offset-4"
+                  <address
+                    className="m-0 not-italic whitespace-pre-wrap group-hover:underline underline-offset-4"
                   >
                     {event.location}
-                  </span>
+                  </address>
                 </a>
               )}
 

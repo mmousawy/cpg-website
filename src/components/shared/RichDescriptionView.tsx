@@ -31,7 +31,7 @@ export function RichDescriptionView({
   if (isPlainText(content)) {
     return (
       <div
-        className={classes}
+        className={clsx(classes, 'whitespace-pre-line')}
       >
         {content}
       </div>

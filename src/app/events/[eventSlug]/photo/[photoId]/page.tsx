@@ -1,10 +1,12 @@
 import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
+import JsonLd from '@/components/shared/JsonLd';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getEventPhotoByShortId } from '@/lib/data/albums';
 import { getStandalonePhotoCanonicalPath } from '@/lib/photoCanonical';
-import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
+import { buildImageObjectJsonLd } from '@/lib/photos/jsonLd';
+import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -104,12 +106,39 @@ async function CachedEventPhotoPage({
   cacheTag('events');
   cacheTag(`photo-${photoId}`);
 
+  const fallbackCanonical = `/events/${encodeURIComponent(eventSlug)}/photo/${encodeURIComponent(result.photo.short_id || photoId)}`;
+  const isCanonical = getStandalonePhotoCanonicalPath(
+    result.profile.nickname,
+    result.photo,
+    fallbackCanonical,
+  ) === fallbackCanonical;
+  const pageUrl = getAbsoluteUrl(fallbackCanonical);
+  const creatorName = result.profile.full_name || `@${result.profile.nickname}`;
+
   return (
-    <PhotoLightboxColumn
-      photo={result.photo}
-      isInAlbum
-      siblingPhotos={result.siblingPhotos}
-      basePath={`/events/${eventSlug}`}
-    />
+    <>
+      {isCanonical && result.photo.url && (
+        <JsonLd
+          data={buildImageObjectJsonLd({
+            name: result.photo.title || 'Photo',
+            description: result.photo.description
+              || `Photo from event "${result.currentEvent.title || 'Event'}"`,
+            contentUrl: result.photo.url,
+            pageUrl,
+            creatorNickname: result.profile.nickname,
+            creatorName,
+            dateCreated: result.photo.created_at,
+            license: result.photo.license,
+            copyrightNotice: result.photo.copyright_notice,
+          })}
+        />
+      )}
+      <PhotoLightboxColumn
+        photo={result.photo}
+        isInAlbum
+        siblingPhotos={result.siblingPhotos}
+        basePath={`/events/${eventSlug}`}
+      />
+    </>
   );
 }

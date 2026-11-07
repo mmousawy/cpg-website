@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
 import { subscribeRouteChange } from '@/lib/routeChange';
 
 type PopoverAlign = 'left' | 'right' | 'center' | 'auto';
@@ -197,14 +198,14 @@ export default function Popover({
     <details
       ref={detailsRef}
       className={clsx(
-        'relative overflow-visible',
-        isTriggerWidth ? 'inline-block w-fit' : 'inline-block',
+        'relative flex items-center overflow-visible',
+        isTriggerWidth ? 'inline-flex w-fit' : 'inline-flex',
       )}
       onToggle={handleToggle}
     >
       <summary
         ref={summaryRef}
-        className="list-none cursor-pointer [&::-webkit-details-marker]:hidden *:block"
+        className="flex list-none cursor-pointer items-center leading-none [&::-webkit-details-marker]:hidden"
         onClick={handleSummaryClick}
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled}
@@ -214,7 +215,8 @@ export default function Popover({
       <div
         ref={panelRef}
         className={clsx(
-          'absolute z-50',
+          'absolute',
+          pageFloatingZClassName,
           sideClasses,
           widthClasses,
           alignmentClasses[resolvedAlign],

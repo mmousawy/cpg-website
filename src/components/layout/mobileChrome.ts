@@ -44,6 +44,14 @@ export const mobileStickyBottomClassName =
 export const mobileStickyChromeZClassName = 'max-sm:z-30';
 
 /**
+ * Page popovers, select menus, and tooltips that compete with the site header.
+ * Below the header (z-40); same layer as toasts. Header-owned menus stay z-50
+ * inside the header stacking context. When portaled into an open dialog
+ * (top layer), this only orders content inside that dialog.
+ */
+export const pageFloatingZClassName = 'z-39';
+
+/**
  * Full-screen overlays (modals, search, sheets).
  * Above sticky section headings (z-20), page titles (z-30), the tab bar (z-35),
  * and the site header (z-40). A dialog opened on top of a modal uses z-70.
