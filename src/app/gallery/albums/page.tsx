@@ -47,7 +47,7 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
         data={breadcrumbJsonLd}
       />
       <PageContainer
-        innerClassName="max-w-screen-xl"
+        innerClassName="max-w-(--breakpoint-xl)"
       >
         <PageHeading
           title="Photo albums"

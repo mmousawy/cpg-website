@@ -141,7 +141,7 @@ export default function OnboardingNicknameSection({
             Your profile URL will be:
             <br />
             <span
-              className="break-words"
+              className="wrap-break-word"
             >
               {(() => {
                 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://creativephotography.group';

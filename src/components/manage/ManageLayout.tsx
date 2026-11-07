@@ -150,7 +150,7 @@ function ManageLayoutContent({
                     <Link
                       href="/account/photos"
                       onClick={(e) => handleTabClick(e, '/account/photos')}
-                      className="flex items-center gap-1.5 md:gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:z-10 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
+                      className="flex items-center gap-1.5 md:gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-(family-name:--font-geist-mono) text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:z-10 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
                     >
                       <PhotoMicroSVG
                         className="size-4"
@@ -177,7 +177,7 @@ function ManageLayoutContent({
                       id="photos-tour-albums-tab"
                       href="/account/albums"
                       onClick={(e) => handleTabClick(e, '/account/albums')}
-                      className="-ml-[2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
+                      className="ml-[-2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-(family-name:--font-geist-mono) text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
                     >
                       <FolderMicroSVG
                         className="size-4"

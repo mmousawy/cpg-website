@@ -48,7 +48,7 @@ function ButtonSkeleton({ className = 'w-44' }: { className?: string }) {
       className="mt-4 sm:mt-6 flex justify-center "
     >
       <SkeletonBar
-        className={`h-[2.125rem] rounded-full border border-border-color-strong ${className}`}
+        className={`h-8.5 rounded-full border border-border-color-strong ${className}`}
       />
     </div>
   );
@@ -57,7 +57,7 @@ function ButtonSkeleton({ className = 'w-44' }: { className?: string }) {
 function SignUpCTASkeleton() {
   return (
     <Container
-      className="mx-auto mt-10 max-w-screen-md bg-background-special"
+      className="mx-auto mt-10 max-w-(--breakpoint-md) bg-background-special"
     >
       <div
         className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -73,7 +73,7 @@ function SignUpCTASkeleton() {
           />
         </div>
         <SkeletonBar
-          className="h-[2.125rem] w-36 shrink-0 rounded-full"
+          className="h-8.5 w-36 shrink-0 rounded-full"
         />
       </div>
     </Container>

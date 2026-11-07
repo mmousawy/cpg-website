@@ -63,7 +63,7 @@ export default async function TagPage({ params }: { params: Params }) {
 
   return (
     <PageContainer
-      innerClassName="max-w-screen-xl"
+      innerClassName="max-w-(--breakpoint-xl)"
     >
       <PageHeading
         title={`Photos tagged “${tagName}”`}

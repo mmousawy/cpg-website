@@ -220,7 +220,7 @@ export default async function SceneEventDetailPage({
               className="flex-1"
             />
             <div
-              className="mx-auto w-full max-w-screen-md pb-0 sm:pb-4"
+              className="mx-auto w-full max-w-(--breakpoint-md) pb-0 sm:pb-4"
             >
               <div
                 className="mb-2 flex flex-wrap items-center justify-between gap-2"

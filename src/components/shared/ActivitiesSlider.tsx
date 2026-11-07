@@ -165,32 +165,32 @@ const activities = [
 
 const colorStyles: Record<string, { card: string; icon: string; title: string }> = {
   amber: {
-    card: 'border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/5 hover:border-amber-500/40 hover:shadow-amber-500/5',
+    card: 'border-amber-500/20 bg-linear-to-br from-amber-500/10 to-orange-500/5 hover:border-amber-500/40 hover:shadow-amber-500/5',
     icon: 'bg-amber-500/20 text-amber-600 dark:text-amber-400',
     title: 'text-amber-700 dark:text-amber-300',
   },
   rose: {
-    card: 'border-rose-500/20 bg-gradient-to-br from-rose-500/10 to-pink-500/5 hover:border-rose-500/40 hover:shadow-rose-500/5',
+    card: 'border-rose-500/20 bg-linear-to-br from-rose-500/10 to-pink-500/5 hover:border-rose-500/40 hover:shadow-rose-500/5',
     icon: 'bg-rose-500/20 text-rose-600 dark:text-rose-400',
     title: 'text-rose-700 dark:text-rose-300',
   },
   violet: {
-    card: 'border-violet-500/20 bg-gradient-to-br from-violet-500/10 to-purple-500/5 hover:border-violet-500/40 hover:shadow-violet-500/5',
+    card: 'border-violet-500/20 bg-linear-to-br from-violet-500/10 to-purple-500/5 hover:border-violet-500/40 hover:shadow-violet-500/5',
     icon: 'bg-violet-500/20 text-violet-600 dark:text-violet-400',
     title: 'text-violet-700 dark:text-violet-300',
   },
   cyan: {
-    card: 'border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-teal-500/5 hover:border-cyan-500/40 hover:shadow-cyan-500/5',
+    card: 'border-cyan-500/20 bg-linear-to-br from-cyan-500/10 to-teal-500/5 hover:border-cyan-500/40 hover:shadow-cyan-500/5',
     icon: 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400',
     title: 'text-cyan-700 dark:text-cyan-300',
   },
   emerald: {
-    card: 'border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-green-500/5 hover:border-emerald-500/40 hover:shadow-emerald-500/5',
+    card: 'border-emerald-500/20 bg-linear-to-br from-emerald-500/10 to-green-500/5 hover:border-emerald-500/40 hover:shadow-emerald-500/5',
     icon: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
     title: 'text-emerald-700 dark:text-emerald-300',
   },
   sky: {
-    card: 'border-sky-500/20 bg-gradient-to-br from-sky-500/10 to-blue-500/5 hover:border-sky-500/40 hover:shadow-sky-500/5',
+    card: 'border-sky-500/20 bg-linear-to-br from-sky-500/10 to-blue-500/5 hover:border-sky-500/40 hover:shadow-sky-500/5',
     icon: 'bg-sky-500/20 text-sky-600 dark:text-sky-400',
     title: 'text-sky-700 dark:text-sky-300',
   },
@@ -283,7 +283,7 @@ export default function ActivitiesSlider() {
 
         {/* Full-bleed on mobile: cancel PageContainer px-3. Avoid w-screen/100vw (document width vs scrollbar). */}
         <div
-          className="relative -mx-3 w-[calc(100%+1.5rem)] sm:mx-0 sm:w-auto sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+          className="relative -mx-3 w-[calc(100%+1.5rem)] sm:mx-0 sm:w-auto sm:mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
         >
           <Swiper
             modules={[Navigation, A11y]}
@@ -308,7 +308,7 @@ export default function ActivitiesSlider() {
             {activities.map((activity) => (
               <SwiperSlide
                 key={activity.title}
-                className="!h-auto"
+                className="h-auto!"
               >
                 <ActivityCard
                   activity={activity}

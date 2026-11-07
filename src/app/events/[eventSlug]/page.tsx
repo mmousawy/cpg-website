@@ -258,7 +258,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             className="absolute inset-x-0 bottom-0 px-3 pb-0 sm:px-8"
           >
             <div
-              className="mx-auto max-w-screen-md"
+              className="mx-auto max-w-(--breakpoint-md)"
             >
               <div
                 className="mb-2 flex flex-wrap items-center justify-between gap-2"

@@ -56,7 +56,7 @@ function SceneEventStickyBarGuest({
           aria-label="I'm interested"
         >
           <StarOutlineIcon
-            className="size-4 shrink-0 -ml-[0.2rem] text-foreground transition-colors group-hover:text-primary"
+            className="size-4 shrink-0 ml-[-0.2rem] text-foreground transition-colors group-hover:text-primary"
           />
           <span
             className={clsx('text-sm font-medium', count > 0 && 'hidden sm:inline')}
@@ -182,7 +182,7 @@ function SceneEventStickyBarAuthenticated({ event }: SceneEventStickyBarProps) {
             <StarOutlineIcon
               className={clsx(
                 'size-4 shrink-0 text-foreground transition-colors group-hover:text-primary',
-                count === 0 && '-ml-[0.2rem]',
+                count === 0 && 'ml-[-0.2rem]',
               )}
             />
           )}

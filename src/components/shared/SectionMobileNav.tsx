@@ -85,7 +85,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="relative z-[2] flex items-center justify-between gap-3 px-4 py-3 text-left"
+          className="relative z-2 flex items-center justify-between gap-3 px-4 py-3 text-left"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? 'Close sections' : 'Open sections'}
         >
@@ -128,7 +128,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
         >
           <nav
             aria-label={ariaLabel}
-            className="relative z-[2] border-t border-border-color overflow-y-auto overscroll-contain max-h-65"
+            className="relative z-2 border-t border-border-color overflow-y-auto overscroll-contain max-h-65"
           >
             <ul
               className="py-2"

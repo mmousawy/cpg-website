@@ -162,7 +162,7 @@ export default function PublicProfileSection({
                     icon={<CloseSVG
                       className="size-4"
                     />}
-                    className="w-full !px-2 !py-2 sm:w-auto"
+                    className="w-full px-2! py-2! sm:w-auto"
                   >
                     <span
                       className="sm:hidden"

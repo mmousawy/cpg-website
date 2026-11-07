@@ -1136,7 +1136,7 @@ export default function ReportsPage() {
       {activeTab === 'pending' && selectedIds.size > 0 && (
         <StickyActionBar>
           <div
-            className="flex items-center gap-3 max-w-screen-md w-full mx-auto"
+            className="flex items-center gap-3 max-w-(--breakpoint-md) w-full mx-auto"
           >
             <span
               className="text-sm flex-1 text-foreground/80"

@@ -34,7 +34,7 @@ export default function PageContainer({ children, className, variant = 'default'
       )}
     >
       <div
-        className={clsx('w-full max-w-screen-md', innerClassName)}
+        className={clsx('w-full max-w-(--breakpoint-md)', innerClassName)}
       >
         {children}
       </div>

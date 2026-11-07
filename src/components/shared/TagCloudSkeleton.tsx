@@ -44,7 +44,7 @@ export default function TagCloudSkeleton({
     <div
       className={
         variant === 'gallery'
-          ? 'flex max-h-[4.5rem] flex-wrap items-center gap-2 overflow-hidden'
+          ? 'flex max-h-18 flex-wrap items-center gap-2 overflow-hidden'
           : 'flex flex-wrap items-center gap-2'
       }
       aria-busy="true"

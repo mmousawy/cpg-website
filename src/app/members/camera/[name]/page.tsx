@@ -123,7 +123,7 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
               </div>
               <ScrappyCameraIllustration
                 camera={label}
-                className="h-16 w-auto max-w-[5.75rem] shrink-0 object-contain opacity-90 sm:hidden"
+                className="h-16 w-auto max-w-23 shrink-0 object-contain opacity-90 sm:hidden"
               />
             </div>
           )}

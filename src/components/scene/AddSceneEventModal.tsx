@@ -224,7 +224,7 @@ export default function AddSceneEventModal() {
         className="sticky top-0 z-10 -mx-4 px-4 pt-3 pb-3 bg-background-light border-b border-border-color-strong"
       >
         <div
-          className="absolute -bottom-[17px] left-0 right-0 h-4 bg-linear-to-b from-background-light to-transparent pointer-events-none"
+          className="absolute bottom-[-17px] left-0 right-0 h-4 bg-linear-to-b from-background-light to-transparent pointer-events-none"
         />
         <div
           className="flex items-center gap-1"

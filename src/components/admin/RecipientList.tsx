@@ -1,6 +1,7 @@
 'use client';
 
 import Checkbox from '@/components/shared/Checkbox';
+import clsx from 'clsx';
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
 import { useMemo } from 'react';
@@ -83,6 +84,12 @@ export default function RecipientList({
 
   const allSelected = selectableRecipients.length > 0 && selectableRecipients.every(r => r.selected);
 
+  const maxHeightClass = clsx(
+    maxHeight === 'sm' && 'max-h-64',
+    maxHeight === 'md' && 'max-h-96',
+    maxHeight === 'lg' && 'max-h-128',
+  );
+
   const handleSelectAll = (checked: boolean) => {
     onRecipientsChange(
       recipients.map(r => (r.disabled ? r : { ...r, selected: checked })),
@@ -140,14 +147,13 @@ export default function RecipientList({
       </h3>
 
       <div
-        className={`overflow-hidden rounded-lg border border-border-color bg-background-light ${
-          maxHeight === 'sm' ? 'max-h-64' : maxHeight === 'lg' ? 'max-h-[32rem]' : 'max-h-96'
-        }`}
+        className={clsx(
+          'overflow-hidden rounded-lg border border-border-color bg-background-light',
+          maxHeightClass,
+        )}
       >
         <div
-          className={`overflow-y-auto ${
-            maxHeight === 'sm' ? 'max-h-64' : maxHeight === 'lg' ? 'max-h-[32rem]' : 'max-h-96'
-          }`}
+          className={clsx('overflow-y-auto', maxHeightClass)}
         >
           <table
             className="w-full"

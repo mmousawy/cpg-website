@@ -113,7 +113,7 @@ export default function Button({
 
   const classes = clsx(
     // Base styles
-    'group inline-flex items-center justify-center gap-2 rounded-md border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
+    'group inline-flex items-center justify-center gap-2 rounded-md border font-(family-name:--font-geist-mono) font-medium transition-colors whitespace-nowrap',
     // Variant styles
     variantStyles[variant],
     // Size styles

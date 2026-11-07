@@ -29,8 +29,8 @@ export default function Modal() {
   // Size-specific classes for the modal container
   const sizeClasses = {
     small: 'max-w-[24rem]',
-    default: 'max-w-[30rem]',
-    medium: 'max-w-[42rem]',
+    default: 'max-w-120',
+    medium: 'max-w-2xl',
     large: 'max-w-6xl w-[90vw]',
     fullscreen: 'max-w-[95vw] w-[95vw] max-h-[90vh]',
   };

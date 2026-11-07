@@ -227,7 +227,7 @@ export default async function ChallengePage({
             className="absolute inset-x-0 bottom-0 px-3 pb-0 sm:px-8"
           >
             <div
-              className="mx-auto max-w-screen-md"
+              className="mx-auto max-w-(--breakpoint-md)"
             >
               {/* Challenge badge */}
               <div

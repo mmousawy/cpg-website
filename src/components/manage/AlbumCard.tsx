@@ -59,13 +59,13 @@ function AlbumCard({
         isSelected
           ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
           : isHovered
-            ? 'ring-2 ring-primary/50 ring-offset-0 [&>:last-child]:opacity-80'
+            ? 'ring-2 ring-primary/50 ring-offset-0 *:last:opacity-80'
             : 'hover:ring-2 hover:ring-primary/50',
       )}
     >
       {/* Cover image */}
       <div
-        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background"
+        className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-background"
       >
         {coverImage ? (
           <BlurImage

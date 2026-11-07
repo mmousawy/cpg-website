@@ -334,7 +334,7 @@ export default function EmailAttendeesModal({
                             {Object.entries(sendResult.errorDetails).map(([email, error]) => (
                               <div
                                 key={email}
-                                className="break-words"
+                                className="wrap-break-word"
                               >
                                 <span
                                   className="font-medium"
