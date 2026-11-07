@@ -78,7 +78,7 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
       <GalleryPageHeader />
 
       <div
-        className="-mx-3 grid min-w-0 gap-8 md:-mx-12 md:gap-10 md:pb-12 [&>*]:min-w-0"
+        className="-mx-3 grid min-w-0 gap-8 md:-mx-12 md:gap-10 md:pb-12 *:min-w-0"
       >
         <GalleryTagsSection
           tags={popularTags}
@@ -105,7 +105,7 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
           </div>
           <SignUpCTA
             variant="inline"
-            className="max-w-screen-md  mx-auto sm:mt-12"
+            className="max-w-(--breakpoint-md)  mx-auto sm:mt-12"
           />
         </WidePageContainer>
       </div>

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.47.2](https://github.com/mmousawy/cpg-website/compare/v1.47.1...v1.47.2) (2026-11-07)
+
+
+### 🐛 Bug Fixes
+
+* enhance album and photo management with new help menu and tour replay functionality ([48dc3b4](https://github.com/mmousawy/cpg-website/commit/48dc3b41cc0269f6fbd19dfbeab0f8f831753e19))
+* enhance album management and styling consistency ([d007655](https://github.com/mmousawy/cpg-website/commit/d007655f03933497640228c77bc9bba98609c97a))
+
+
+### ♻️ Refactoring
+
+* update max-width classes for responsive design consistency ([7e28642](https://github.com/mmousawy/cpg-website/commit/7e2864221af2ca793b9fffae076a386a625002ef))
+
 ## [1.47.1](https://github.com/mmousawy/cpg-website/compare/v1.47.0...v1.47.1) (2026-11-06)
 
 

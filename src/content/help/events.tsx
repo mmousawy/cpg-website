@@ -52,7 +52,7 @@ export const eventsFAQ: FAQSection = {
       title: 'Event email reminders',
       content: (
         <p>
-          We send automated email reminders: an RSVP reminder about 5 days before the event (if you haven&apos;t signed up yet) and an attendee reminder about 1 day before (if you&apos;ve confirmed you&apos;re going). You can opt out of these in your email preferences.
+          We send automated email reminders: an RSVP reminder about 5 days before the event (if you haven&apos;t signed up yet) and an attendee reminder about 1 day before (if you&apos;ve confirmed you&apos;re going). The RSVP reminder follows your Events email preference — turn it off in Account → Email preferences to stop receiving them. The attendee reminder is always sent to confirmed attendees so you don&apos;t miss an event you signed up for.
         </p>
       ),
     },
@@ -63,6 +63,28 @@ export const eventsFAQ: FAQSection = {
         <p>
           Some events have a limited number of spots. The event page shows how many spots are filled (e.g. &quot;12 / 20 spots filled&quot;) or &quot;Event is full&quot; when no spots remain. RSVP early to reserve your spot.
         </p>
+      ),
+    },
+    {
+      id: 'event-photos',
+      title: 'Event photos',
+      content: (
+        <>
+          <p
+            className="mb-3"
+          >
+            Every event has a shared photo album. Logged-in members can add photos from the event page using
+            {' '}
+            <strong>
+              Add photos
+            </strong>
+            {' '}
+            in the Event photos section — upload new shots or pick from your library. You don&apos;t need to join the album first.
+          </p>
+          <p>
+            Photos appear right away with your name as the contributor. Anyone in the group can add photos, so it&apos;s an easy way to share what you shot at a meetup.
+          </p>
+        </>
       ),
     },
   ],

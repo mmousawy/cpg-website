@@ -553,6 +553,7 @@ export default function SingleAlbumEditForm({
                   placeholder="Unlimited"
                   value={maxPhotosPerUser}
                   onChange={(e) => setMaxPhotosPerUser(e.target.value)}
+                  className="max-w-36"
                 />
                 <p
                   className="text-xs text-foreground/50"

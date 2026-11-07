@@ -24,7 +24,7 @@ export const mobileFixedBottomChromeClassName =
  * so the sticky containing block is unchanged.
  */
 export const mobileStickyBarSettleGapClassName =
-  'mobile-sticky-bar-settle-gap pointer-events-none max-sm:h-[calc(0.875rem-0.25rem)] sm:hidden';
+  'mobile-sticky-bar-settle-gap pointer-events-none max-sm:h-2.5 sm:hidden';
 
 /**
  * End-of-page settle gap. Matches the 0.25rem pin above the tab bar so the
@@ -50,13 +50,13 @@ export const mobileStickyChromeZClassName = 'max-sm:z-30';
  * In-page dialogs must portal to `document.body`. A local stacking context
  * (the profile hero is z-10) would otherwise paint them under sticky headings.
  */
-export const modalOverlayZClassName = 'z-[60]';
+export const modalOverlayZClassName = 'z-60';
 
-export const nestedModalOverlayZClassName = 'z-[70]';
+export const nestedModalOverlayZClassName = 'z-70';
 
-export const mobileTabBarZClassName = 'max-sm:z-[35]';
+export const mobileTabBarZClassName = 'max-sm:z-35';
 
-export const mobileScrimZClassName = 'max-sm:z-[25]';
+export const mobileScrimZClassName = 'max-sm:z-25';
 
 /** Manage photos/albums: bottom chrome stays active below the `md` sidebar breakpoint. */
 export const manageMobileFloatingPillClassName =
@@ -73,7 +73,7 @@ export const manageMobileChromeMediaQuery = '(max-width: 767px)';
 
 /** Sliding active-tab pill — fill + inset highlight. */
 export const mobileTabActivePillClassName =
-  'bg-foreground/[0.14] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.55),inset_0_0_0_1px_rgba(0,0,0,0.07)] dark:bg-foreground/[0.12] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),inset_0_0_0_1px_var(--selection-ring)]';
+  'bg-foreground/[0.14] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.55),inset_0_0_0_1px_rgba(0,0,0,0.07)] dark:bg-foreground/12 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),inset_0_0_0_1px_var(--selection-ring)]';
 
 /** Active tab label (background lives on the sliding pill). */
 export const mobileTabActiveClassName =

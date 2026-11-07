@@ -42,7 +42,7 @@ export default function Header() {
       className="app-site-header sticky top-0 z-40 hidden justify-center border-b border-b-border-color border-t-primary bg-background-light px-2 py-2 text-foreground shadow-md shadow-[#00000005] sm:flex"
     >
       <div
-        className="app-header-inner flex w-full max-w-screen-md items-center justify-between gap-4"
+        className="app-header-inner flex w-full max-w-(--breakpoint-md) items-center justify-between gap-4"
       >
         <div
           className="flex items-center gap-5"

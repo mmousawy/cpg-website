@@ -2,14 +2,20 @@
 
 import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
-import type { SharedAlbumMember } from '@/types/albums';
+import type { SharedAlbumMemberProfile } from '@/types/albums';
 import Link from 'next/link';
 
 import CloseMiniSVG from 'public/icons/close-mini.svg';
 import PlusSVG from 'public/icons/plus.svg';
 
+export type AlbumMemberListItem = {
+  user_id: string;
+  role: 'owner' | 'member';
+  profiles?: SharedAlbumMemberProfile | null;
+};
+
 type SharedAlbumMemberListProps = {
-  members: SharedAlbumMember[];
+  members: AlbumMemberListItem[];
   albumOwnerId: string;
   currentUserId: string | undefined;
   isOwner: boolean;
@@ -18,14 +24,37 @@ type SharedAlbumMemberListProps = {
   isRemoving?: boolean;
 };
 
-function getDisplayName(member: SharedAlbumMember): string {
+/** Unique photo owners, used as members when the album is not invite-only. */
+export function membersFromPhotoContributors(
+  photos: Array<{
+    user_id: string | null;
+    owner_profile?: SharedAlbumMemberProfile | null;
+  }>,
+  albumOwnerId?: string | null,
+): AlbumMemberListItem[] {
+  const seen = new Set<string>();
+  const members: AlbumMemberListItem[] = [];
+  for (const photo of photos) {
+    const userId = photo.user_id;
+    if (!userId || seen.has(userId)) continue;
+    seen.add(userId);
+    members.push({
+      user_id: userId,
+      role: albumOwnerId && userId === albumOwnerId ? 'owner' : 'member',
+      profiles: photo.owner_profile ?? null,
+    });
+  }
+  return members;
+}
+
+function getDisplayName(member: AlbumMemberListItem): string {
   const profile = member.profiles;
   if (profile?.full_name) return profile.full_name;
   if (profile?.nickname) return `@${profile.nickname}`;
   return 'Unknown';
 }
 
-function getProfileUrl(member: SharedAlbumMember): string | null {
+function getProfileUrl(member: AlbumMemberListItem): string | null {
   const profile = member.profiles;
   if (profile?.nickname) return `/@${profile.nickname}`;
   return null;
@@ -90,7 +119,7 @@ export default function SharedAlbumMemberList({
 
               return (
                 <li
-                  key={member.id}
+                  key={member.user_id}
                   className="flex items-center gap-3 px-4 py-3"
                 >
                   <Avatar

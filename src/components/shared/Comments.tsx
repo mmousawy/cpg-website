@@ -83,9 +83,9 @@ function scrollToComment(commentId: string) {
   target.scrollIntoView({ behavior: scrollBehavior('smooth'), block: 'center' });
   const card = target.querySelector(':scope > div');
   if (card) {
-    card.classList.add('!border-primary', '!bg-primary/20');
+    card.classList.add('border-primary!', 'bg-primary/20!');
     setTimeout(() => {
-      card.classList.remove('!border-primary', '!bg-primary/20');
+      card.classList.remove('border-primary!', 'bg-primary/20!');
     }, 2000);
   }
 }

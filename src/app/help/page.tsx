@@ -84,7 +84,12 @@ export default function HelpPage() {
                 className="text-primary hover:underline underline-offset-4"
               >
                 Contact us
-              </Link>
+              </Link>{', or send '}
+              <strong>
+                Feedback
+              </strong>
+              {' '}
+              from the footer (desktop) or your avatar menu under Help &amp; info (mobile).
             </p>
           </div>
         </div>

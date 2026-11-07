@@ -172,7 +172,7 @@ export default function MobilePullToRefresh() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-[45] flex justify-center sm:hidden"
+      className="pointer-events-none fixed inset-x-0 top-0 z-45 flex justify-center sm:hidden"
       style={{
         transform: `translateY(${indicatorY}px)`,
         transition: isPulling ? 'none' : 'transform 220ms cubic-bezier(0.33, 1, 0.68, 1)',

@@ -226,7 +226,7 @@ function LocationMapPickerBody({
     <div
       className={clsx(
         'scale-100 modal-panel-in',
-        'flex w-full max-w-[42rem] min-w-0 flex-col',
+        'flex w-full max-w-2xl min-w-0 flex-col',
         'relative max-h-full min-h-0',
         'flex flex-col',
         'rounded-xl sm:rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
@@ -341,7 +341,7 @@ function LocationMapPickerBody({
           aria-hidden
         >
           <MapPinSolidSVG
-            className="size-11 -mt-[1.65rem] drop-shadow-md"
+            className="size-11 mt-[-1.65rem] drop-shadow-md"
           />
         </div>
       </div>

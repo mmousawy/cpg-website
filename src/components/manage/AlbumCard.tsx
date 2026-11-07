@@ -10,6 +10,7 @@ import FolderSVG from 'public/icons/folder.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import UsersMicroSVG from 'public/icons/users-micro.svg';
 import { memo, useMemo } from 'react';
+import { getAlbumDisplayName } from './AlbumListItem';
 
 interface AlbumCardProps {
   album: AlbumWithPhotos;
@@ -27,6 +28,7 @@ function AlbumCard({
 }: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
+  const displayName = getAlbumDisplayName(album);
 
   const badges = useMemo(() => {
     const badgeList = [];
@@ -59,18 +61,18 @@ function AlbumCard({
         isSelected
           ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
           : isHovered
-            ? 'ring-2 ring-primary/50 ring-offset-0 [&>:last-child]:opacity-80'
+            ? 'ring-2 ring-primary/50 ring-offset-0 *:last:opacity-80'
             : 'hover:ring-2 hover:ring-primary/50',
       )}
     >
       {/* Cover image */}
       <div
-        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background"
+        className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-background"
       >
         {coverImage ? (
           <BlurImage
             src={getCroppedThumbnailUrl(coverImage, 250, 188, 85) || coverImage}
-            alt={album.title}
+            alt={displayName}
             blurhash={album.cover_image_blurhash}
             fill
             sizes="250px"
@@ -97,7 +99,7 @@ function AlbumCard({
         <p
           className="text-sm font-semibold line-clamp-1"
         >
-          {album.title}
+          {displayName}
         </p>
         <p
           className="text-xs text-foreground/50 mt-1"
@@ -106,13 +108,6 @@ function AlbumCard({
           {' '}
           {photoCount === 1 ? 'photo' : 'photos'}
         </p>
-        {album.event_title && (
-          <p
-            className="text-xs text-foreground/50 mt-0.5 line-clamp-1"
-          >
-            {album.event_title}
-          </p>
-        )}
       </div>
 
       {/* Hover overlay */}
@@ -137,9 +132,9 @@ export default memo(AlbumCard, (prevProps, nextProps) => {
   return (
     prevProps.album.id === nextProps.album.id &&
     prevProps.album.title === nextProps.album.title &&
+    prevProps.album.event_title === nextProps.album.event_title &&
     prevProps.album.cover_image_url === nextProps.album.cover_image_url &&
     prevProps.album.event_cover_image === nextProps.album.event_cover_image &&
-    prevProps.album.event_title === nextProps.album.event_title &&
     prevProps.album.is_public === nextProps.album.is_public &&
     prevProps.album.is_shared === nextProps.album.is_shared &&
     prevProps.album.photos?.length === nextProps.album.photos?.length &&

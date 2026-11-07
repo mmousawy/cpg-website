@@ -29,7 +29,7 @@ export default async function RecentlyLikedPage() {
 
   return (
     <PageContainer
-      innerClassName="max-w-screen-xl"
+      innerClassName="max-w-(--breakpoint-xl)"
     >
       <PageHeading
         title="Recently liked photos"

@@ -12,7 +12,7 @@ export const membersFAQ: FAQSection = {
           <p
             className="mb-3"
           >
-            The Members page helps you find and connect with other photographers in the community. You can explore members by:
+            The Members page helps you find and connect with other photographers in the community. You need to be logged in to see this page. You can explore members by:
           </p>
           <ul>
             <li>
@@ -59,7 +59,16 @@ export const membersFAQ: FAQSection = {
       title: 'Viewing member profiles',
       content: (
         <p>
-          Click on any member card to visit their profile. You can see their bio, interests, public photos, and albums. Profiles also show when they joined and their achievements and stats.
+          Click on any member card to visit their profile. You can see their bio, interests, public photos, and albums. Profiles also show when they joined and their achievements and stats. You can follow a member from their profile page — their new uploads will then appear in your activity feed.
+        </p>
+      ),
+    },
+    {
+      id: 'following',
+      title: 'Following members',
+      content: (
+        <p>
+          Click the Follow button on someone&apos;s profile to follow them. When they upload new photos you&apos;ll get a notification in your activity feed. You can unfollow from their profile at any time. Your followers and following counts are visible on your own profile.
         </p>
       ),
     },

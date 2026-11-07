@@ -54,10 +54,10 @@ export default function ChallengeMiniCard({
       >
         {coverImageUrl ? (
           <BlurImage
-            src={getSquareThumbnailUrl(coverImageUrl, 64, 85) || coverImageUrl}
+            src={getSquareThumbnailUrl(coverImageUrl, 128, 85) || coverImageUrl}
             alt={title}
             fill
-            sizes="76px"
+            sizes="128px"
             className="object-cover"
           />
         ) : (

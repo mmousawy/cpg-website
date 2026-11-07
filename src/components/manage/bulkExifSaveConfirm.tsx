@@ -180,12 +180,12 @@ function BulkExifChangesTable({ changes }: { changes: BulkExifChangeRow[] }) {
                 {row.field}
               </td>
               <td
-                className="px-3 py-2 align-top text-foreground/70 break-words"
+                className="px-3 py-2 align-top text-foreground/70 wrap-break-word"
               >
                 {row.oldValue}
               </td>
               <td
-                className="px-3 py-2 align-top break-words"
+                className="px-3 py-2 align-top wrap-break-word"
               >
                 {row.newValue}
               </td>

@@ -10,7 +10,7 @@ import Button from '@/components/shared/Button';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
 import TrashSVG from 'public/icons/trash.svg';
 
-const iconDeleteButtonClassName = '!size-[34px] shrink-0 !gap-0 !p-0';
+const iconDeleteButtonClassName = 'size-[34px]! shrink-0 gap-0! p-0!';
 
 export interface ProfileImageUploadSectionsProps {
   profileId?: string;

@@ -51,7 +51,7 @@ export default async function PhotosPage({ searchParams }: PageProps) {
         data={breadcrumbJsonLd}
       />
       <PageContainer
-        innerClassName="max-w-screen-xl"
+        innerClassName="max-w-(--breakpoint-xl)"
       >
         <PageHeading
           title="Community photos"

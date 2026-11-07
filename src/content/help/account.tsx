@@ -23,6 +23,21 @@ export const accountFAQ: FAQSection = {
       ),
     },
     {
+      id: 'change-email',
+      title: 'Changing your email address',
+      content: (
+        <p>
+          Go to Account → Basic info and click
+          {' '}
+          <strong>
+            Change
+          </strong>
+          {' '}
+          next to your email. Enter the new address and we&apos;ll send a confirmation link to your current inbox. Click the link within 24 hours to finish the change. Your email stays the same until you confirm.
+        </p>
+      ),
+    },
+    {
       id: 'notifications',
       title: 'Email notifications and preferences',
       content: (
@@ -71,7 +86,7 @@ export const accountFAQ: FAQSection = {
                 Weekly digest
               </strong>
               {' '}
-              — A weekly summary of activity and notifications.
+              — Sent on Sundays. A summary of unseen notifications from the past week (likes, comments, follows, uploads from people you follow, and more).
             </li>
             <li>
               <strong>
@@ -194,7 +209,37 @@ export const accountFAQ: FAQSection = {
       title: 'Activity feed and notifications',
       content: (
         <p>
-          The Activity page (Header → Notifications → View all notifications) shows your notifications: likes, comments, replies, event reminders and announcements, challenge results and announcements, and report resolutions. Notifications are grouped by time (Today, Yesterday, This week, Earlier). You can mark them as seen or dismiss them.
+          The Activity page (Header → Notifications → View all activity) shows your notifications: likes, comments, replies, new followers, uploads from people you follow, event reminders and announcements, challenge results and announcements, shared-album invites and requests, and report resolutions. Notifications are grouped by time (Today, Yesterday, This week, Earlier). You can mark them as seen or dismiss them.
+        </p>
+      ),
+    },
+    {
+      id: 'your-stats',
+      title: 'Your stats',
+      content: (
+        <p>
+          Open
+          {' '}
+          <strong>
+            My stats
+          </strong>
+          {' '}
+          from your avatar menu to see how your content is doing: photo and album counts, views, likes, comments, followers, events attended, challenge participation, and storage used. Charts show activity over time — switch the range (for example last 30 days) to zoom in.
+        </p>
+      ),
+    },
+    {
+      id: 'your-gear',
+      title: 'Your gear',
+      content: (
+        <p>
+          Open
+          {' '}
+          <strong>
+            My gear
+          </strong>
+          {' '}
+          from your avatar menu to update shooting formats, your daily driver camera body and lens, and a full inventory (bodies, lenses, film, lighting, and more). Search the catalog as you add items. A short summary appears on your profile; the full list is on your public gear page. You can change all of this anytime after onboarding.
         </p>
       ),
     },

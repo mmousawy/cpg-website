@@ -13,6 +13,7 @@ import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
+import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import Image from 'next/image';
@@ -410,11 +411,11 @@ export default function AddPhotosToAlbumModal({
                       >
                         {album.cover_image_url ? (
                           <Image
-                            src={album.cover_image_url}
+                            src={getSquareThumbnailUrl(album.cover_image_url, 128, 85) || album.cover_image_url}
                             alt={album.title}
                             fill
                             className="object-cover"
-                            sizes="56px"
+                            sizes="128px"
                           />
                         ) : (
                           <FolderSVG
@@ -486,11 +487,11 @@ export default function AddPhotosToAlbumModal({
                         >
                           {album.cover_image_url ? (
                             <Image
-                              src={album.cover_image_url}
+                              src={getSquareThumbnailUrl(album.cover_image_url, 128, 85) || album.cover_image_url}
                               alt={album.title}
                               fill
                               className="object-cover"
-                              sizes="56px"
+                              sizes="128px"
                             />
                           ) : (
                             <FolderSVG

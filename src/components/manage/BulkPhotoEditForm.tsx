@@ -1,6 +1,7 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
@@ -10,7 +11,8 @@ import Toggle from '@/components/shared/Toggle';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
 import { useOpenPhotoExifModal } from '@/hooks/useOpenPhotoExifModal';
 import { useAuth } from '@/hooks/useAuth';
-import type { PhotoWithAlbums } from '@/types/photos';
+import type { PhotoOwnerProfile, PhotoWithAlbums } from '@/types/photos';
+import Link from 'next/link';
 import { getBulkExifSummaryLabel } from '@/utils/exif';
 import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
 import HelpLink from '@/components/shared/HelpLink';
@@ -181,6 +183,17 @@ export default function BulkPhotoEditForm({
     () => allTags.filter((tag) => !commonTags.includes(tag)),
     [allTags, commonTags],
   );
+
+  const otherOwners = useMemo(() => {
+    const owners = new Map<string, PhotoOwnerProfile>();
+    for (const photo of selectedPhotos) {
+      const profile = photo.owner_profile;
+      const key = photo.user_id || profile?.nickname;
+      if (!key || !profile) continue;
+      if (!owners.has(key)) owners.set(key, profile);
+    }
+    return [...owners.values()];
+  }, [selectedPhotos]);
 
   const {
     register,
@@ -395,11 +408,51 @@ export default function BulkPhotoEditForm({
       />
 
       {readOnly && (
-        <p
-          className="text-sm text-foreground/50"
+        <div
+          className="space-y-3"
         >
-          Selection includes photos from other users. You can only remove them from this album.
-        </p>
+          {otherOwners.length > 0 && (
+            <ul
+              className="space-y-2"
+            >
+              {otherOwners.map((owner) => {
+                const handle = owner.nickname ? `@${owner.nickname}` : owner.full_name || 'Another user';
+                return (
+                  <li
+                    key={owner.nickname || owner.full_name || handle}
+                    className="flex items-center gap-1.5 text-sm"
+                  >
+                    <Avatar
+                      avatarUrl={owner.avatar_url}
+                      fullName={owner.full_name}
+                      nickname={owner.nickname}
+                      size="xxs"
+                    />
+                    {owner.nickname ? (
+                      <Link
+                        href={`/@${owner.nickname}`}
+                        className="text-foreground/80 font-medium hover:text-primary"
+                      >
+                        {handle}
+                      </Link>
+                    ) : (
+                      <span
+                        className="text-foreground/80 font-medium"
+                      >
+                        {handle}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p
+            className="text-sm text-foreground/50"
+          >
+            Selection includes photos from other users. You can only remove them from this album.
+          </p>
+        </div>
       )}
 
       {/* Bulk edit form */}
@@ -422,7 +475,6 @@ export default function BulkPhotoEditForm({
               id="bulk_title"
               type="text"
               {...register('title')}
-              placeholder="Set same title for all (leave empty to skip)"
             />
             <p
               className="text-xs text-foreground/50"
@@ -444,7 +496,6 @@ export default function BulkPhotoEditForm({
               id="bulk_description"
               {...register('description')}
               rows={3}
-              placeholder="Set same description for all (leave empty to skip)"
             />
             <p
               className="text-xs text-foreground/50"
@@ -488,6 +539,7 @@ export default function BulkPhotoEditForm({
               tagCounts={tagCounts}
               totalCount={selectedPhotos.length}
               readOnlyTags={readOnlyTags}
+              placeholder=""
               helperText="Partially shared tags are visible but are not editable and won't be added to other items."
             />
           </div>

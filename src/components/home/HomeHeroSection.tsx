@@ -42,7 +42,7 @@ export async function HomeHeroSection() {
         className="absolute inset-x-0 bottom-0 px-2 sm:px-8"
       >
         <div
-          className="flex flex-col items-center mx-auto max-w-screen-md"
+          className="flex flex-col items-center mx-auto max-w-(--breakpoint-md)"
         >
           <p
             className="mb-2 px-4 text-5xl md:text-7xl font-heading hero-title-shadow sm:mb-3 text-center"

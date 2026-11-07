@@ -4,12 +4,13 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import AlbumRequestsPanel from '@/components/albums/AlbumRequestsPanel';
 import InviteMembersModal from '@/components/albums/InviteMembersModal';
-import SharedAlbumMemberList from '@/components/albums/SharedAlbumMemberList';
+import SharedAlbumMemberList, { membersFromPhotoContributors } from '@/components/albums/SharedAlbumMemberList';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
+import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
 import { useAuth } from '@/hooks/useAuth';
 import {
   useInviteToSharedAlbum,
@@ -21,7 +22,7 @@ import {
 import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbum, confirmDisableAlbumSharing } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import AlbumListItem from './AlbumListItem';
@@ -104,8 +105,18 @@ export default function SharedAlbumEditForm({
   const albumId = album?.id;
   const albumOwnerId = album?.user_id ?? null;
   const isOwner = !!user && !!albumOwnerId && albumOwnerId === user.id;
+  const isInviteOnly = album?.join_policy === 'closed';
 
-  const { data: members = [] } = useSharedAlbumMembers(albumId && !isNewAlbum ? albumId : undefined);
+  const { data: membershipRows = [] } = useSharedAlbumMembers(
+    albumId && !isNewAlbum && isInviteOnly ? albumId : undefined,
+  );
+  const { data: albumPhotos = [] } = useAlbumPhotos(
+    albumId && !isNewAlbum && !isInviteOnly ? albumId : undefined,
+  );
+  const members = useMemo(
+    () => (isInviteOnly ? membershipRows : membersFromPhotoContributors(albumPhotos, albumOwnerId)),
+    [isInviteOnly, membershipRows, albumPhotos, albumOwnerId],
+  );
   const { data: requests = [] } = useSharedAlbumRequests(albumId && !isNewAlbum ? albumId : undefined);
   const inviteMutation = useInviteToSharedAlbum(
     albumId ?? undefined,
@@ -155,10 +166,18 @@ export default function SharedAlbumEditForm({
     onDirtyChange?.(isDirty);
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
+  // Reset local state when album changes (React-recommended "adjusting state during rendering" pattern)
+  const [prevAlbumId, setPrevAlbumId] = useState(album?.id);
+  const [prevIsNewAlbum, setPrevIsNewAlbum] = useState(isNewAlbum);
+  if (prevAlbumId !== album?.id || prevIsNewAlbum !== isNewAlbum) {
+    setPrevAlbumId(album?.id);
+    setPrevIsNewAlbum(isNewAlbum);
+    setHasEditedSlug(false);
+  }
+
   useEffect(() => {
     if (!album || isNewAlbum) {
       reset(formDefaultValues);
-      setHasEditedSlug(false);
       return;
     }
 
@@ -171,7 +190,7 @@ export default function SharedAlbumEditForm({
 
     const maxPhotos = album.max_photos_per_user;
     reset({
-      title: album.title,
+      title: album.event_title || album.title,
       slug: album.slug,
       description: album.description ?? '',
       isPublic: album.is_public ?? true,
@@ -179,7 +198,6 @@ export default function SharedAlbumEditForm({
       joinPolicy: (album.join_policy === 'open' || album.join_policy === 'closed') ? album.join_policy : 'open',
       maxPhotosPerUser: maxPhotos != null ? String(maxPhotos) : ('' as SharedAlbumFormInput['maxPhotosPerUser']),
     });
-    setHasEditedSlug(false);
   }, [album, isNewAlbum, reset]);
 
   const handleDelete = async () => {
@@ -575,6 +593,7 @@ export default function SharedAlbumEditForm({
               type="number"
               min={1}
               placeholder="Unlimited"
+              className="max-w-36"
               {...register('maxPhotosPerUser')}
             />
             <p
@@ -606,8 +625,8 @@ export default function SharedAlbumEditForm({
                 members={members}
                 albumOwnerId={albumOwnerId ?? ''}
                 currentUserId={user?.id}
-                isOwner={isOwner}
-                onRemoveMember={async (userId) => {
+                isOwner={isOwner && !album.event_id}
+                onRemoveMember={isInviteOnly ? async (userId) => {
                   const member = members.find((m) => m.user_id === userId);
                   const name = member?.profiles?.full_name || member?.profiles?.nickname || 'this member';
                   const confirmed = await confirm({
@@ -619,7 +638,7 @@ export default function SharedAlbumEditForm({
                   if (confirmed) {
                     removeMemberMutation.mutate(userId);
                   }
-                }}
+                } : undefined}
                 isRemoving={removeMemberMutation.isPending}
                 onInviteClick={() => {
                   modalContext.setSize('small');

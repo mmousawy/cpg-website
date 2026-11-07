@@ -10,7 +10,7 @@ const FILTER_OPTIONS_SELECT = `
   exif_data,
   photo_tags(tag),
   album_photos!album_photos_photo_id_fkey(
-    album:albums(id, title, deleted_at)
+    album:albums(id, title, deleted_at, event:events!albums_event_id_fkey(title))
   ),
   challenge_submissions!challenge_submissions_photo_id_fkey(
     status,

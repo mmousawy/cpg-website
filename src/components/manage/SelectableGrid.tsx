@@ -54,6 +54,8 @@ interface SelectableGridProps<T> {
   trailingContent?: React.ReactNode;
   /** Set of item IDs that are disabled (non-selectable, no checkbox) */
   disabledIds?: Set<string>;
+  /** Hide checkboxes but still allow click-to-select (e.g. photos you don't own) */
+  hideCheckboxIds?: Set<string>;
   /** Reduce top padding (e.g. when inside a collapsible section header) */
   reducedTopPadding?: boolean;
 }
@@ -76,6 +78,7 @@ export default function SelectableGrid<T>({
   leadingContent,
   trailingContent,
   disabledIds,
+  hideCheckboxIds,
   reducedTopPadding = false,
 }: SelectableGridProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -519,9 +522,9 @@ export default function SelectableGrid<T>({
 
             // Check if this is a multi-drag scenario
             const isMultiDragActive =
-          activeDragId !== null &&
-          selectedIds.has(activeDragId) &&
-          selectedIds.size > 1;
+              activeDragId !== null &&
+              selectedIds.has(activeDragId) &&
+              selectedIds.size > 1;
 
             // Check if this item is part of a multi-drag (selected, but not the one being dragged directly)
             const isMultiDragging = isMultiDragActive && isSelected && activeDragId !== id;
@@ -551,6 +554,7 @@ export default function SelectableGrid<T>({
                 isMultiSelectMode={isMultiSelectMode}
                 onEnterMultiSelectMode={handleEnterMultiSelectMode}
                 disabled={disabledIds?.has(id)}
+                hideCheckbox={hideCheckboxIds?.has(id)}
                 isActiveDrag={activeDragId === id}
                 isBoxSelecting={isBoxSelecting}
               />

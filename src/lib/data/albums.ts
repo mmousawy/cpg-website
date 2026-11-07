@@ -740,9 +740,10 @@ export async function getEventPhotoByShortId(
         profile_nickname: albumRow.profile?.nickname || null,
         event_slug: albumRow.event?.slug || null,
         event_title: albumRow.event?.title || null,
+        event_cover_image: albumRow.event?.cover_image || null,
       };
     })
-    .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug: string | null; event_title: string | null }>;
+    .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug: string | null; event_title: string | null; event_cover_image: string | null }>;
 
   // Get challenges this photo was accepted in (for "Featured in" section)
   const { data: challengeSubmissions } = await supabase

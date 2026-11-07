@@ -34,7 +34,7 @@ type ProfileHeaderProps = {
 
 /** Height of the profile hero banner — keep in sync with ProfileBannerCropper aspect */
 export const profileHeroBannerHeightClassName =
-  'aspect-[3.2/1] w-full min-h-[10rem] max-h-[18rem]';
+  'aspect-[3.2/1] w-full min-h-40 max-h-72';
 
 /** Shorter height for in-settings profile preview */
 export const profileHeroBannerPreviewHeightClassName =
@@ -42,7 +42,7 @@ export const profileHeroBannerPreviewHeightClassName =
 
 /** Shorter hero on /@nickname subpages (gear, albums, photos, …) */
 export const profileHeroBannerSubpageHeightClassName =
-  'w-full min-h-[7rem] sm:min-h-[10rem] max-h-[10rem] sm:max-h-[16rem]';
+  'w-full min-h-28 sm:min-h-40 max-h-40 sm:max-h-64';
 
 /** Extra top spacing below the profile hero on mobile */
 export const profileHeroMobileGapClassName = 'max-sm:pt-4!';
@@ -245,7 +245,7 @@ export function ProfileHeroBanner({
         )}
       >
         <div
-          className="w-full min-w-0 max-w-screen-md"
+          className="w-full min-w-0 max-w-(--breakpoint-md)"
         >
           <ProfileHeaderRow
             profile={profile}
@@ -274,7 +274,7 @@ export function ProfileMdContent({
       className={clsx('flex justify-center px-3 md:px-12', className)}
     >
       <div
-        className="w-full min-w-0 max-w-screen-md"
+        className="w-full min-w-0 max-w-(--breakpoint-md)"
       >
         {children}
       </div>

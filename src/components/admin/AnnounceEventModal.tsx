@@ -248,7 +248,7 @@ export default function AnnounceEventModal({
                             {Object.entries(sendResult.errorDetails).map(([email, error]) => (
                               <div
                                 key={email}
-                                className="break-words"
+                                className="wrap-break-word"
                               >
                                 <span
                                   className="font-medium"

@@ -16,10 +16,10 @@ export const challengesFAQ: FAQSection = {
           Challenges are themed photo prompts (e.g. &quot;Street Life&quot;, &quot;Minimalism&quot;). Each challenge has a deadline. You submit photos that fit the theme; submissions are reviewed by organizers who accept or reject them. Only accepted photos appear in the challenge gallery. If your photo is rejected, you&apos;ll see the reason in
           {' '}
           <strong>
-            My challenge submissions
+            My challenges
           </strong>
           {' '}
-          (click your avatar → My challenges).
+          (click your avatar).
         </p>
       ),
     },
@@ -31,15 +31,10 @@ export const challengesFAQ: FAQSection = {
           Go to
           {' '}
           <strong>
-            Gallery
-          </strong>
-          {' '}
-          in the bottom tab bar, then choose
-          {' '}
-          <strong>
             Challenges
           </strong>
-          , or tap Gallery again while you&apos;re already on Gallery or Challenges. Click an active challenge from the Active challenges section, then click
+          {' '}
+          from the header (desktop) or open Gallery in the bottom tab bar and switch to Challenges using the pill switcher below the page title (mobile). Click an active challenge from the Active challenges section, then click
           {' '}
           <strong>
             Submit photos
@@ -95,7 +90,7 @@ export const challengesFAQ: FAQSection = {
               My challenges
             </strong>
             {' '}
-            (click your avatar). The page is titled My challenge submissions.
+            (click your avatar).
           </p>
           <p
             className="mb-2 font-medium"
@@ -154,6 +149,21 @@ export const challengesFAQ: FAQSection = {
           </strong>
           {' '}
           (click your avatar). This shows which challenges your work has been featured in.
+        </p>
+      ),
+    },
+    {
+      id: 'color-draw',
+      title: 'Color draw',
+      content: (
+        <p>
+          Some challenges include a
+          {' '}
+          <strong>
+            Draw your color
+          </strong>
+          {' '}
+          section. Click the button to get a random color to photograph. You can swap once if you want a different color. Sign in to take part; guests can join when the challenge page includes a guest link. After the challenge ends, you can still see everyone&apos;s colors but you can&apos;t draw a new one.
         </p>
       ),
     },

@@ -43,17 +43,17 @@ export default function EventMiniCard({
     >
       <Link
         href={href}
-        className="inline-flex items-center gap-3 pr-3"
+        className="inline-flex items-center gap-2 pr-2.5"
       >
         <div
           className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-background"
         >
           {coverImageUrl ? (
             <BlurImage
-              src={getSquareThumbnailUrl(coverImageUrl, 64, 85) || coverImageUrl}
+              src={getSquareThumbnailUrl(coverImageUrl, 128, 85) || coverImageUrl}
               alt={title}
               fill
-              sizes="76px"
+              sizes="128px"
               className="object-cover"
             />
           ) : (

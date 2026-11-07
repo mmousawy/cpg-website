@@ -215,7 +215,7 @@ function PhotoCard({
           quality={92}
           className={clsx(
             'object-cover transition-transform',
-            localPreviewUrl && 'z-[1]',
+            localPreviewUrl && 'z-1',
             disabled && 'grayscale opacity-70!',
           )}
           draggable={false}

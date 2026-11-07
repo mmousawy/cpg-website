@@ -25,7 +25,7 @@ export default function Footer() {
       className="app-footer mt-auto hidden justify-center border-t border-border-color bg-background-light px-2 py-4 sm:flex sm:py-6 text-foreground"
     >
       <div
-        className="flex w-full max-w-screen-md flex-col items-center gap-3"
+        className="flex w-full max-w-(--breakpoint-md) flex-col items-center gap-3"
       >
         <div
           className="flex items-center gap-4 max-md:justify-center"

@@ -159,7 +159,7 @@ export default function Tooltip({
           <div
             ref={tooltipRef}
             className={clsx(
-              'fixed z-[100] rounded-md bg-gray-900 px-2 py-1.5 text-xs text-white shadow-lg',
+              'fixed z-100 rounded-md bg-gray-900 px-2 py-1.5 text-xs text-white shadow-lg',
               maxWidth,
             )}
             style={

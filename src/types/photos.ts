@@ -12,6 +12,8 @@ export type PhotoAlbumInfo = {
   profile_nickname: string | null;
   photo_count?: number;
   event_slug?: string | null;
+  event_title?: string | null;
+  event_cover_image?: string | null;
 };
 
 export type PhotoChallengeInfo = {

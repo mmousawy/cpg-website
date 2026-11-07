@@ -47,7 +47,7 @@ export default function ConfirmModal() {
   const isDanger = options?.variant === 'danger';
   const sizeClasses: Record<'default' | 'medium' | 'large', string> = {
     default: 'max-w-md',
-    medium: 'max-w-[42rem]',
+    medium: 'max-w-2xl',
     large: 'max-w-3xl',
   };
   const panelSize = sizeClasses[options?.size ?? 'default'];

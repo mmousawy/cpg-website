@@ -327,7 +327,7 @@ function GearPageClientCore({
                 onValueChange={(v) => setSortMode(v as GearSortMode)}
                 options={GEAR_SORT_OPTIONS}
                 fullWidth={false}
-                className="min-w-[10rem]"
+                className="min-w-40"
               />
             </div>
           </div>

@@ -36,7 +36,7 @@ const ALBUM_EMBED = `
       deleted_at,
       profile:profiles!albums_user_id_fkey(nickname),
       album_photos_active(count),
-      event:events!albums_event_id_fkey(slug, cover_image)
+      event:events!albums_event_id_fkey(slug, title, cover_image)
     )
 `;
 
@@ -81,7 +81,7 @@ type AlbumPhotoJoin = {
   album: (AlbumRow & {
     profile: ProfileRow | null;
     album_photos_active: Array<{ count: number }>;
-    event: { slug: string | null; cover_image: string | null } | null;
+    event: { slug: string | null; title: string | null; cover_image: string | null } | null;
   }) | null;
 };
 type ChallengeSubmissionJoin = {
@@ -107,6 +107,8 @@ export function mapPhotoQueryRow(photo: PhotoQueryResult): PhotoWithAlbums {
       profile_nickname: a.profile?.nickname || null,
       photo_count: a.album_photos_active?.[0]?.count ?? 0,
       event_slug: a.event?.slug || null,
+      event_title: a.event?.title || null,
+      event_cover_image: a.event?.cover_image || null,
     }));
 
   const challenges = (photo.challenge_submissions || [])

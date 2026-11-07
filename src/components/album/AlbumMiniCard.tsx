@@ -1,3 +1,4 @@
+import { getAlbumCoverUrl } from '@/components/manage/AlbumListItem';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -21,6 +22,8 @@ interface AlbumMiniCardProps {
   title: string;
   slug: string;
   coverImageUrl?: string | null;
+  /** Linked event cover — used when the album itself has no cover image */
+  eventCoverImageUrl?: string | null;
   href: string;
   /** URL to the public album page (shown as link icon button) */
   publicUrl?: string;
@@ -42,6 +45,7 @@ interface AlbumMiniCardProps {
 export default function AlbumMiniCard({
   title,
   coverImageUrl,
+  eventCoverImageUrl,
   href,
   publicUrl,
   photoCount,
@@ -50,6 +54,11 @@ export default function AlbumMiniCard({
   className = '',
   ownerNickname,
 }: AlbumMiniCardProps) {
+  const thumb = getAlbumCoverUrl({
+    cover_image_url: coverImageUrl,
+    event_cover_image: eventCoverImageUrl,
+  });
+
   return (
     <div
       className={clsx(
@@ -62,17 +71,17 @@ export default function AlbumMiniCard({
     >
       <Link
         href={href}
-        className="inline-flex items-center gap-3 pr-3"
+        className="inline-flex items-center gap-2 pr-2.5"
       >
         <div
           className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-background"
         >
-          {coverImageUrl ? (
+          {thumb ? (
             <BlurImage
-              src={getSquareThumbnailUrl(coverImageUrl, 64, 85) || coverImageUrl}
+              src={getSquareThumbnailUrl(thumb, 128, 85) || thumb}
               alt={title}
               fill
-              sizes="76px"
+              sizes="128px"
               className="object-cover"
             />
           ) : (

@@ -133,10 +133,10 @@ export const gettingStartedFAQ: FAQSection = {
             </HelpStep>
             <HelpStep
               icon={ImageSVG}
-              title="Profile images"
+              title="Your style"
             >
               <p>
-                A profile picture and a banner, if you have them. You can skip this and add them later.
+                Pick your shooting formats (digital, film, phone, etc.) and optionally enter your daily driver camera body and lens. These appear on your profile and help others find photographers with a similar style. Profile images (avatar and banner), color scheme, and motion preferences are also set on this step. You can change everything later from Account → Settings and My gear.
               </p>
             </HelpStep>
             <HelpStep
@@ -175,7 +175,14 @@ export const gettingStartedFAQ: FAQSection = {
                 Events
               </strong>
               {' '}
-              — Browse and RSVP for meetups, photo walks, and workshops.
+              — Browse and RSVP for official CPG meetups, photo walks, and workshops.
+            </li>
+            <li>
+              <strong>
+                Scene
+              </strong>
+              {' '}
+              — A community-curated calendar of external photography events (exhibitions, festivals, workshops, and more).
             </li>
             <li>
               <strong>
@@ -196,16 +203,12 @@ export const gettingStartedFAQ: FAQSection = {
                 Members
               </strong>
               {' '}
-              — Discover other photographers and their profiles.
-            </li>
-            <li>
-              <strong>
-                Account
-              </strong>
-              {' '}
-              — Manage your events, photos, albums, and settings (requires login).
+              — Discover other photographers and their profiles (requires login).
             </li>
           </ul>
+          <p>
+            On desktop, all five sections appear in the header. On mobile, the bottom tab bar shows Home, Events, Gallery, Members, and your account. Scene is grouped under Events, and Challenges is grouped under Gallery — use the pill switcher below the page title to move between them.
+          </p>
         </>
       ),
     },
@@ -229,7 +232,7 @@ export const gettingStartedFAQ: FAQSection = {
               Ctrl+K
             </Kbd>
             {' '}
-            (Windows/Linux) to open the global search. Search across albums, photos, members, events, and tags. Use the arrow keys to navigate results and Enter to select. Press Esc to close.
+            (Windows/Linux) to open the global search. Search across members, gear, events, Scene events, challenges, albums, photos, and tags. Use the arrow keys to navigate results and Enter to select. Press Esc to close.
           </p>
           <p>
             Search requires at least 2 characters. Results are grouped by type for easy browsing.

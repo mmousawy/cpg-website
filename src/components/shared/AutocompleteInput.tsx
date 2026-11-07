@@ -188,7 +188,7 @@ export default function AutocompleteInput({
       {...{ [PORTAL_OVERLAY_ATTR]: '' }}
       className={clsx(
         'rounded-md border border-border-color-strong bg-background-medium bg-no-noise shadow-lg shadow-black/15 ring-1 ring-black/5 dark:shadow-black/35 dark:ring-white/10',
-        inlineSuggestions ? 'relative mt-1 w-full' : 'fixed z-[100]',
+        inlineSuggestions ? 'relative mt-1 w-full' : 'fixed z-100',
       )}
       style={
         inlineSuggestions || !dropdownPosition

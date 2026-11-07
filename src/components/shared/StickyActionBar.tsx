@@ -54,8 +54,8 @@ export default function StickyActionBar({
           'absolute left-0 right-0 pointer-events-none hidden sm:block',
           variant === 'compact' ? 'h-4' : 'h-6',
           position === 'bottom'
-            ? variant === 'compact' ? '-top-4 bg-gradient-to-b from-transparent to-background-light' : '-top-6 bg-gradient-to-b from-transparent to-background'
-            : variant === 'compact' ? '-bottom-4 bg-gradient-to-t from-transparent to-background-light' : '-bottom-6 bg-gradient-to-t from-transparent to-background',
+            ? variant === 'compact' ? '-top-4 bg-linear-to-b from-transparent to-background-light' : '-top-6 bg-linear-to-b from-transparent to-background'
+            : variant === 'compact' ? '-bottom-4 bg-linear-to-t from-transparent to-background-light' : '-bottom-6 bg-linear-to-t from-transparent to-background',
         )}
       />
       <div
@@ -73,7 +73,7 @@ export default function StickyActionBar({
         <div
           className={clsx(
             'mx-auto flex items-center justify-between gap-3 sm:gap-4',
-            constrainWidth && 'max-w-screen-md',
+            constrainWidth && 'max-w-(--breakpoint-md)',
           )}
         >
           {children}

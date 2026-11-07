@@ -22,7 +22,7 @@ export default function WidePageContainer({
       className={clsx('flex grow justify-center', pagePadding, className)}
     >
       <div
-        className={clsx('w-full max-w-screen-xl', innerClassName)}
+        className={clsx('w-full max-w-(--breakpoint-xl)', innerClassName)}
       >
         {children}
       </div>
