@@ -10,7 +10,8 @@ export type SharedAlbumMemberProfile = Pick<
   'nickname' | 'full_name' | 'avatar_url'
 >;
 
-export type SharedAlbumMember = Tables<'shared_album_members'> & {
+export type SharedAlbumMember = Omit<Tables<'shared_album_members'>, 'role'> & {
+  role: 'owner' | 'member';
   profiles?: SharedAlbumMemberProfile | null;
 };
 export type SharedAlbumRequest = Tables<'shared_album_requests'> & {

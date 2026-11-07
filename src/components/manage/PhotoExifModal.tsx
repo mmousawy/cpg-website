@@ -16,7 +16,6 @@ import {
   prepareBulkExifApply,
 } from '@/components/manage/bulkExifSaveConfirm';
 import PhotoExifReadOnlyContent from '@/components/manage/PhotoExifReadOnlyContent';
-import { ROTTERDAM_CENTER } from '@/lib/location/mapDefaults';
 import { useBulkUpdatePhotoExif, useUpdatePhotoExif } from '@/hooks/usePhotoMutations';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmClearPhotoCaptureDetails, confirmUnsavedChanges } from '@/utils/confirmHelpers';
@@ -42,9 +41,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import CheckMiniSVG from 'public/icons/check-mini.svg';
-
-/** Empty capture fields: softer placeholder; filled state uses Input `filled` prop. */
-const EXIF_FIELD_INPUT_CLASS = 'placeholder:text-foreground/45';
 
 const exifEditFormSchema = z
   .object({
@@ -167,11 +163,6 @@ function PhotoExifModalReadOnly({
     <div
       className="space-y-4"
     >
-      <p
-        className="text-sm text-foreground/70"
-      >
-        Capture details shown on the public photo page (read-only).
-      </p>
       <PhotoExifReadOnlyContent
         photo={photo}
       />
@@ -466,10 +457,8 @@ function PhotoExifModalEditable({
               suggestions={cameraSuggestions}
               disableFilter
               loading={cameraLoading}
-              placeholder="Camera or phone"
               disabled={formLocked}
               filled={isExifFieldFilled('camera')}
-              className={EXIF_FIELD_INPUT_CLASS}
               onSelect={(s) => {
                 const hit = cameraResults.find((r) => formatCatalogDisplayName(r.brand, r.name) === s)
                   ?? cameraResults.find((r) => r.name === s);
@@ -503,10 +492,8 @@ function PhotoExifModalEditable({
             suggestions={lensSuggestions}
             disableFilter
             loading={lensLoading}
-            placeholder="Lens name"
             disabled={formLocked}
             filled={isExifFieldFilled('lensModel')}
-            className={EXIF_FIELD_INPUT_CLASS}
             onSelect={(s) => {
               const hit = lensResults.find((r) => r.name === s);
               setValue('lensModel', hit?.name ?? s, { shouldDirty: true });
@@ -530,11 +517,9 @@ function PhotoExifModalEditable({
               id="exif-iso"
               inputMode="numeric"
               {...register('iso')}
-              placeholder="400"
               disabled={formLocked}
               error={!!errors.iso}
               filled={isExifFieldFilled('iso')}
-              className={EXIF_FIELD_INPUT_CLASS}
             />
             {fieldError('iso') && (
               <p
@@ -557,11 +542,9 @@ function PhotoExifModalEditable({
               id="exif-aperture"
               inputMode="decimal"
               {...register('aperture')}
-              placeholder="2.8"
               disabled={formLocked}
               error={!!errors.aperture}
               filled={isExifFieldFilled('aperture')}
-              className={EXIF_FIELD_INPUT_CLASS}
             />
             {fieldError('aperture') && (
               <p
@@ -583,11 +566,9 @@ function PhotoExifModalEditable({
             <Input
               id="exif-shutter"
               {...register('exposureTime')}
-              placeholder="1/250 or 2s"
               disabled={formLocked}
               error={!!errors.exposureTime}
               filled={isExifFieldFilled('exposureTime')}
-              className={EXIF_FIELD_INPUT_CLASS}
             />
             {fieldError('exposureTime') && (
               <p
@@ -610,11 +591,9 @@ function PhotoExifModalEditable({
               id="exif-focal"
               inputMode="decimal"
               {...register('focalLength')}
-              placeholder="50"
               disabled={formLocked}
               error={!!errors.focalLength}
               filled={isExifFieldFilled('focalLength')}
-              className={EXIF_FIELD_INPUT_CLASS}
             />
             {fieldError('focalLength') && (
               <p
@@ -643,7 +622,6 @@ function PhotoExifModalEditable({
             {...register('captureTime')}
             disabled={formLocked}
             filled={isExifFieldFilled('captureTime')}
-            className={EXIF_FIELD_INPUT_CLASS}
           />
         </div>
 
@@ -708,11 +686,9 @@ function PhotoExifModalEditable({
                 id="exif-lat"
                 inputMode="decimal"
                 {...register('latitude')}
-                placeholder={String(ROTTERDAM_CENTER.lat)}
                 disabled={formLocked}
                 error={!!errors.latitude}
                 filled={isExifFieldFilled('latitude')}
-                className={EXIF_FIELD_INPUT_CLASS}
               />
             </div>
             <div
@@ -728,11 +704,9 @@ function PhotoExifModalEditable({
                 id="exif-lng"
                 inputMode="decimal"
                 {...register('longitude')}
-                placeholder={String(ROTTERDAM_CENTER.lng)}
                 disabled={formLocked}
                 error={!!errors.longitude}
                 filled={isExifFieldFilled('longitude')}
-                className={EXIF_FIELD_INPUT_CLASS}
               />
             </div>
           </div>

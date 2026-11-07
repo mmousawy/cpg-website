@@ -10,6 +10,7 @@ import FolderSVG from 'public/icons/folder.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import UsersMicroSVG from 'public/icons/users-micro.svg';
 import { memo, useMemo } from 'react';
+import { getAlbumDisplayName } from './AlbumListItem';
 
 interface AlbumCardProps {
   album: AlbumWithPhotos;
@@ -27,6 +28,7 @@ function AlbumCard({
 }: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
+  const displayName = getAlbumDisplayName(album);
 
   const badges = useMemo(() => {
     const badgeList = [];
@@ -70,7 +72,7 @@ function AlbumCard({
         {coverImage ? (
           <BlurImage
             src={getCroppedThumbnailUrl(coverImage, 250, 188, 85) || coverImage}
-            alt={album.title}
+            alt={displayName}
             blurhash={album.cover_image_blurhash}
             fill
             sizes="250px"
@@ -97,7 +99,7 @@ function AlbumCard({
         <p
           className="text-sm font-semibold line-clamp-1"
         >
-          {album.title}
+          {displayName}
         </p>
         <p
           className="text-xs text-foreground/50 mt-1"
@@ -130,6 +132,7 @@ export default memo(AlbumCard, (prevProps, nextProps) => {
   return (
     prevProps.album.id === nextProps.album.id &&
     prevProps.album.title === nextProps.album.title &&
+    prevProps.album.event_title === nextProps.album.event_title &&
     prevProps.album.cover_image_url === nextProps.album.cover_image_url &&
     prevProps.album.event_cover_image === nextProps.album.event_cover_image &&
     prevProps.album.is_public === nextProps.album.is_public &&

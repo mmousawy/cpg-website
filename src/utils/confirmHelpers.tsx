@@ -178,7 +178,7 @@ export function confirmDeleteComment(): ConfirmOptions {
 export function confirmDisableAlbumSharing(album: AlbumWithPhotos): ConfirmOptions {
   return {
     title: 'Disable album sharing',
-    message: 'Existing members will lose access to this album. You can re-enable sharing later from the album settings.',
+    message: 'Anyone else with access to this album will no longer be able to view it or add photos. You can turn sharing back on later from the album settings.',
     content: <AlbumListItem
       album={album}
       variant="detailed"

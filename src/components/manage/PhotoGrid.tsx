@@ -173,7 +173,8 @@ function PhotoGrid({
       alwaysShowMobileSpacer={alwaysShowMobileSpacer}
       leadingContent={leadingContent}
       trailingContent={trailingContent}
-      disabledIds={allNoCheckboxIds}
+      disabledIds={fullyDisabledIds}
+      hideCheckboxIds={allNoCheckboxIds}
       renderItem={renderItem}
     />
   );

@@ -84,6 +84,7 @@ export default function AlbumCard({
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
   const isCompact = variant === 'compact';
+  const displayName = album.event_title || album.title;
 
   // When isOwner but no onClick, link to the unified photos page
   // (the onClick prop is preferred when available for in-page navigation)
@@ -103,7 +104,7 @@ export default function AlbumCard({
         {coverImage ? (
           <BlurImage
             src={getCroppedThumbnailUrl(coverImage, 512, isCompact ? 512 : 384, 85) || coverImage}
-            alt={album.title}
+            alt={displayName}
             lite
             blurhash={album.cover_image_blurhash}
             sizes={coverImageSizes}
@@ -159,7 +160,7 @@ export default function AlbumCard({
               <p
                 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md"
               >
-                {album.title}
+                {displayName}
               </p>
               {/* Photo count - top right, visible on hover */}
               {photoCount > 0 && (
@@ -201,7 +202,7 @@ export default function AlbumCard({
           <p
             className="text-sm font-semibold line-clamp-1"
           >
-            {album.title}
+            {displayName}
           </p>
           <div
             className="flex items-center justify-between mt-2"

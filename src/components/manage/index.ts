@@ -19,7 +19,7 @@ export { default as AlbumCard } from './AlbumCard';
 export { default as AlbumEditEmptyState } from './AlbumEditEmptyState';
 export { default as AlbumEditSidebar, type AlbumFormData, type BulkAlbumFormData } from './AlbumEditSidebar';
 export { default as AlbumGrid } from './AlbumGrid';
-export { default as AlbumListItem, getAlbumDisplayName, type AlbumListItemVariant } from './AlbumListItem';
+export { default as AlbumListItem, getAlbumCoverUrl, getAlbumDisplayName, type AlbumListItemVariant } from './AlbumListItem';
 export { default as AlbumSwitcher } from './AlbumSwitcher';
 
 // Shared components

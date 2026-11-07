@@ -1,6 +1,7 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import Avatar from '@/components/auth/Avatar';
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import Button from '@/components/shared/Button';
@@ -19,9 +20,11 @@ import { confirmDeletePhoto } from '@/utils/confirmHelpers';
 import { getExifSummary } from '@/utils/exif';
 import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
+import { getAlbumDisplayName } from './AlbumListItem';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
 
@@ -313,6 +316,44 @@ export default function SinglePhotoEditForm({
         <div
           className="space-y-4"
         >
+          {photo.owner_profile && (
+            <div
+              className="flex items-center gap-3"
+            >
+              <Avatar
+                avatarUrl={photo.owner_profile.avatar_url}
+                fullName={photo.owner_profile.full_name}
+                nickname={photo.owner_profile.nickname}
+                size="sm"
+              />
+              <div
+                className="min-w-0 flex-1 flex flex-col"
+              >
+                {photo.owner_profile.nickname ? (
+                  <Link
+                    href={`/@${photo.owner_profile.nickname}`}
+                    className="font-medium text-foreground hover:text-primary truncate"
+                  >
+                    {photo.owner_profile.full_name || `@${photo.owner_profile.nickname}`}
+                  </Link>
+                ) : (
+                  <span
+                    className="font-medium truncate"
+                  >
+                    {photo.owner_profile.full_name || 'Another user'}
+                  </span>
+                )}
+                {photo.owner_profile.nickname && photo.owner_profile.full_name && (
+                  <span
+                    className="text-xs text-foreground/80"
+                  >
+                    @
+                    {photo.owner_profile.nickname}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           <p
             className="text-sm text-foreground/80"
           >
@@ -398,7 +439,6 @@ export default function SinglePhotoEditForm({
               id={`title-${photo.id}`}
               type="text"
               {...register('title')}
-              placeholder="Photo title (optional)"
             />
           </div>
 
@@ -415,7 +455,6 @@ export default function SinglePhotoEditForm({
               id={`description-${photo.id}`}
               {...register('description')}
               rows={3}
-              placeholder="Tell us about this photo..."
             />
           </div>
 
@@ -440,6 +479,7 @@ export default function SinglePhotoEditForm({
               tags={watchedTags || []}
               onAddTag={handleAddTag}
               onRemoveTag={handleRemoveTag}
+              placeholder=""
               helperText="Add up to 5 tags to help people discover your photo"
             />
           </div>
@@ -566,9 +606,10 @@ export default function SinglePhotoEditForm({
                     return (
                       <AlbumMiniCard
                         key={album.id}
-                        title={album.title}
+                        title={getAlbumDisplayName(album)}
                         slug={album.slug}
                         coverImageUrl={album.cover_image_url}
+                        eventCoverImageUrl={album.event_cover_image}
                         href={`/account/albums/${album.slug}`}
                         publicUrl={publicUrl}
                         photoCount={album.photo_count}

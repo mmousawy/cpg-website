@@ -14,8 +14,25 @@ import ArrowDownShortSVG from 'public/icons/arrow-down-short.svg';
 import ArrowUpLeftSVG from 'public/icons/arrow-up-left-micro.svg';
 import ChevronDownSVG from 'public/icons/chevron-down.svg';
 import FolderSVG from 'public/icons/folder.svg';
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { getAlbumCoverUrl, getAlbumDisplayName } from './AlbumListItem';
+
+const EVENT_ALBUM_SLUG = /^event-\d+-photos$/;
+
+function scrollElementIntoContainer(el: HTMLElement, container: HTMLElement, padding = 12) {
+  const containerRect = container.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  if (containerRect.height === 0) return;
+
+  const fullyVisible =
+    elRect.top >= containerRect.top + padding &&
+    elRect.bottom <= containerRect.bottom - padding;
+  if (fullyVisible) return;
+
+  container.scrollTop +=
+    elRect.top - containerRect.top - containerRect.height / 2 + elRect.height / 2;
+}
 
 interface AlbumSwitcherProps {
   /** Current album title */
@@ -32,7 +49,14 @@ type SwitcherAlbum = AlbumWithPhotos & {
 
 export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwitcherProps) {
   const { user } = useAuth();
-  const [expandedOnce, setExpandedOnce] = useState<Record<string, boolean>>({});
+  const isEventAlbumSlug = EVENT_ALBUM_SLUG.test(slug);
+
+  const [expandedOnce, setExpandedOnce] = useState<Record<string, boolean>>(
+    (): Record<string, boolean> => (isEventAlbumSlug ? { event: true } : {}),
+  );
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => ({
+    event: !isEventAlbumSlug,
+  }));
 
   // Personal and Your shared albums load eagerly (not collapsed by default)
   // Shared with me and Event albums load lazily when expanded
@@ -40,7 +64,10 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
   const { data: personalAlbumsRaw = [], isLoading: personalLoading } = usePersonalAlbums(user?.id);
   const { data: yourSharedAlbumsRaw = [] } = useYourSharedAlbums(user?.id);
   const { data: sharedWithMeAlbums = [] } = useSharedWithMeAlbums(user?.id);
-  const { data: allEventAlbumsRaw = [] } = useAllEventAlbums(user?.id, !!expandedOnce.event);
+  const { data: allEventAlbumsRaw = [], isPending: eventAlbumsPending } = useAllEventAlbums(
+    user?.id,
+    !!expandedOnce.event || isEventAlbumSlug,
+  );
 
   const albumsLoading = personalLoading;
   const router = useRouter();
@@ -124,7 +151,37 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
     return result;
   }, [personalAlbums, yourSharedAlbums, sortedSharedWithMe, eventAlbums, sectionCounts]);
 
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ event: true });
+  const currentSectionKey = useMemo(() => {
+    if (!slug) return null;
+    if (personalAlbums.some((album) => album.slug === slug)) return 'personal';
+    if (yourSharedAlbums.some((album) => album.slug === slug)) return 'shared';
+    if (sortedSharedWithMe.some((album) => album.slug === slug)) return 'sharedWithMe';
+    if (isEventAlbumSlug || eventAlbums.some((album) => album.slug === slug)) return 'event';
+    return null;
+  }, [slug, isEventAlbumSlug, personalAlbums, yourSharedAlbums, sortedSharedWithMe, eventAlbums]);
+
+  const currentAlbumRef = useRef<HTMLButtonElement>(null);
+
+  // Keep the section that contains the current album expanded (and load its albums)
+  useLayoutEffect(() => {
+    if (currentSectionKey !== 'sharedWithMe' && currentSectionKey !== 'event') return;
+    setCollapsedSections((prev) => (
+      prev[currentSectionKey] ? { ...prev, [currentSectionKey]: false } : prev
+    ));
+    setExpandedOnce((prev) => (
+      prev[currentSectionKey] ? prev : { ...prev, [currentSectionKey]: true }
+    ));
+  }, [currentSectionKey]);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const el = currentAlbumRef.current;
+    if (!el) return;
+    const container = el.closest('.overflow-y-auto');
+    if (!(container instanceof HTMLElement)) return;
+    scrollElementIntoContainer(el, container);
+  }, [isOpen, slug, currentSectionKey, eventAlbums.length, collapsedSections]);
+
   const toggleSection = useCallback((key: string) => {
     setCollapsedSections((prev) => {
       const willExpand = !!prev[key];
@@ -135,8 +192,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
     });
   }, []);
 
-  const getCoverUrl = (album: SwitcherAlbum) =>
-    album.cover_image_url || album.photos?.[0]?.photo_url || null;
+  const getCoverUrl = (album: SwitcherAlbum) => getAlbumCoverUrl(album);
 
   return (
     <div
@@ -253,6 +309,15 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
                       </div>
                     );
                   })()}
+                  {!isCollapsed && section.key === 'event' && eventAlbumsPending && section.albums.length === 0 && (
+                    <div
+                      className="flex items-center justify-center py-3"
+                    >
+                      <LoadingSpinner
+                        size="sm"
+                      />
+                    </div>
+                  )}
                   {!isCollapsed && section.albums.map((album) => {
                     const isCurrent = album.slug === slug;
                     const coverUrl = getCoverUrl(album);
@@ -261,6 +326,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
                     return (
                       <button
                         key={album.id}
+                        ref={isCurrent ? currentAlbumRef : undefined}
                         type="button"
                         onClick={() => handleNavigate(album)}
                         className={clsx(
@@ -277,7 +343,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
                           {coverUrl ? (
                             <BlurImage
                               src={getSquareThumbnailUrl(coverUrl, 64, 75) || coverUrl}
-                              alt={album.title}
+                              alt={getAlbumDisplayName(album)}
                               blurhash={album.cover_image_blurhash}
                               fill
                               sizes="32px"
@@ -304,7 +370,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
                               isCurrent ? 'font-semibold' : 'font-medium',
                             )}
                           >
-                            {album.title}
+                            {getAlbumDisplayName(album)}
                           </p>
                           <p
                             className="text-xs text-foreground/50"

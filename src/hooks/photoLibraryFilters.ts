@@ -234,7 +234,12 @@ type FilterOptionsRow = {
   exif_data: Record<string, unknown> | null;
   photo_tags?: Array<{ tag: string }> | null;
   album_photos?: Array<{
-    album: { id: string; title: string; deleted_at: string | null } | null;
+    album: {
+      id: string;
+      title: string;
+      deleted_at: string | null;
+      event?: { title: string | null } | null;
+    } | null;
   }> | null;
   challenge_submissions?: Array<{
     status: string;
@@ -277,7 +282,7 @@ export function buildPhotoLibraryFilterOptions(rows: FilterOptionsRow[]): PhotoL
     for (const ap of row.album_photos ?? []) {
       const album = ap.album;
       if (album && !album.deleted_at) {
-        albumSet.set(album.id, album.title);
+        albumSet.set(album.id, album.event?.title || album.title);
       }
     }
 

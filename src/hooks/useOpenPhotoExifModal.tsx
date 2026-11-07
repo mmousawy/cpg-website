@@ -26,7 +26,7 @@ export function useOpenPhotoExifModal({
         ? `Capture details (${list.length} photos)`
         : 'Capture details';
 
-      modalContext.setSize('medium');
+      modalContext.setSize(readOnly ? 'default' : 'medium');
       modalContext.setTitle(title);
       modalContext.setFlushContentTop(false);
       modalContext.setFooter(null);

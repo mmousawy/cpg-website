@@ -24,7 +24,9 @@ export interface SortableItemProps<T> {
   sortable: boolean;
   isMultiSelectMode: boolean; // True when in multi-select mode (after checkbox tap on mobile)
   onEnterMultiSelectMode: () => void; // Callback to enter multi-select mode
-  disabled?: boolean; // If true, item is non-selectable and checkbox is hidden
+  disabled?: boolean; // If true, item is non-selectable (no hover ring)
+  /** Hide the selection checkbox while still allowing click-to-select (e.g. photos you don't own) */
+  hideCheckbox?: boolean;
   isActiveDrag?: boolean; // True if this item is the one currently being dragged (from parent state, survives dnd-kit cleanup)
   /** True while box-select drag (or preview) is active — disables CSS hover styling */
   isBoxSelecting?: boolean;
@@ -46,6 +48,7 @@ function SortableGridItemInner<T>({
   isMultiSelectMode,
   onEnterMultiSelectMode,
   disabled = false,
+  hideCheckbox = false,
   isActiveDrag = false,
   isBoxSelecting = false,
 }: SortableItemProps<T>) {
@@ -159,13 +162,13 @@ function SortableGridItemInner<T>({
         // isolate: keep checkbox/overlay z-index inside the card so they cannot cover sticky section headings
         'relative isolate group outline-none focus-visible:ring-2 focus-visible:ring-primary',
         isDragging && !isMultiDragActive && 'z-50',
-        !disabled && (
-          isSelected
-            ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
-            : isHovered
+        isSelected
+          ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
+          : !disabled && (
+            isHovered
               ? 'ring-2 ring-primary/50 ring-offset-0 [&_.photo-card-hover-overlay]:opacity-80'
               : !isBoxSelecting && 'hover:ring-2 hover:ring-primary/50'
-        ),
+          ),
         isBoxSelecting && 'pointer-events-none',
       )}
       onClick={handleClick}
@@ -178,8 +181,8 @@ function SortableGridItemInner<T>({
         }
       }}
     >
-      {/* Selection checkbox - hidden for disabled items */}
-      {!disabled && (
+      {/* Selection checkbox — hidden for disabled items and photos you don't own */}
+      {!disabled && !hideCheckbox && (
         <GridCheckbox
           isSelected={isSelected}
           onClick={handleCheckboxClick}

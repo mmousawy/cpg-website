@@ -7,6 +7,7 @@ import { SHOOTING_FORMAT_MICRO_ICONS } from '@/lib/gear/shootingFormatIcons';
 import { isShootingFormatSlug } from '@/lib/gear/groupMembersByGear';
 import BlurImage from '@/components/shared/BlurImage';
 import type { SearchResult } from '@/types/search';
+import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import { stripHtml } from '@/utils/stripHtml';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -92,7 +93,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
         >
           {result.image_url ? (
             <BlurImage
-              src={result.image_url}
+              src={getSquareThumbnailUrl(result.image_url, 128, 85) || result.image_url}
               alt={result.title}
               fill
               sizes="128px"
@@ -144,7 +145,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
         >
           {result.image_url ? (
             <BlurImage
-              src={result.image_url}
+              src={getSquareThumbnailUrl(result.image_url, 128, 85) || result.image_url}
               alt={result.title}
               fill
               sizes="128px"

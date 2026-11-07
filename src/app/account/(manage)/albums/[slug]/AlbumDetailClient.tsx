@@ -11,6 +11,7 @@ import {
   PhotoEditSidebar,
   PhotoGrid,
   UploadingPhotoCard,
+  getAlbumDisplayName,
   type AlbumFormData,
   type BulkPhotoFormData,
   type PhotoFormData,
@@ -58,7 +59,7 @@ import {
 } from 'react';
 
 import Avatar from '@/components/auth/Avatar';
-import SharedAlbumMemberList from '@/components/albums/SharedAlbumMemberList';
+import SharedAlbumMemberList, { membersFromPhotoContributors } from '@/components/albums/SharedAlbumMemberList';
 import { useSharedAlbumMembers } from '@/hooks/useSharedAlbumMembers';
 
 import CloseMiniSVG from 'public/icons/close-mini.svg';
@@ -104,9 +105,15 @@ export default function AlbumDetailClient() {
   } = isSharedWithMe ? sharedAlbumQuery : ownAlbumQuery;
   const { data: photosData, isLoading: photosLoading } = useAlbumPhotos(album?.id);
   const photos: PhotoWithAlbums[] = photosData ?? [];
+  const isInviteOnly = album?.join_policy === 'closed';
   const { data: sharedMembers = [] } = useSharedAlbumMembers(
-    isSharedWithMe && album?.id ? album.id : undefined,
+    isSharedWithMe && isInviteOnly && album?.id ? album.id : undefined,
   );
+  const contributorMembers = useMemo(
+    () => membersFromPhotoContributors(photos, album?.user_id),
+    [photos, album?.user_id],
+  );
+  const displayMembers = isInviteOnly ? sharedMembers : contributorMembers;
   const updateAlbumPhotoMutation = useUpdateAlbumPhoto(album?.id, profile?.nickname);
   const bulkUpdateAlbumPhotosMutation = useBulkUpdateAlbumPhotos(album?.id, profile?.nickname);
   const deleteAlbumPhotoMutation = useDeleteAlbumPhoto(album?.id, user?.id, profile?.nickname);
@@ -526,7 +533,7 @@ export default function AlbumDetailClient() {
         <h3
           className="text-lg font-semibold font-heading"
         >
-          {album.title}
+          {getAlbumDisplayName(album)}
         </h3>
         {album.description && (
           <p
@@ -562,9 +569,9 @@ export default function AlbumDetailClient() {
           {photos.length === 1 ? 'photo' : 'photos'}
         </p>
       </div>
-      {sharedMembers.length > 0 && (
+      {displayMembers.length > 0 && (
         <SharedAlbumMemberList
-          members={sharedMembers}
+          members={displayMembers}
           albumOwnerId={album.user_id ?? ''}
           currentUserId={user?.id}
           isOwner={false}
@@ -590,7 +597,7 @@ export default function AlbumDetailClient() {
   return (
     <>
       <ManageLayout
-        albumDetail={{ title: album.title, slug: album.slug }}
+        albumDetail={{ title: getAlbumDisplayName(album), slug: album.slug }}
         actions={
           <>
             <Button

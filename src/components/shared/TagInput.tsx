@@ -183,7 +183,7 @@ export default function TagInput({
           placeholder={
             isMaxReached
               ? `Maximum of ${maxTags} tags reached`
-              : placeholder || 'Type a tag and press Enter'
+              : (placeholder ?? 'Type a tag and press Enter')
           }
           autoComplete="off"
         />
