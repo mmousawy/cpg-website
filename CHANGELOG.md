@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.47.4](https://github.com/mmousawy/cpg-website/compare/v1.47.3...v1.47.4) (2026-11-07)
+
+
+### ♻️ Refactoring
+
+* enhance Dockerfile and improve JSON-LD integration across components ([6380249](https://github.com/mmousawy/cpg-website/commit/6380249fa9d07653cfcade005a4ec3509a42dbad))
+* update responsive design breakpoints and improve component styling ([7f5afd9](https://github.com/mmousawy/cpg-website/commit/7f5afd9c723568509117175870bc1022840c02cc))
+
 ## [1.47.3](https://github.com/mmousawy/cpg-website/compare/v1.47.2...v1.47.3) (2026-11-07)
 
 
