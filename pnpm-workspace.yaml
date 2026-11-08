@@ -1,6 +1,14 @@
 packages:
   - '.'
 
+# eslint-config-next still pulls plugins whose peer ranges stop at ESLint 9.
+# They run under ESLint 10 (one crash is already disabled in eslint.config.mjs).
+peerDependencyRules:
+  allowedVersions:
+    'eslint-plugin-import>eslint': '>=10'
+    'eslint-plugin-jsx-a11y>eslint': '>=10'
+    'eslint-plugin-react>eslint': '>=10'
+
 allowBuilds:
   sharp: true
   unrs-resolver: true
@@ -11,7 +19,7 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   - '@playwright/test@1.65.0'
-  - '@tanstack/query-core@5.106.1'
-  - '@tanstack/react-query@5.106.1'
+  - '@tanstack/query-core@5.106.1 || 5.107.1'
+  - '@tanstack/react-query@5.106.1 || 5.107.1'
   - playwright-core@1.65.0
   - playwright@1.65.0

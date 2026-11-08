@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-bookworm-slim AS base
+FROM node:26-trixie-slim AS base
 WORKDIR /app
 ENV HUSKY=0
 ENV NEXT_TELEMETRY_DISABLED=1
