@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.47.5](https://github.com/mmousawy/cpg-website/compare/v1.47.4...v1.47.5) (2026-11-08)
+
+
+### 🔧 Maintenance
+
+* upgrade Node.js version and update dependencies ([c476465](https://github.com/mmousawy/cpg-website/commit/c476465c21ab7c9f0978e8dbbe777f7aa38ca235))
+
 ## [1.47.4](https://github.com/mmousawy/cpg-website/compare/v1.47.3...v1.47.4) (2026-11-07)
 
 
