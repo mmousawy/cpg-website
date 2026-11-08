@@ -137,7 +137,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 26+
 - Supabase project
 - (Optional) Resend account, reCAPTCHA keys
 
