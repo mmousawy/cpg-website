@@ -1,9 +1,12 @@
 'use client';
 
 import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
+import { motionDuration } from '@/utils/reduceMotion';
 import clsx from 'clsx';
-import { cloneElement, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+const TOOLTIP_MOTION_MS = 150;
 
 interface TooltipProps {
   /** Content to show in the tooltip */
@@ -22,19 +25,24 @@ export default function Tooltip({
   content,
   children,
   position = 'top',
-  delay = 300,
+  delay = 16,
   maxWidth = 'max-w-xs',
 }: TooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [entered, setEntered] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<{ top: number; left: number } | null>(null);
-  const triggerRef = useRef<HTMLElement>(null);
+  const anchorRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openRef = useRef(false);
 
   const updatePosition = useCallback(() => {
-    if (!triggerRef.current || !tooltipRef.current) return;
+    // The anchor is display:contents, so it has no box. Measure the child element.
+    const trigger = anchorRef.current?.firstElementChild;
+    if (!trigger || !tooltipRef.current) return;
 
-    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const triggerRect = trigger.getBoundingClientRect();
     const tooltipRect = tooltipRef.current.getBoundingClientRect();
 
     // If tooltip hasn't rendered yet, skip positioning
@@ -80,37 +88,90 @@ export default function Tooltip({
     setTooltipPosition({ top, left });
   }, [position]);
 
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      setIsVisible(true);
-    }, delay);
-  };
-
-  const handleMouseLeave = () => {
+  const clearShowTimer = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    setIsVisible(false);
+  };
+
+  const clearExitTimer = () => {
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+  };
+
+  const dismiss = () => {
+    if (openRef.current) return;
+    clearExitTimer();
+    setEntered(false);
+    setIsMounted(false);
+    setTooltipPosition(null);
+  };
+
+  const handleMouseEnter = (event: { buttons: number }) => {
+    // A held button is a drag or click, not a hover.
+    if (event.buttons !== 0) return;
+    clearShowTimer();
+    clearExitTimer();
+    openRef.current = true;
+    // Already on screen (including while fading out): reverse immediately.
+    if (isMounted && tooltipPosition) {
+      setEntered(true);
+      return;
+    }
+    timeoutRef.current = setTimeout(() => {
+      if (!openRef.current) return;
+      setIsMounted(true);
+    }, delay);
+  };
+
+  const handleMouseLeave = () => {
+    clearShowTimer();
+    openRef.current = false;
+    setEntered(false);
+    clearExitTimer();
+    const motionMs = motionDuration(TOOLTIP_MOTION_MS);
+    exitTimerRef.current = setTimeout(dismiss, motionMs === 0 ? 0 : motionMs + 40);
+  };
+
+  const handleTransitionEnd = (event: React.TransitionEvent<HTMLDivElement>) => {
+    if (event.propertyName !== 'opacity') return;
+    dismiss();
   };
 
   // Update position when tooltip becomes visible
   useEffect(() => {
-    if (isVisible && tooltipRef.current) {
+    if (isMounted && tooltipRef.current) {
       // Small delay to ensure tooltip is rendered before calculating position
       const timeoutId = setTimeout(() => {
         updatePosition();
       }, 0);
       return () => clearTimeout(timeoutId);
     }
-  }, [isVisible, updatePosition]);
+  }, [isMounted, updatePosition]);
+
+  const placed = tooltipPosition != null;
+  // Play the enter transition only after the hidden tooltip has been positioned and painted.
+  useEffect(() => {
+    if (!isMounted || !placed) return;
+    const frame = setTimeout(() => {
+      if (openRef.current) setEntered(true);
+    }, 20);
+    return () => clearTimeout(frame);
+  }, [isMounted, placed]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
+  }, []);
 
   // Update position on scroll/resize
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isMounted) return;
 
     const handleUpdate = () => {
       updatePosition();
@@ -123,44 +184,56 @@ export default function Tooltip({
       window.removeEventListener('scroll', handleUpdate, true);
       window.removeEventListener('resize', handleUpdate);
     };
-  }, [isVisible, updatePosition]);
+  }, [isMounted, updatePosition]);
 
-  const childElement = children as React.ReactElement<{ ref?: React.Ref<HTMLElement>; onMouseEnter?: (e: React.MouseEvent) => void; onMouseLeave?: (e: React.MouseEvent) => void }>;
-  // Access ref from React element (React stores ref separately, not in props)
-  const childRef = (childElement as { ref?: React.Ref<HTMLElement> }).ref;
+  // The anchor is display:contents, so mouse events are listened on the child element.
+  useEffect(() => {
+    const trigger = anchorRef.current?.firstElementChild;
+    if (!trigger) return;
 
-  const trigger = cloneElement(childElement, {
-    ref: (node: HTMLElement | null) => {
-      triggerRef.current = node;
-      // Forward ref to child component if it has one
-      if (typeof childRef === 'function') {
-        childRef(node);
-      } else if (childRef && 'current' in childRef) {
-        // Mutating ref.current is correct for ref forwarding - this is expected React pattern
-        // eslint-disable-next-line react-hooks/immutability
-        (childRef as React.MutableRefObject<HTMLElement | null>).current = node;
-      }
-    },
-    onMouseEnter: (e: React.MouseEvent) => {
-      handleMouseEnter();
-      childElement.props?.onMouseEnter?.(e);
-    },
-    onMouseLeave: (e: React.MouseEvent) => {
+    const enter = (event: Event) => {
+      if (!(event instanceof globalThis.MouseEvent)) return;
+      handleMouseEnter(event);
+    };
+    const leave = () => {
       handleMouseLeave();
-      childElement.props?.onMouseLeave?.(e);
-    },
+    };
+
+    trigger.addEventListener('mouseenter', enter);
+    trigger.addEventListener('mouseleave', leave);
+    trigger.addEventListener('pointerdown', leave);
+    return () => {
+      trigger.removeEventListener('mouseenter', enter);
+      trigger.removeEventListener('mouseleave', leave);
+      trigger.removeEventListener('pointerdown', leave);
+    };
   });
 
   return (
     <>
-      {trigger}
-      {isVisible &&
+      <span
+        ref={anchorRef}
+        className="contents"
+      >
+        {children}
+      </span>
+      {isMounted &&
         typeof window !== 'undefined' &&
         createPortal(
           <div
             ref={tooltipRef}
             className={clsx(
-              'fixed rounded-md bg-gray-900 px-2 py-1.5 text-xs text-white shadow-lg',
+              'fixed rounded-md border border-border-color-strong bg-background-float px-2 py-1.5 text-xs text-foreground shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.15)] dark:shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.4)]',
+              'transition-[opacity,translate] duration-150 ease-out motion-reduce:transition-none',
+              entered
+                ? 'translate-x-0 translate-y-0 opacity-100'
+                : clsx(
+                  'opacity-0 motion-reduce:translate-none motion-reduce:opacity-100',
+                  position === 'top' && 'translate-y-1',
+                  position === 'bottom' && '-translate-y-1',
+                  position === 'left' && 'translate-x-1',
+                  position === 'right' && '-translate-x-1',
+                ),
               pageFloatingZClassName,
               maxWidth,
             )}
@@ -174,6 +247,7 @@ export default function Tooltip({
             }
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onTransitionEnd={handleTransitionEnd}
           >
             {content}
           </div>,

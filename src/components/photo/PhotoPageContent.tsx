@@ -65,6 +65,7 @@ export interface SiblingPhoto {
   shortId: string;
   url: string;
   blurhash: string | null;
+  title?: string | null;
   sortOrder: number;
   width: number;
   height: number;

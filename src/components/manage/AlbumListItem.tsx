@@ -1,6 +1,10 @@
 'use client';
 
 import BlurImage from '@/components/shared/BlurImage';
+import {
+  getAlbumCoverUrl,
+  getAlbumDisplayName,
+} from '@/lib/albums/display';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
@@ -8,35 +12,12 @@ import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
 import LinkSVG from 'public/icons/link.svg';
 
-/** Fields needed to label an album in UI. */
-export type AlbumDisplayNameSource = Pick<AlbumWithPhotos, 'id'> & {
-  title?: string | null;
-  slug?: string | null;
-  event_title?: string | null;
-};
-
-/** Fields needed to resolve an album thumbnail. */
-export type AlbumCoverSource = {
-  cover_image_url?: string | null;
-  photos?: Array<{ photo_url?: string | null }> | null;
-  event_cover_image?: string | null;
-};
-
-/**
- * Label for an album in UI.
- * Event albums store an internal title (`{event} Photos`); always show the event name instead.
- */
-export function getAlbumDisplayName(album: AlbumDisplayNameSource): string {
-  if (album.event_title) return album.event_title;
-  if (album.title) return album.title;
-  if (album.slug) return album.slug;
-  return album.id.slice(0, 8);
-}
-
-/** Album cover, first photo, then linked event cover for event albums with no photos yet. */
-export function getAlbumCoverUrl(album: AlbumCoverSource): string | null {
-  return album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image || null;
-}
+export {
+  getAlbumCoverUrl,
+  getAlbumDisplayName,
+  type AlbumCoverSource,
+  type AlbumDisplayNameSource,
+} from '@/lib/albums/display';
 
 /** Format date in user-friendly format */
 function formatDate(dateString: string | null | undefined): string | null {

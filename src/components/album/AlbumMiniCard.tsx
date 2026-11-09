@@ -1,4 +1,4 @@
-import { getAlbumCoverUrl } from '@/components/manage/AlbumListItem';
+import { getAlbumCoverUrl } from '@/lib/albums/display';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import Link from 'next/link';
