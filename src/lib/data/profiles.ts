@@ -311,6 +311,55 @@ export async function getProfileStats(
 }
 
 /**
+ * Sibling photos for photostream filmstrip navigation (profile photo layout)
+ */
+export async function getProfileSiblingPhotos(nickname: string, includeTestContent = false) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag(`profile-${nickname}`);
+
+  if (!isPublicProfileAllowed(nickname, includeTestContent)) {
+    return null;
+  }
+
+  const supabase = createPublicClient();
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('nickname', nickname)
+    .is('suspended_at', null)
+    .is('under_review_at', null)
+    .is('deletion_scheduled_at', null)
+    .single();
+
+  if (!profile) {
+    return null;
+  }
+
+  const { data: photos } = await supabase
+    .from('photos')
+    .select('id, short_id, url, blurhash, title, width, height')
+    .eq('user_id', profile.id)
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%')
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
+
+  return (photos || []).map((photo, index) => ({
+    id: photo.id,
+    shortId: photo.short_id,
+    url: photo.url,
+    blurhash: photo.blurhash,
+    title: photo.title,
+    sortOrder: index,
+    width: photo.width ?? 1200,
+    height: photo.height ?? 800,
+  }));
+}
+
+/**
  * Sibling photos for album filmstrip navigation (album context layout)
  */
 export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string) {
@@ -349,7 +398,7 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
 
   const { data: siblingPhotosData } = await supabase
     .from('album_photos_active')
-    .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, width, height)')
+    .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, title, width, height)')
     .eq('album_id', albumData.id)
     .order('sort_order', { ascending: true });
 
@@ -361,6 +410,7 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
       short_id: string;
       url: string;
       blurhash: string | null;
+      title: string | null;
       width: number | null;
       height: number | null;
     } | null;
@@ -374,12 +424,13 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
         shortId: sp.photo.short_id,
         url: sp.photo.url,
         blurhash: sp.photo.blurhash,
+        title: sp.photo.title,
         sortOrder: sp.sort_order ?? 0,
         width: sp.photo.width ?? 1200,
         height: sp.photo.height ?? 800,
       };
     })
-    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; title: string | null; sortOrder: number; width: number; height: number } => p !== null);
 }
 
 /**

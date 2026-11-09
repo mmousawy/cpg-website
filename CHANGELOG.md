@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.47.6](https://github.com/mmousawy/cpg-website/compare/v1.47.5...v1.47.6) (2026-11-09)
+
+
+### ♻️ Refactoring
+
+* update photo page layout and sibling photo handling ([326e6e0](https://github.com/mmousawy/cpg-website/commit/326e6e0d4a269c98fcd45591f09ea0eb2131518d))
+
 ## [1.47.5](https://github.com/mmousawy/cpg-website/compare/v1.47.4...v1.47.5) (2026-11-08)
 
 

@@ -275,7 +275,7 @@ export async function getChallengeSiblingPhotos(challengeSlug: string, includeTe
 
   const { data: siblingData } = await supabase
     .from('challenge_photos')
-    .select('photo_id, short_id, url, blurhash, width, height, reviewed_at, profile_nickname')
+    .select('photo_id, short_id, url, blurhash, title, width, height, reviewed_at, profile_nickname')
     .eq('challenge_id', challenge.id)
     .order('reviewed_at', { ascending: false });
 
@@ -285,11 +285,12 @@ export async function getChallengeSiblingPhotos(challengeSlug: string, includeTe
       shortId: sp.short_id ?? '',
       url: sp.url ?? '',
       blurhash: sp.blurhash,
+      title: sp.title,
       sortOrder: index,
       width: sp.width ?? 1200,
       height: sp.height ?? 800,
     }))
-    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => !!p.id && !!p.shortId && !!p.url);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; title: string | null; sortOrder: number; width: number; height: number } => !!p.id && !!p.shortId && !!p.url);
 }
 
 /**

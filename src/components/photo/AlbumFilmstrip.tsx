@@ -4,7 +4,8 @@ import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPh
 import BlurImage from '@/components/shared/BlurImage';
 import HoverPrefetchLink from '@/components/shared/HoverPrefetchLink';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { scrollBehavior } from '@/utils/reduceMotion';
+import Tooltip from '@/components/shared/Tooltip';
+import { prefersReducedMotion } from '@/utils/reduceMotion';
 import { isPhotoSwipeOpen } from '@/utils/photoswipe';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
@@ -12,11 +13,17 @@ import { usePathname } from 'next/navigation';
 import ArrowLeftFillSVG from 'public/icons/arrow-left-fill.svg';
 import ArrowRightFillSVG from 'public/icons/arrow-right-fill.svg';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Swiper as SwiperType } from 'swiper';
+import { A11y, FreeMode } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/react';
+
+import 'swiper/css';
 
 interface SiblingPhoto {
   shortId: string;
   url: string;
   blurhash: string | null;
+  title?: string | null;
   sortOrder: number;
 }
 
@@ -42,7 +49,51 @@ function getPhotoShortIdFromPathname(pathname: string): string {
 function isThumbnailVisible(container: HTMLElement, element: HTMLElement): boolean {
   const containerRect = container.getBoundingClientRect();
   const elementRect = element.getBoundingClientRect();
-  return elementRect.left >= containerRect.left && elementRect.right <= containerRect.right;
+  // 1px slack so subpixel layout does not count a fully on-screen thumb as clipped.
+  return elementRect.left >= containerRect.left - 1 && elementRect.right <= containerRect.right + 1;
+}
+
+function filmstripSpeed(): number {
+  return prefersReducedMotion() ? 0 : 300;
+}
+
+function filmstripPhotoTitle(title: string | null | undefined): string | null {
+  const trimmed = title?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function scrollFilmstripToIndex(
+  swiper: SwiperType,
+  index: number,
+  photoCount: number,
+  viewport: HTMLElement,
+) {
+  if (index < 0) return;
+
+  const slideEl = swiper.slides[index];
+  if (!(slideEl instanceof HTMLElement)) return;
+  if (isThumbnailVisible(viewport, slideEl)) return;
+
+  const speed = filmstripSpeed();
+  let nextTranslate: number;
+  if (index === 0) {
+    nextTranslate = swiper.minTranslate();
+  } else if (index === photoCount - 1) {
+    nextTranslate = swiper.maxTranslate();
+  } else {
+    const containerRect = viewport.getBoundingClientRect();
+    const slideRect = slideEl.getBoundingClientRect();
+    const delta = (slideRect.left - containerRect.left)
+      - (containerRect.width / 2)
+      + (slideRect.width / 2);
+    nextTranslate = swiper.getTranslate() - delta;
+  }
+
+  const clamped = Math.min(swiper.minTranslate(), Math.max(swiper.maxTranslate(), nextTranslate));
+  if (Math.abs(clamped - swiper.getTranslate()) < 1) return;
+  swiper.setTransition(speed);
+  swiper.setTranslate(clamped);
+  swiper.updateProgress();
 }
 
 export default function AlbumFilmstrip({
@@ -61,12 +112,10 @@ export default function AlbumFilmstrip({
     : `/@${nickname}/album/${albumSlug}/photo/${shortId}`,
   [basePath, nickname, albumSlug]);
   const {
-    currentIndex,
     hasPrev,
     hasNext,
     pendingShortId,
     setPendingShortId,
-    navigateToPhoto,
     goToPrevPhoto,
     goToNextPhoto,
   } = useCollectionPhotoNavigation({
@@ -74,79 +123,45 @@ export default function AlbumFilmstrip({
     currentPhotoShortId,
     getPhotoHref,
   });
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const activeThumbnailRef = useRef<HTMLAnchorElement>(null);
+  const swiperRef = useRef<SwiperType | null>(null);
+  const clipRef = useRef<HTMLDivElement>(null);
+  const suppressThumbClickRef = useRef(false);
+  const draggingRef = useRef(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const updateScrollEdges = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+  const shouldIgnoreThumbClick = useCallback(() => (
+    suppressThumbClickRef.current || Boolean(swiperRef.current?.animating)
+  ), []);
 
-    const isOverflowing = container.scrollWidth > container.clientWidth + 1;
-    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+  const ignoreThumbClick = useCallback((event: { preventDefault: () => void; stopPropagation: () => void }) => {
+    event.preventDefault();
+    event.stopPropagation();
+    suppressThumbClickRef.current = false;
+  }, []);
 
-    setCanScrollLeft(isOverflowing && container.scrollLeft > 1);
-    setCanScrollRight(isOverflowing && container.scrollLeft < maxScrollLeft - 1);
+  const syncEdges = useCallback((swiper: SwiperType) => {
+    setCanScrollLeft(!swiper.isBeginning);
+    setCanScrollRight(!swiper.isEnd);
   }, []);
 
   const selectedShortId =
     pendingShortId && pendingShortId !== currentPhotoShortId
       ? pendingShortId
       : currentPhotoShortId;
+  const selectedIndex = photos.findIndex((photo) => photo.shortId === selectedShortId);
 
-  // Scroll active thumbnail into view only when it is outside the visible strip
-  useEffect(() => {
-    if (!activeThumbnailRef.current || !scrollContainerRef.current) return;
-
-    const container = scrollContainerRef.current;
-    const activeElement = activeThumbnailRef.current;
-
-    if (isThumbnailVisible(container, activeElement)) {
-      return;
-    }
-
-    const behavior = scrollBehavior('smooth');
-
-    let targetLeft: number;
-    if (currentIndex === 0) {
-      targetLeft = 0;
-    } else if (currentIndex === photos.length - 1) {
-      targetLeft = container.scrollWidth - container.clientWidth;
-    } else {
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = activeElement.getBoundingClientRect();
-      targetLeft = container.scrollLeft
-        + (elementRect.left - containerRect.left)
-        - (containerRect.width / 2)
-        + (elementRect.width / 2);
-    }
-
-    container.scrollTo({ left: targetLeft, behavior });
-
-    // Instant scroll: edges update here; smooth scroll updates via the passive scroll listener.
-    if (behavior === 'auto') {
-      updateScrollEdges();
-    }
-  }, [currentIndex, photos.length, selectedShortId, updateScrollEdges]);
+  const ensureSelectedThumbVisible = useCallback(() => {
+    if (draggingRef.current) return;
+    const swiper = swiperRef.current;
+    const viewport = clipRef.current;
+    if (!swiper || !viewport) return;
+    scrollFilmstripToIndex(swiper, selectedIndex, photos.length, viewport);
+  }, [photos.length, selectedIndex]);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    updateScrollEdges();
-
-    const resizeObserver = new ResizeObserver(updateScrollEdges);
-    resizeObserver.observe(container);
-
-    container.addEventListener('scroll', updateScrollEdges, { passive: true });
-    window.addEventListener('resize', updateScrollEdges);
-    return () => {
-      resizeObserver.disconnect();
-      container.removeEventListener('scroll', updateScrollEdges);
-      window.removeEventListener('resize', updateScrollEdges);
-    };
-  }, [photos, updateScrollEdges]);
+    ensureSelectedThumbVisible();
+  }, [ensureSelectedThumbVisible]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -234,59 +249,135 @@ export default function AlbumFilmstrip({
           />
 
           <div
-            ref={scrollContainerRef}
-            className="flex overflow-x-auto gap-2 py-2 px-1 min-w-0"
+            ref={clipRef}
+            className="overflow-clip overscroll-none px-2 py-2"
+            onClickCapture={(event) => {
+              if (shouldIgnoreThumbClick()) {
+                ignoreThumbClick(event);
+                event.nativeEvent.stopImmediatePropagation();
+              }
+            }}
           >
-            {photos.map((photo, index) => {
-            const isSelected = photo.shortId === selectedShortId;
-            const isPending = photo.shortId === pendingShortId && pendingShortId !== currentPhotoShortId;
-            const thumbnailUrl = getSquareThumbnailUrl(photo.url, 48, 75) || photo.url;
-
-            return (
-              <HoverPrefetchLink
-                key={photo.shortId}
-                ref={isSelected ? activeThumbnailRef : null}
-                href={getPhotoHref(photo.shortId)}
-                onClick={(event) => {
-                  if (photo.shortId === currentPhotoShortId || photo.shortId === pendingShortId) {
-                    event.preventDefault();
-                    return;
-                  }
-                  setPendingShortId(photo.shortId);
-                }}
-                className={clsx(
-                  'relative shrink-0 size-12 rounded-sm overflow-hidden transition-all duration-150 ease-out active:scale-95',
-                  isSelected
-                    ? 'ring-2 ring-offset-2 ring-primary dark:ring-offset-white/70'
-                    : 'border-border-color hover:border-primary/50',
-                )}
-                aria-current={isSelected && !isPending ? 'page' : undefined}
-                aria-label={`Go to photo ${index + 1} of ${photos.length}${isSelected && !isPending ? ' (current)' : ''}${isPending ? ' (loading)' : ''}`}
-                aria-busy={isPending}
-              >
-                <BlurImage
-                  src={thumbnailUrl}
-                  alt={`Photo ${index + 1}`}
-                  blurhash={photo.blurhash}
-                  fill
-                  sizes="48px"
-                  loading="lazy"
-                  fetchPriority="low"
-                  className="object-cover"
-                />
-                {isPending && (
-                  <span
-                    className="absolute inset-0 z-10 flex items-center justify-center bg-black/45"
+            <Swiper
+              modules={[A11y, FreeMode]}
+              slidesPerView="auto"
+              spaceBetween={0}
+              touchEventsTarget="container"
+              freeMode={{
+                enabled: true,
+                momentum: !prefersReducedMotion(),
+                momentumRatio: 0.45,
+                momentumVelocityRatio: 0.5,
+                momentumBounce: !prefersReducedMotion(),
+                momentumBounceRatio: 1,
+              }}
+              grabCursor
+              watchOverflow
+              resistance
+              resistanceRatio={0.85}
+              preventClicks
+              preventClicksPropagation
+              threshold={0}
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper;
+                syncEdges(swiper);
+                ensureSelectedThumbVisible();
+              }}
+              onTouchStart={(swiper) => {
+                draggingRef.current = true;
+                suppressThumbClickRef.current = false;
+                swiper.setTransition(0);
+              }}
+              onTouchEnd={(swiper) => {
+                draggingRef.current = false;
+                syncEdges(swiper);
+              }}
+              onSliderMove={() => {
+                suppressThumbClickRef.current = true;
+              }}
+              onTransitionEnd={syncEdges}
+              onResize={syncEdges}
+              className="overflow-visible! cursor-grab select-none [&_.swiper-wrapper]:cursor-grab [&_.swiper-wrapper]:h-auto [&_a]:cursor-grab [&_a]:[user-drag:none]"
+            >
+              {photos.map((photo, index) => {
+                const isSelected = photo.shortId === selectedShortId;
+                const isPending = photo.shortId === pendingShortId && pendingShortId !== currentPhotoShortId;
+                const thumbnailUrl = getSquareThumbnailUrl(photo.url, 48, 75) || photo.url;
+                const title = filmstripPhotoTitle(photo.title);
+                const thumbnail = (
+                  <HoverPrefetchLink
+                    href={getPhotoHref(photo.shortId)}
+                    draggable={false}
+                    onDragStart={(event) => event.preventDefault()}
+                    onClick={(event) => {
+                      if (shouldIgnoreThumbClick()) {
+                        ignoreThumbClick(event);
+                        return;
+                      }
+                      if (photo.shortId === currentPhotoShortId || photo.shortId === pendingShortId) {
+                        event.preventDefault();
+                        return;
+                      }
+                      setPendingShortId(photo.shortId);
+                    }}
+                    className="group relative block size-12"
+                    aria-current={isSelected && !isPending ? 'page' : undefined}
+                    aria-label={`Go to photo ${index + 1} of ${photos.length}${isSelected && !isPending ? ' (current)' : ''}${isPending ? ' (loading)' : ''}`}
+                    aria-busy={isPending}
                   >
-                    <LoadingSpinner
-                      size="sm"
-                      className="size-4! border-white/90 border-t-transparent"
-                    />
-                  </span>
-                )}
-              </HoverPrefetchLink>
-            );
-          })}
+                    <span
+                      className="pointer-events-none absolute inset-0 origin-center transition-transform duration-150 ease-out group-active:scale-95"
+                    >
+                      <span
+                        className={clsx(
+                          'absolute inset-0 overflow-hidden rounded-sm',
+                          isSelected
+                            ? 'ring-2 ring-offset-2 ring-primary dark:ring-offset-white/70'
+                            : 'border-border-color group-hover:border-primary/50',
+                        )}
+                      >
+                        <BlurImage
+                          src={thumbnailUrl}
+                          alt={title || `Photo ${index + 1}`}
+                          blurhash={photo.blurhash}
+                          fill
+                          sizes="48px"
+                          loading="lazy"
+                          fetchPriority="low"
+                          className="object-cover"
+                        />
+                        {isPending && (
+                          <span
+                            className="absolute inset-0 z-10 flex items-center justify-center bg-black/45"
+                          >
+                            <LoadingSpinner
+                              size="sm"
+                              className="size-4! border-white/90 border-t-transparent"
+                            />
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </HoverPrefetchLink>
+                );
+
+                return (
+                  <SwiperSlide
+                    key={photo.shortId}
+                    className="h-auto! w-auto! pr-2 last:pr-0"
+                  >
+                    {title ? (
+                      <Tooltip
+                        content={title}
+                        position="top"
+                      >
+                        {thumbnail}
+                      </Tooltip>
+                    ) : thumbnail}
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
           </div>
         </div>
 

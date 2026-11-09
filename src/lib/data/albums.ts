@@ -538,7 +538,7 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
 
   const { data: siblingData } = await supabase
     .from('album_photos')
-    .select('sort_order, contributor:profiles!album_photos_added_by_fkey(nickname), photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, width, height, deleted_at)')
+    .select('sort_order, contributor:profiles!album_photos_added_by_fkey(nickname), photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, title, width, height, deleted_at)')
     .eq('album_id', album.id)
     .order('sort_order', { ascending: true });
 
@@ -550,6 +550,7 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
       short_id: string | null;
       url: string | null;
       blurhash: string | null;
+      title: string | null;
       width: number | null;
       height: number | null;
       deleted_at: string | null;
@@ -566,12 +567,13 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
         shortId: p.short_id,
         url: p.url,
         blurhash: p.blurhash ?? null,
+        title: p.title,
         sortOrder: index,
         width: p.width ?? 1200,
         height: p.height ?? 800,
       };
     })
-    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; title: string | null; sortOrder: number; width: number; height: number } => p !== null);
 }
 
 /**

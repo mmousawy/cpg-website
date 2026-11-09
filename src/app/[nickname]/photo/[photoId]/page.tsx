@@ -1,9 +1,9 @@
-import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
-import { getPhotoByShortId } from '@/lib/data/profiles';
+import { getPhotoByShortId, getProfileSiblingPhotos } from '@/lib/data/profiles';
 import { buildImageObjectJsonLd } from '@/lib/photos/jsonLd';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -14,6 +14,7 @@ type Params = Promise<{
 }>;
 
 type PhotoPageResult = NonNullable<Awaited<ReturnType<typeof getPhotoByShortId>>>;
+type SiblingPhotos = NonNullable<Awaited<ReturnType<typeof getProfileSiblingPhotos>>>;
 
 // Required for build-time validation with cacheComponents
 export async function generateStaticParams() {
@@ -72,7 +73,10 @@ export default async function PhotoPage({ params }: { params: Params }) {
   }
 
   const includeTestContent = await getIncludeTestContent();
-  const result = await getPhotoByShortId(nickname, photoId, includeTestContent);
+  const [result, siblingPhotos] = await Promise.all([
+    getPhotoByShortId(nickname, photoId, includeTestContent),
+    getProfileSiblingPhotos(nickname, includeTestContent),
+  ]);
 
   if (!result) {
     notFound();
@@ -83,6 +87,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
       nickname={nickname}
       photoId={photoId}
       result={result}
+      siblingPhotos={siblingPhotos ?? []}
     />
   );
 }
@@ -91,10 +96,12 @@ async function CachedPhotoPage({
   nickname,
   photoId,
   result,
+  siblingPhotos,
 }: {
   nickname: string;
   photoId: string;
   result: PhotoPageResult;
+  siblingPhotos: SiblingPhotos;
 }) {
   'use cache';
   cacheLife('tagged');
@@ -132,11 +139,11 @@ async function CachedPhotoPage({
       <JsonLd
         data={[imageJsonLd, breadcrumbJsonLd]}
       />
-      <PhotoPageContent
+      <PhotoLightboxColumn
         photo={result.photo}
-        profile={result.profile}
-        albums={result.albums}
-        challenges={result.challenges}
+        isInAlbum={siblingPhotos.length > 1}
+        siblingPhotos={siblingPhotos}
+        basePath={`/@${nickname}`}
       />
     </>
   );
