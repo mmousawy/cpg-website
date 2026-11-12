@@ -26,7 +26,16 @@ test.describe('Global search', () => {
       'Search across albums, photos, members, gear, events, scene, and tags',
     )).toBeVisible();
 
+    const searchResponse = page.waitForResponse(
+      (res) => {
+        if (!res.url().includes('/api/search') || !res.ok()) return false;
+        const url = new URL(res.url());
+        return url.searchParams.get('q') === query;
+      },
+      { timeout: 20_000 },
+    );
     await dialog.getByRole('searchbox').fill(query);
+    await searchResponse;
     await expect(dialog.getByRole('heading', { name: 'Members', exact: true })).toBeVisible({
       timeout: 15_000,
     });

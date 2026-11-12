@@ -2,7 +2,7 @@ import { request } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
-import { getPlaywrightApiContextOptions, withInternalApiHeaders } from './test-utils';
+import { getPlaywrightRequestContextOptions, withInternalApiHeaders } from './test-utils';
 
 const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.json');
 
@@ -28,7 +28,7 @@ async function globalTeardown() {
 
   console.log(`Found ${testEmails.length} test emails to clean up`);
 
-  const apiRequest = await request.newContext(getPlaywrightApiContextOptions());
+  const apiRequest = await request.newContext(getPlaywrightRequestContextOptions());
 
   try {
     const response = await apiRequest.post('/api/test/cleanup', {

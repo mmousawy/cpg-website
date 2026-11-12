@@ -53,6 +53,46 @@ export function withInternalApiHeaders(
 
 /** Same header Playwright sends so e2e users appear on public pages. */
 export const E2E_INCLUDE_TEST_HEADER = 'x-cpg-e2e-include-test';
+/** Cookie name — must match `E2E_INCLUDE_TEST_COOKIE` in includeTestContent.ts */
+export const E2E_INCLUDE_TEST_COOKIE = 'cpg_e2e_include_test';
+
+export type PlaywrightCookie = {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  secure: boolean;
+  sameSite: 'Lax' | 'Strict' | 'None';
+  httpOnly: boolean;
+  expires: number;
+};
+
+/** Cookies for browser fetch() and navigations (mirrors verified E2E header). */
+export function getE2EPlaywrightCookies(baseURL: string): PlaywrightCookie[] {
+  const secret = getInternalApiSecret();
+  if (!secret) return [];
+
+  const url = new URL(baseURL);
+  return [{
+    name: E2E_INCLUDE_TEST_COOKIE,
+    value: secret,
+    domain: url.hostname,
+    path: '/',
+    secure: url.protocol === 'https:',
+    sameSite: 'Lax',
+    httpOnly: true,
+    expires: Math.floor(Date.now() / 1000) + 60 * 60,
+  }];
+}
+
+/** APIRequestContext options — omit browser-only storageState cookies. */
+export function getPlaywrightRequestContextOptions(): {
+  baseURL: string;
+  extraHTTPHeaders: Record<string, string>;
+  } {
+  const { baseURL, extraHTTPHeaders } = getPlaywrightApiContextOptions();
+  return { baseURL, extraHTTPHeaders };
+}
 
 export function withE2EIncludeTestHeaders(
   headers: Record<string, string> = {},
@@ -65,17 +105,21 @@ export function withE2EIncludeTestHeaders(
   };
 }
 
-/** Shared Playwright request context options (mirrors playwright.config.ts). */
-export function getPlaywrightApiContextOptions(): {
+export type PlaywrightApiContextOptions = {
   baseURL: string;
   extraHTTPHeaders: Record<string, string>;
-  } {
-  const baseUrl = resolveE2EBaseUrl();
-  const headers = withE2EIncludeTestHeaders({});
+  e2eCookies: PlaywrightCookie[];
+};
+
+/** Shared Playwright request context options (mirrors playwright.config.ts). */
+export function getPlaywrightApiContextOptions(): PlaywrightApiContextOptions {
+  const baseURL = resolveE2EBaseUrl();
+  const extraHTTPHeaders = withE2EIncludeTestHeaders({});
 
   return {
-    baseURL: baseUrl,
-    extraHTTPHeaders: headers,
+    baseURL,
+    extraHTTPHeaders,
+    e2eCookies: getE2EPlaywrightCookies(baseURL),
   };
 }
 

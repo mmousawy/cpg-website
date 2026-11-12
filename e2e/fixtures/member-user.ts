@@ -3,7 +3,7 @@ import { test as base, expect, request as playwrightRequest } from '@playwright/
 import {
   cleanupTestUsers,
   createTestUser,
-  getPlaywrightApiContextOptions,
+  getPlaywrightRequestContextOptions,
   type TestUser,
 } from '../test-utils';
 /**
@@ -12,8 +12,8 @@ import {
  */
 export const test = base.extend<object, { memberUser: TestUser }>({
   memberUser: [
-    async ({}, useFixture) => {
-      const apiRequest = await playwrightRequest.newContext(getPlaywrightApiContextOptions());
+    async ({ }, useFixture) => {
+      const apiRequest = await playwrightRequest.newContext(getPlaywrightRequestContextOptions());
       const user = await createTestUser(apiRequest);
       try {
         await useFixture(user);

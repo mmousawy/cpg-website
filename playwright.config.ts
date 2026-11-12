@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 import { getPlaywrightApiContextOptions, isStagingE2ETarget } from './e2e/test-utils';
 
-const { baseURL, extraHTTPHeaders } = getPlaywrightApiContextOptions();
+const { baseURL, extraHTTPHeaders, e2eCookies } = getPlaywrightApiContextOptions();
 
 export default defineConfig({
   testDir: './e2e',
@@ -22,6 +22,9 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     extraHTTPHeaders,
+    ...(e2eCookies.length > 0
+      ? { storageState: { cookies: e2eCookies, origins: [] } }
+      : {}),
   },
 
   projects: [
