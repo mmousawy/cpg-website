@@ -83,6 +83,10 @@ async function fillProfileStep(page: Page, nickname: string, fullName = ONBOARDI
   for (const interest of ONBOARDING.interests) {
     await addInterest(page, interest);
   }
+
+  const filmFormat = page.getByRole('button', { name: 'Analog / film', exact: true });
+  await filmFormat.click();
+  await expect(filmFormat).toHaveAttribute('aria-pressed', 'true');
   const emailInput = page.locator('#email');
   if (await emailInput.isVisible()) {
     const current = await emailInput.inputValue();
@@ -294,10 +298,19 @@ test.describe('Onboarding with incomplete profile', () => {
     const completeButton = page.getByRole('button', { name: /join the group/i });
     await expect(completeButton).toBeEnabled();
     await completeButton.click();
-    await expect(page).toHaveURL(/\/account/, { timeout: 45000 });
+    await expect(page).toHaveURL(/\/account\/events\/?$/, { timeout: 45000 });
     await expect(page.getByText(/failed to upload/i)).toHaveCount(0);
 
     await page.goto('/account');
     await expectPersistedOnboardingOnAccount(page, testUser.nickname);
+
+    await page.goto('/account/gear');
+    await expect(page.getByRole('heading', { name: 'My gear', exact: true })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole('button', { name: 'Analog / film', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });

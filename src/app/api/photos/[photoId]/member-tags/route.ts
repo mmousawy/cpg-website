@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { revalidateProfile } from '@/app/actions/revalidate';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { scheduleNotification } from '@/lib/notifications/schedule';
 import { createClient } from '@/utils/supabase/server';
+
+async function revalidateTaggedMember(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  profileId: string,
+) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('nickname')
+    .eq('id', profileId)
+    .maybeSingle();
+  if (profile?.nickname) {
+    await revalidateProfile(profile.nickname);
+  }
+}
 
 type RouteContext = { params: Promise<{ photoId: string }> };
 
@@ -11,11 +27,11 @@ function clampUnit(value: unknown): number | null {
   return number;
 }
 
-export async function GET(_request: NextRequest, context: RouteContext) {
-  const { photoId } = await context.params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
+async function canManagePhotoMemberTags(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  photoId: string,
+  userId: string,
+): Promise<{ photo: { id: string; user_id: string | null } | null; canEdit: boolean }> {
   const { data: photo } = await supabase
     .from('photos')
     .select('id, user_id')
@@ -23,8 +39,21 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     .maybeSingle();
 
   if (!photo) {
-    return NextResponse.json({ message: 'Photo not found' }, { status: 404 });
+    return { photo: null, canEdit: false };
   }
+
+  if (photo.user_id === userId) {
+    return { photo, canEdit: true };
+  }
+
+  const isAdmin = await checkIsAdmin(supabase);
+  return { photo, canEdit: isAdmin };
+}
+
+export async function GET(_request: NextRequest, context: RouteContext) {
+  const { photoId } = await context.params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: rows, error } = await supabase
     .from('photo_member_tags')
@@ -36,14 +65,12 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: 'Failed to load tags' }, { status: 500 });
   }
 
-  let canEdit = false;
-  if (user) {
-    if (user.id === photo.user_id) {
-      canEdit = true;
-    } else {
-      const { data: isAdmin } = await supabase.rpc('is_admin');
-      canEdit = isAdmin === true;
-    }
+  const { photo, canEdit } = user
+    ? await canManagePhotoMemberTags(supabase, photoId, user.id)
+    : { photo: null as { id: string; user_id: string | null } | null, canEdit: false };
+
+  if (!photo) {
+    return NextResponse.json({ message: 'Photo not found' }, { status: 404 });
   }
 
   const tags = (rows ?? []).flatMap((row) => {
@@ -79,6 +106,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
+  const { photo, canEdit } = await canManagePhotoMemberTags(supabase, photoId, user.id);
+  if (!photo) {
+    return NextResponse.json({ message: 'Photo not found' }, { status: 404 });
+  }
+  if (!canEdit) {
+    return NextResponse.json(
+      { message: 'Only the photo owner (or a site admin) can tag people on this photo' },
+      { status: 403 },
+    );
+  }
+
   let body: { profileId?: string; x?: unknown; y?: unknown };
   try {
     body = await request.json();
@@ -107,6 +145,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (error) {
       return NextResponse.json({ message: 'Could not move that tag' }, { status: 403 });
     }
+    await revalidateTaggedMember(supabase, body.profileId);
     return NextResponse.json({ success: true, moved: true });
   }
 
@@ -121,6 +160,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (error) {
     return NextResponse.json({ message: 'Could not tag that member' }, { status: 403 });
   }
+
+  await revalidateTaggedMember(supabase, body.profileId);
 
   if (body.profileId !== user.id) {
     const [{ data: actor }, { data: photo }] = await Promise.all([
@@ -178,6 +219,15 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: 'profileId is required' }, { status: 400 });
   }
 
+  const { photo, canEdit } = await canManagePhotoMemberTags(supabase, photoId, user.id);
+  if (!photo) {
+    return NextResponse.json({ message: 'Photo not found' }, { status: 404 });
+  }
+  const canRemove = canEdit || profileId === user.id;
+  if (!canRemove) {
+    return NextResponse.json({ message: 'You cannot remove that tag' }, { status: 403 });
+  }
+
   const { error } = await supabase
     .from('photo_member_tags')
     .delete()
@@ -187,6 +237,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   if (error) {
     return NextResponse.json({ message: 'Could not remove that tag' }, { status: 403 });
   }
+
+  await revalidateTaggedMember(supabase, profileId);
 
   return NextResponse.json({ success: true });
 }

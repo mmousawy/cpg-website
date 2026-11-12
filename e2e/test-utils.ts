@@ -161,29 +161,20 @@ export type CreateTestUserOptions = {
   asAdmin?: boolean;
 };
 
-function resolveCreateTestUserOptions(options: CreateTestUserOptions): CreateTestUserOptions {
-  // Deployed staging still signs out non-admins. Specs that need a member
-  // pass `{ asAdmin: false }` after that gate is removed.
-  if (isStagingE2ETarget() && options.asAdmin !== false) {
-    return { ...options, asAdmin: true };
-  }
-  return options;
-}
-
 /**
  * Create a fully verified test user via the test setup API.
  * Uses Playwright's request context so auth headers match browser tests.
+ * Pass `{ asAdmin: true }` only when the spec needs an admin (event create auto-RSVPs every admin).
  */
 export async function createTestUser(
   apiRequest: APIRequestContext,
   options: CreateTestUserOptions = {},
 ): Promise<TestUser> {
-  const resolved = resolveCreateTestUserOptions(options);
   const email = generateTestEmail();
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
-  const completeOnboarding = resolved.completeOnboarding !== false;
-  const asAdmin = resolved.asAdmin === true;
+  const completeOnboarding = options.completeOnboarding !== false;
+  const asAdmin = options.asAdmin === true;
 
   if (!getInternalApiSecret()) {
     throw new Error(

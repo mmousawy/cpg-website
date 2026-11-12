@@ -26,6 +26,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { getAlbumDisplayName } from './AlbumListItem';
+import ManagePhotoMemberTagsSection from './ManagePhotoMemberTagsSection';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
 
@@ -471,6 +472,10 @@ export default function SinglePhotoEditForm({
               )}
             />
           </div>
+
+          <ManagePhotoMemberTagsSection
+            photo={photo}
+          />
 
           <Toggle
             id={`is_public-${photo.id}`}

@@ -38,7 +38,7 @@ type PhotoWithLightboxProps = {
   albumSlug?: string;
   /** Event/challenge context: base path (e.g. /events/my-event) */
   basePath?: string;
-  /** When set, member spot-tags can be shown and edited on this photo */
+  /** When set, member spot-tag dots are shown on this photo (placement is only in Account → Photos). */
   photoId?: string;
 };
 
@@ -283,7 +283,7 @@ export default function PhotoWithLightbox({
           data-pswp-width={width}
           data-pswp-height={height}
           onClick={hasGallery ? handleImageClick : undefined}
-          className="block cursor-zoom-in!"
+          className={clsx('block', hasGallery && 'cursor-zoom-in!')}
         >
           <BlurImage
             src={url}
@@ -295,17 +295,19 @@ export default function PhotoWithLightbox({
             unoptimized
             onLoad={() => setIsLoaded(true)}
             className={clsx(
-            isInAlbum ? 'max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]'
-              : 'max-h-[calc(100vh-90px)] sm:max-h-[calc(100vh-106px)] lg:max-h-[calc(100vh-138px)] ',
+              isInAlbum ? 'max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]'
+                : 'max-h-[calc(100vh-90px)] sm:max-h-[calc(100vh-106px)] lg:max-h-[calc(100vh-138px)] ',
             )}
             style={{
-            aspectRatio: `${width}/${height}`,
+              aspectRatio: `${width}/${height}`,
             }}
           />
         </a>
-        {photoId ? <PhotoMemberTagLayer
-          photoId={photoId}
-        /> : null}
+        {photoId ? (
+          <PhotoMemberTagLayer
+            photoId={photoId}
+          />
+        ) : null}
       </div>
     </div>
   );

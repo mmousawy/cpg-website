@@ -52,15 +52,19 @@ export const mobileStickyChromeZClassName = 'max-sm:z-30';
 export const pageFloatingZClassName = 'z-39';
 
 /**
- * Full-screen overlays (modals, search, sheets).
+ * Full-screen overlays (bottom sheets, search, standalone dialogs).
  * Above sticky section headings (z-20), page titles (z-30), the tab bar (z-35),
- * and the site header (z-40). A dialog opened on top of a modal uses z-70.
+ * and the site header (z-40). The shared app `Modal` uses z-70 so it stacks above
+ * bottom sheets when opened from manage flows.
  * In-page dialogs must portal to `document.body`. A local stacking context
  * (the profile hero is z-10) would otherwise paint them under sticky headings.
  */
 export const modalOverlayZClassName = 'z-60';
 
 export const nestedModalOverlayZClassName = 'z-70';
+
+/** Body-portaled pickers (tag search, autocomplete) while the app modal (z-70) is open. */
+export const modalPopoverZClassName = 'z-[71]';
 
 export const mobileTabBarZClassName = 'max-sm:z-35';
 

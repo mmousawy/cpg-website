@@ -181,13 +181,18 @@ export const photosFAQ: FAQSection = {
           <p
             className="mb-3"
           >
-            On a photo you own, use
+            Open
+            {' '}
+            <strong>
+              Account → Photos
+            </strong>
+            , select a photo, and choose
             {' '}
             <strong>
               Tag people
             </strong>
             {' '}
-            on the image. Click a spot to place a tag, then choose a member from the nickname search. Each person can only appear once per photo; picking them again moves the dot. Tags show as dots on the photo detail page — hover for a profile card. The sidebar lists everyone tagged on that photo.
+            to open a larger view. Click a spot on the image, then choose a member from the nickname search. Each person can only appear once per photo; picking them again moves the dot. On the public photo page, tags show as dots on the image (hover for a profile card) and in the sidebar list — you cannot place new tags there.
           </p>
           <p
             className="mb-3"
@@ -198,7 +203,7 @@ export const photosFAQ: FAQSection = {
               Notifications
             </strong>
             {' '}
-            on). Site admins can tag on any photo the same way owners can. Tagged members, owners, and admins can remove a tag from the sidebar or from the dot (where shown).
+            on). Tagged members, owners, and admins can remove a tag from the photo page sidebar or from the manage sidebar.
           </p>
           <p>
             Tags are not shown in gallery grids or the fullscreen zoom view. Public photos you are tagged in appear in the

@@ -253,4 +253,63 @@ test.describe('Photo Management Flow', () => {
 
     console.log('✅ Bulk photo selection test completed successfully');
   });
+
+  test('filters the library to public photos and clears the filter', async ({ page, memberUser }) => {
+    test.setTimeout(60_000);
+    await loginTestUser(page, memberUser.email, memberUser.password);
+    await page.goto('/account/photos');
+    await deleteAllPhotos(page);
+
+    const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
+    await photosUploadInput(page).setInputFiles(testImagePath);
+    const photoCards = page.locator('[data-testid="photo-card"]');
+    await expect(photoCards).toHaveCount(1, { timeout: 30_000 });
+    await dismissDriverTour(page);
+
+    await page.getByRole('button', { name: 'Filter photos' }).first().click();
+    const dialog = page.locator('dialog[open]');
+    await expect(dialog.getByRole('heading', { name: 'Filter photos' })).toBeVisible();
+    await dialog.getByRole('combobox', { name: /visibility/i }).click();
+    await page.getByRole('option', { name: 'Public', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+
+    await expect(page.getByText('No photos match your filters')).toBeVisible();
+    await page.getByRole('button', { name: 'Clear filters' }).click();
+    await expect(photoCards).toHaveCount(1, { timeout: 15_000 });
+
+    await deleteAllPhotos(page);
+  });
+
+  test('opens capture details and the map picker', async ({ page, memberUser }) => {
+    test.setTimeout(60_000);
+    await loginTestUser(page, memberUser.email, memberUser.password);
+    await page.goto('/account/photos');
+    await deleteAllPhotos(page);
+
+    const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
+    await photosUploadInput(page).setInputFiles(testImagePath);
+    const photoCard = page.locator('[data-testid="photo-card"]').first();
+    await expect(photoCard).toBeVisible({ timeout: 30_000 });
+    await dismissDriverTour(page);
+    await photoCard.click();
+
+    const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
+    await expect(sidebar).toBeVisible();
+    await sidebar.getByRole('button', { name: 'Edit capture details' }).click();
+    await expect(page.getByRole('heading', { name: 'Capture details', exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Choose on map' }).click();
+    const mapDialog = page.locator('dialog[open]').filter({
+      has: page.getByRole('heading', { name: 'Choose location' }),
+    });
+    await expect(mapDialog.getByRole('heading', { name: 'Choose location' })).toBeVisible({
+      timeout: 15_000,
+    });
+    await mapDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(mapDialog).not.toBeVisible();
+
+    await page.goto('/account/photos');
+    await deleteAllPhotos(page);
+  });
 });
