@@ -24,6 +24,19 @@ export type QueuedCommentEmailItem = {
 
 const DEFAULT_DEBOUNCE_MINUTES = 15;
 
+export type MentionEmailKind = 'mention' | 'photo_tag';
+
+export type MentionEmailItem = {
+  kind: MentionEmailKind;
+  actorName: string;
+  actorNickname: string | null;
+  actorAvatarUrl: string | null;
+  actorProfileLink: string | null;
+  entityTitle: string;
+  entityLink: string;
+  contextLabel: string;
+};
+
 export async function enqueueDebouncedNotificationEmail(params: {
   recipientUserId: string;
   batchKey: string;
@@ -86,6 +99,32 @@ export async function enqueueCommentNotificationEmail(params: {
     recipientUserId: params.recipientUserId,
     batchKey,
     templateKey: EMAIL_TEMPLATE_KEYS.commentNotification,
+    item: params.item as unknown as Json,
+    emailType: 'notifications',
+    notificationId: params.notificationId,
+    debounceMinutes: params.debounceMinutes,
+  });
+}
+
+export async function enqueueMentionNotificationEmail(params: {
+  recipientUserId: string;
+  entityId: string;
+  notificationId?: string;
+  item: MentionEmailItem;
+  batchEntityType?: string;
+  debounceMinutes?: number;
+}): Promise<void> {
+  if (await userIdsIncludeTestUser(params.recipientUserId)) {
+    return;
+  }
+
+  const batchEntityType = params.batchEntityType ?? 'mention';
+  const batchKey = buildNotificationEmailBatchKey(batchEntityType, params.entityId);
+
+  await enqueueDebouncedNotificationEmail({
+    recipientUserId: params.recipientUserId,
+    batchKey,
+    templateKey: EMAIL_TEMPLATE_KEYS.mentionNotification,
     item: params.item as unknown as Json,
     emailType: 'notifications',
     notificationId: params.notificationId,

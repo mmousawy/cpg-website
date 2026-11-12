@@ -29,6 +29,7 @@ import {
   getProfileStats,
   getUserPublicPhotoCount,
   getUserPublicPhotos,
+  getPhotosTaggedWithMember,
 } from '@/lib/data/profiles';
 import { ensureStaticParams } from '@/lib/staticParams';
 import {
@@ -124,12 +125,13 @@ async function ProfileContent({ nickname }: { nickname: string }) {
 
   const profile: ProfileData = loadedProfile;
 
-  const [albums, publicPhotos, totalPhotos, followCounts, gearProfile] = await Promise.all([
+  const [albums, publicPhotos, totalPhotos, followCounts, gearProfile, taggedPhotos] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname),
     getUserPublicPhotos(profile.id, nickname, PROFILE_PHOTOSTREAM_FETCH_LIMIT),
     getUserPublicPhotoCount(profile.id, nickname),
     getProfileFollowCounts(profile.id),
     getUserGearByNickname(nickname, includeTestContent),
+    getPhotosTaggedWithMember(profile.id, nickname),
   ]);
 
   // Fetch stats using cached data function
@@ -266,6 +268,36 @@ async function ProfileContent({ nickname }: { nickname: string }) {
               </Button>
             </div>
           )}
+        </WidePageContainer>
+      )}
+
+      {taggedPhotos.length > 0 && (
+        <WidePageContainer
+          className="pt-0!"
+        >
+          <DensityAwarePhotoGrid
+            photos={taggedPhotos.map((photo) => ({
+              ...photo,
+              profile: photo.profile,
+            })) as StreamPhoto[]}
+            profileNickname={profile.nickname || nickname}
+            showAttribution
+            header={(
+              <StickySectionHeading
+                as="div"
+                stickyClassName="mb-6 sm:mb-6"
+              >
+                <h2
+                  className="text-xl font-semibold font-heading"
+                >Tagged</h2>
+                <p
+                  className="text-sm text-foreground/80 leading-snug"
+                >
+                  Photos this member is tagged in
+                </p>
+              </StickySectionHeading>
+            )}
+          />
         </WidePageContainer>
       )}
 

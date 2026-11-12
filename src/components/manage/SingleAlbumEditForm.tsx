@@ -4,13 +4,13 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import TagInput from '@/components/shared/TagInput';
-import Textarea from '@/components/shared/Textarea';
+import MentionField from '@/components/shared/MentionField';
 import Toggle from '@/components/shared/Toggle';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbum } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import AlbumListItem from './AlbumListItem';
 import LinkedEventSection from './LinkedEventSection';
@@ -439,11 +439,17 @@ export default function SingleAlbumEditForm({
           >
             Description
           </label>
-          <Textarea
-            id="description"
-            {...register('description')}
-            rows={4}
-            placeholder="Tell us about this album..."
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <MentionField
+                id="description"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                rows={3}
+              />
+            )}
           />
         </div>
 

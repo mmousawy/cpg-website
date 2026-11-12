@@ -258,6 +258,52 @@ export async function getUserPublicPhotoCount(userId: string, nickname: string) 
 }
 
 /**
+ * Public photos where this member is tagged.
+ */
+export async function getPhotosTaggedWithMember(userId: string, nickname: string) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag(`profile-${nickname}`);
+
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from('photo_member_tags')
+    .select(`
+      photos!inner(
+        id, short_id, url, blurhash, width, height, title, likes_count, created_at, user_id,
+        profile:profiles!photos_user_id_fkey(nickname, full_name, avatar_url)
+      )
+    `)
+    .eq('profile_id', userId)
+    .limit(24);
+
+  return (data ?? []).flatMap((row) => {
+    const photo = row.photos as {
+      id: string;
+      short_id: string;
+      url: string;
+      blurhash: string | null;
+      width: number;
+      height: number;
+      title: string | null;
+      likes_count: number | null;
+      created_at: string;
+      user_id: string;
+      profile: { nickname: string | null; full_name: string | null; avatar_url: string | null } | null;
+    } | null;
+    if (!photo?.profile?.nickname) return [];
+    return [{
+      ...photo,
+      profile: {
+        nickname: photo.profile.nickname,
+        full_name: photo.profile.full_name,
+        avatar_url: photo.profile.avatar_url,
+      },
+    }];
+  });
+}
+
+/**
  * Get public profile stats
  * Tagged with specific profile tag for granular invalidation
  */

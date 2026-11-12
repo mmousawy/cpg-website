@@ -10,7 +10,7 @@ import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
-import Textarea from '@/components/shared/Textarea';
+import MentionField from '@/components/shared/MentionField';
 import Toggle from '@/components/shared/Toggle';
 import { routes } from '@/config/routes';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
@@ -458,10 +458,17 @@ export default function SinglePhotoEditForm({
             >
               Description
             </label>
-            <Textarea
-              id={`description-${photo.id}`}
-              {...register('description')}
-              rows={3}
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <MentionField
+                  id={`description-${photo.id}`}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  rows={3}
+                />
+              )}
             />
           </div>
 

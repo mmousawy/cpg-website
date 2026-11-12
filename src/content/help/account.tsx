@@ -14,6 +14,51 @@ export const accountFAQ: FAQSection = {
       ),
     },
     {
+      id: 'member-tagging',
+      title: 'Who can tag or @mention you',
+      content: (
+        <>
+          <p
+            className="mb-3"
+          >
+            Under Account → Your public profile, the checkbox
+            {' '}
+            <strong>
+              Allow other members to tag you in comments, descriptions, and photos
+            </strong>
+            {' '}
+            controls whether others can @mention you or place a spot tag on your photos. It is on by default for existing members.
+          </p>
+          <p
+            className="mb-3"
+          >
+            When you turn it off, other people no longer see you in mention or tag pickers, existing @mentions in text stay as plain words (no link), and dots on photos are removed. Comment and description text is not rewritten. You can still @mention yourself and, on photos you own, tag yourself.
+          </p>
+          <p>
+            This setting is separate from email: turning off
+            {' '}
+            <strong>
+              Notifications
+            </strong>
+            {' '}
+            under Email preferences only stops mention and tag emails and similar activity mail — it does not block others from tagging you. See
+            {' '}
+            <strong>
+              Mentioning members (@nickname)
+            </strong>
+            {' '}
+            and
+            {' '}
+            <strong>
+              Tagging people on a photo
+            </strong>
+            {' '}
+            in the Photos &amp; gallery help section for how mentions and photo tags work.
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'change-password',
       title: 'Changing your password',
       content: (
@@ -65,7 +110,7 @@ export const accountFAQ: FAQSection = {
                 Notifications
               </strong>
               {' '}
-              — When someone comments on your photos, albums, or replies to your comments.
+              — When someone comments on your photos or albums, replies to your comments, @mentions you, or tags you on a photo. In-app notifications for these always arrive; this toggle controls the follow-up email (about 15 minutes later if you have not opened the notification yet).
             </li>
             <li>
               <strong>

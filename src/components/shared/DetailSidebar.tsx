@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
+import MentionText from './MentionText';
 
 type DetailSidebarProps = {
   children: ReactNode;
@@ -70,9 +71,11 @@ export function DetailSidebarAuthor({ children }: { children: ReactNode }) {
 export function DetailSidebarTitle({
   title,
   description,
+  authorId,
 }: {
   title?: ReactNode;
   description?: string | null;
+  authorId?: string | null;
 }) {
   if (!title && !description) return null;
 
@@ -91,7 +94,10 @@ export function DetailSidebarTitle({
         <p
           className="whitespace-pre-wrap text-base opacity-80 md:text-sm"
         >
-          {description}
+          <MentionText
+            text={description}
+            authorId={authorId}
+          />
         </p>
       ) : null}
     </div>

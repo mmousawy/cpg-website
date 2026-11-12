@@ -8,7 +8,7 @@ import SharedAlbumMemberList, { membersFromPhotoContributors } from '@/component
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import TagInput from '@/components/shared/TagInput';
-import Textarea from '@/components/shared/Textarea';
+import MentionField from '@/components/shared/MentionField';
 import Toggle from '@/components/shared/Toggle';
 import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,7 +23,7 @@ import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbum, confirmDisableAlbumSharing } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import AlbumListItem from './AlbumListItem';
 import LinkedEventSection from './LinkedEventSection';
@@ -494,11 +494,18 @@ export default function SharedAlbumEditForm({
           >
             Description
           </label>
-          <Textarea
-            id="description"
-            {...register('description')}
-            rows={4}
-            placeholder="Describe this shared album..."
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <MentionField
+                id="description"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                rows={4}
+                placeholder="Describe this shared album..."
+              />
+            )}
           />
         </div>
 

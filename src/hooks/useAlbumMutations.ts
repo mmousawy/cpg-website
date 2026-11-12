@@ -66,9 +66,25 @@ export function useCreateAlbum(userId: string | undefined, nickname: string | nu
         await revalidateAlbum(nickname, newAlbum.slug);
       }
 
+      if (newAlbum) {
+        await syncAlbumMentions(newAlbum.id);
+      }
+
       return newAlbum;
     },
   });
+}
+
+async function syncAlbumMentions(albumId: string) {
+  try {
+    await fetch('/api/mentions/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sourceType: 'album', sourceId: albumId }),
+    });
+  } catch (error) {
+    console.error('Failed to sync album mentions:', error);
+  }
 }
 
 export function useUpdateAlbum(userId: string | undefined, nickname: string | null | undefined) {
@@ -161,6 +177,8 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
       if (nickname) {
         await revalidateAlbum(nickname, data.slug);
       }
+
+      await syncAlbumMentions(albumId);
 
       return { albumId, data };
     },

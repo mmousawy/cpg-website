@@ -2,6 +2,7 @@ import { render } from '@react-email/render';
 import { Section } from '@react-email/components';
 
 import { CommentNotificationEmail, getCommentNotificationSubject } from '@/emails/comment-notification';
+import { MentionNotificationEmail, getMentionNotificationSubject } from '@/emails/mention-notification';
 import { FeedbackNotificationEmail } from '@/emails/feedback-notification';
 import EmailButton from '@/emails/components/EmailButton';
 import EmailHeading from '@/emails/components/EmailHeading';
@@ -23,7 +24,7 @@ import type {
   QueuedSubmissionResultItem,
 } from '@/lib/email/debouncedEmailItems';
 import { EMAIL_TEMPLATE_KEYS, type EmailTemplateKey } from '@/lib/email/templateKeys';
-import type { QueuedCommentEmailItem } from '@/lib/notifications/emailQueue';
+import type { MentionEmailItem, QueuedCommentEmailItem } from '@/lib/notifications/emailQueue';
 
 export type DebouncedEmailRenderContext = {
   recipientEmail: string;
@@ -56,6 +57,28 @@ export async function renderDebouncedEmailBatch(
   }
 
   switch (templateKey) {
+    case EMAIL_TEMPLATE_KEYS.mentionNotification: {
+      const mentionItems = parseItems<MentionEmailItem>(items).map((item) => ({
+        ...item,
+        entityLink: toAbsoluteEmailUrl(item.entityLink),
+        actorProfileLink: item.actorProfileLink
+          ? toAbsoluteEmailUrl(item.actorProfileLink)
+          : null,
+      }));
+      return {
+        subject: getMentionNotificationSubject(mentionItems),
+        html: await render(
+          MentionNotificationEmail({
+            recipientName: context.recipientName,
+            recipientEmail: context.recipientEmail,
+            items: mentionItems,
+            optOutLink: context.optOutLink,
+          }),
+        ),
+        listUnsubscribe: context.optOutLink,
+      };
+    }
+
     case EMAIL_TEMPLATE_KEYS.commentNotification: {
       const commentItems = parseItems<QueuedCommentEmailItem>(items).map((item) => ({
         ...item,

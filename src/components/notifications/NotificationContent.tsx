@@ -71,6 +71,10 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   comment_challenge: CommentSVG,
   comment_scene_event: CommentSVG,
   comment_reply: CommentSVG,
+  mention_comment: CommentSVG,
+  mention_photo: CommentSVG,
+  mention_album: CommentSVG,
+  photo_member_tag: UsersMicroSVG,
   follow: HeartSVG,
   followed_upload: PhotoStackSVG,
   event_reminder: CalendarSVG,
@@ -102,6 +106,10 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
   comment_challenge: (actor, data) => formatCommentMessage(actor, data, 'the challenge'),
   comment_scene_event: (actor, data) => formatCommentMessage(actor, data, 'a Scene event'),
   comment_reply: (actor, data) => formatReplyMessage(actor, data),
+  mention_comment: (actor, data) => `${actor || 'Someone'} mentioned you in a comment${data?.title ? ` on ${data.title}` : ''}`,
+  mention_photo: (actor, data) => `${actor || 'Someone'} mentioned you in a photo description${data?.title ? ` on ${data.title}` : ''}`,
+  mention_album: (actor, data) => `${actor || 'Someone'} mentioned you in an album description${data?.title ? ` on ${data.title}` : ''}`,
+  photo_member_tag: (actor, data) => `${actor || 'Someone'} tagged you in a photo${data?.title ? `: ${data.title}` : ''}`,
   follow: (actor) => `${actor || 'Someone'} started following you`,
   followed_upload: (actor, data) => {
     const count = (data?.photoCount as number) || 1;

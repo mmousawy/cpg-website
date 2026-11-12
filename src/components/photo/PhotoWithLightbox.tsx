@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import BlurImage from '../shared/BlurImage';
 import LoadingSpinner from '../shared/LoadingSpinner';
+import { PhotoMemberTagLayer } from './PhotoMemberTags';
 
 function keepLightboxKeysOffThePage(lightbox: PhotoSwipeLightboxInstance) {
   lightbox.on('keydown', (event) => {
@@ -37,6 +38,8 @@ type PhotoWithLightboxProps = {
   albumSlug?: string;
   /** Event/challenge context: base path (e.g. /events/my-event) */
   basePath?: string;
+  /** When set, member spot-tags can be shown and edited on this photo */
+  photoId?: string;
 };
 
 export default function PhotoWithLightbox({
@@ -51,6 +54,7 @@ export default function PhotoWithLightbox({
   nickname,
   albumSlug,
   basePath,
+  photoId,
 }: PhotoWithLightboxProps) {
   const galleryRef = useRef<HTMLDivElement>(null);
   const imageAnchorRef = useRef<HTMLAnchorElement>(null);
@@ -269,33 +273,40 @@ export default function PhotoWithLightbox({
         </div>
       </div>
 
-      <a
-        ref={imageAnchorRef}
-        href={url}
-        data-pswp-src={url}
-        data-pswp-width={width}
-        data-pswp-height={height}
-        onClick={hasGallery ? handleImageClick : undefined}
-        className="m-auto cursor-zoom-in!"
+      <div
+        className="relative mx-auto w-fit"
       >
-        <BlurImage
-          src={url}
-          alt={title}
-          width={width}
-          height={height}
-          blurhash={blurhash}
-          contain
-          unoptimized
-          onLoad={() => setIsLoaded(true)}
-          className={clsx(
+        <a
+          ref={imageAnchorRef}
+          href={url}
+          data-pswp-src={url}
+          data-pswp-width={width}
+          data-pswp-height={height}
+          onClick={hasGallery ? handleImageClick : undefined}
+          className="block cursor-zoom-in!"
+        >
+          <BlurImage
+            src={url}
+            alt={title}
+            width={width}
+            height={height}
+            blurhash={blurhash}
+            contain
+            unoptimized
+            onLoad={() => setIsLoaded(true)}
+            className={clsx(
             isInAlbum ? 'max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]'
               : 'max-h-[calc(100vh-90px)] sm:max-h-[calc(100vh-106px)] lg:max-h-[calc(100vh-138px)] ',
-          )}
-          style={{
+            )}
+            style={{
             aspectRatio: `${width}/${height}`,
-          }}
-        />
-      </a>
+            }}
+          />
+        </a>
+        {photoId ? <PhotoMemberTagLayer
+          photoId={photoId}
+        /> : null}
+      </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import Input from '@/components/shared/Input';
 import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
-import Textarea from '@/components/shared/Textarea';
+import MentionField from '@/components/shared/MentionField';
 import Toggle from '@/components/shared/Toggle';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
 import { useOpenPhotoExifModal } from '@/hooks/useOpenPhotoExifModal';
@@ -499,10 +499,17 @@ export default function BulkPhotoEditForm({
             >
               Description
             </label>
-            <Textarea
-              id="bulk_description"
-              {...register('description')}
-              rows={3}
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <MentionField
+                  id="bulk_description"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  rows={3}
+                />
+              )}
             />
             <p
               className="text-xs text-foreground/50"

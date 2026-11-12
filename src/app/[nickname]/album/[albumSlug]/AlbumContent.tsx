@@ -172,6 +172,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
           <DetailSidebarTitle
             title={album.title}
             description={album.description}
+            authorId={album.user_id}
           />
 
           <DetailSidebarMeta>

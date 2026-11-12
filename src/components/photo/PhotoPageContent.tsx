@@ -3,6 +3,7 @@ import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import EventMiniCard from '@/components/events/EventMiniCard';
 import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
 import PhotoExifDetails from '@/components/photo/PhotoExifDetails';
+import { PhotoMemberTagList } from '@/components/photo/PhotoMemberTags';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
@@ -132,6 +133,7 @@ export function PhotoLightboxColumn({
       nickname={nickname}
       albumSlug={albumSlug}
       basePath={basePath}
+      photoId={photo.id}
     />
   );
 }
@@ -226,6 +228,10 @@ export function PhotoMetadataColumn({
       <DetailSidebarTitle
         title={photo.title}
         description={photo.description}
+        authorId={photo.user_id}
+      />
+      <PhotoMemberTagList
+        photoId={photo.id}
       />
 
       <DetailSidebarMeta>

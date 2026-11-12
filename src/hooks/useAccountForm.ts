@@ -77,6 +77,7 @@ export const accountFormSchema = z.object({
   watermarkText: z.string().optional(),
   embedCopyrightExif: z.boolean(),
   exifCopyrightText: z.string().optional(),
+  allowMemberTags: z.boolean(),
 });
 
 export type AccountFormData = z.infer<typeof accountFormSchema>;
@@ -224,6 +225,7 @@ export function useAccountForm() {
       watermarkText: '',
       embedCopyrightExif: false,
       exifCopyrightText: '',
+      allowMemberTags: true,
     },
   });
 
@@ -428,6 +430,7 @@ export function useAccountForm() {
                 watermarkText: newProfile.watermark_text || '',
                 embedCopyrightExif: newProfile.embed_copyright_exif ?? false,
                 exifCopyrightText: newProfile.exif_copyright_text || '',
+                allowMemberTags: newProfile.allow_member_tags ?? true,
               };
               reset(formValues);
               setSavedFormValues(formValues);
@@ -482,6 +485,7 @@ export function useAccountForm() {
               watermarkText: '',
               embedCopyrightExif: false,
               exifCopyrightText: '',
+              allowMemberTags: true,
             };
             reset(formValues);
             setSavedFormValues(formValues);
@@ -562,6 +566,7 @@ export function useAccountForm() {
             watermarkText: data.watermark_text || '',
             embedCopyrightExif: data.embed_copyright_exif ?? false,
             exifCopyrightText: data.exif_copyright_text || '',
+            allowMemberTags: data.allow_member_tags ?? true,
           };
           reset(formValues);
           setSavedFormValues(formValues);
@@ -999,6 +1004,7 @@ export function useAccountForm() {
           watermark_text: data.watermarkText || null,
           embed_copyright_exif: data.embedCopyrightExif,
           exif_copyright_text: data.exifCopyrightText || null,
+          allow_member_tags: data.allowMemberTags,
         })
         .eq('id', user.id)
         .select('avatar_url, banner_url')
@@ -1027,6 +1033,7 @@ export function useAccountForm() {
             watermark_text: data.watermarkText || null,
             embed_copyright_exif: data.embedCopyrightExif,
             exif_copyright_text: data.exifCopyrightText || null,
+            allow_member_tags: data.allowMemberTags,
           })
           .eq('id', user.id)
           .select('avatar_url, banner_url')
@@ -1119,6 +1126,7 @@ export function useAccountForm() {
           watermarkText: data.watermarkText || '',
           embedCopyrightExif: data.embedCopyrightExif,
           exifCopyrightText: data.exifCopyrightText || '',
+          allowMemberTags: data.allowMemberTags,
         };
 
         // Reset form to saved values and update baseline

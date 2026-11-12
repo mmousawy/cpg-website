@@ -1,5 +1,6 @@
 export const EMAIL_TEMPLATE_KEYS = {
   commentNotification: 'comment_notification',
+  mentionNotification: 'mention_notification',
   submissionNotification: 'submission_notification',
   memberNotification: 'member_notification',
   reportNotification: 'report_notification',

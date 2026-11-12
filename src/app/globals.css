@@ -795,7 +795,8 @@ a, button, input, textarea, select, [tabindex] {
 
 input:focus-visible,
 textarea:focus-visible,
-select:focus-visible {
+select:focus-visible,
+[contenteditable]:focus-visible {
   outline: none;
 }
 
