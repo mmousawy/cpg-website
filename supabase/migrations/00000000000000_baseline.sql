@@ -2486,13 +2486,20 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  WITH search_tsquery AS (
-    SELECT to_tsquery('english',
+  WITH normalized_query AS (
+    SELECT regexp_replace(btrim(search_query), '-', ' ', 'g') AS q
+  ),
+  search_tsquery AS (
+    SELECT to_tsquery(
+      'english',
       regexp_replace(
-        regexp_replace(search_query, '\s+', ' & ', 'g'),
+        regexp_replace((SELECT q FROM normalized_query), '\s+', ' & ', 'g'),
         '(\w+)', '\1:*', 'g'
       )
     ) AS query
+  ),
+  nickname_handle AS (
+    SELECT replace(btrim(search_query), ' ', '-') AS handle
   ),
   all_results AS (
     SELECT
@@ -2503,13 +2510,21 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
       p.avatar_url AS image_url,
       NULL::text AS image_blurhash,
       CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname ELSE NULL END AS url,
-      ts_rank(p.search_vector, sq.query) AS rank
+      CASE
+        WHEN p.search_vector @@ sq.query THEN ts_rank(p.search_vector, sq.query)
+        ELSE 0.85::real
+      END AS rank
     FROM profiles p
     CROSS JOIN search_tsquery sq
+    CROSS JOIN nickname_handle nh
     WHERE 'members' = ANY(search_types)
       AND p.suspended_at IS NULL
       AND p.nickname IS NOT NULL
-      AND p.search_vector @@ sq.query
+      AND length(btrim(search_query)) >= 2
+      AND (
+        p.search_vector @@ sq.query
+        OR p.nickname ILIKE nh.handle || '%'
+      )
 
     UNION ALL
 
@@ -2651,7 +2666,7 @@ $$;
 ALTER FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) OWNER TO "supabase_admin";
 
 
-COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search across albums, photos, members, events, scene events, challenges, and tags. SECURITY DEFINER with explicit public-only filters.';
+COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search. Hyphenated nicknames normalized for FTS; member handle prefix fallback.';
 
 
 
@@ -4601,7 +4616,6 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "theme" "text" DEFAULT 'system'::"text",
     "newsletter_opt_in" boolean DEFAULT false NOT NULL,
     "terms_accepted_at" timestamp with time zone,
-    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("full_name", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("nickname", ''::"text")), 'A'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("bio", ''::"text")), 'B'::"char"))) STORED,
     "default_license" "public"."license_type" DEFAULT 'all-rights-reserved'::"public"."license_type" NOT NULL,
     "copyright_name" "text",
     "watermark_enabled" boolean DEFAULT false NOT NULL,
@@ -4625,6 +4639,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "deletion_source" "text",
     "is_service_account" boolean DEFAULT false NOT NULL,
     "allow_member_tags" boolean DEFAULT true NOT NULL,
+    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("full_name", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("replace"("nickname", '-'::"text", ' '::"text"), ''::"text")), 'A'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("bio", ''::"text")), 'B'::"char"))) STORED,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_deletion_source_check" CHECK ((("deletion_source" IS NULL) OR ("deletion_source" = ANY (ARRAY['self'::"text", 'admin'::"text", 'inactivity'::"text", 'suspension'::"text"])))),
