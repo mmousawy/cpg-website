@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import Avatar, { SIZE_MAP } from '@/components/auth/Avatar';
+import MemberHoverCard from './MemberHoverCard';
 import Popover from './Popover';
 
 const DEFAULT_MAX_VISIBLE_AVATARS = 12;
@@ -288,28 +289,19 @@ export default function StackedAvatarsPopover({
             className="space-y-1"
           >
             {people.map((person) => {
-              const Wrapper = person.nickname && !disableLinks ? Link : 'div';
-              const wrapperProps = person.nickname && !disableLinks
-                ? {
-                    href: `/@${person.nickname}`,
-                    className: 'group flex items-center gap-2 p-1.5 rounded hover:bg-background transition-colors',
-                    onClick: () => setIsOpen(false),
-                  }
-                : {
-                    className: 'flex items-center gap-2 p-1.5',
-                  };
-
-              return (
-                <Wrapper
-                  key={person.id}
-                  {...(wrapperProps as any)}
+              const canLink = Boolean(person.nickname && !disableLinks);
+              const row = (
+                <div
+                  className={canLink
+                    ? 'group flex items-center gap-2 p-1.5 rounded hover:bg-background transition-colors'
+                    : 'flex items-center gap-2 p-1.5'}
                 >
                   <Avatar
                     avatarUrl={person.avatarUrl}
                     fullName={person.fullName}
                     nickname={person.nickname}
                     size="xs"
-                    hoverEffect={!!person.nickname && !disableLinks}
+                    hoverEffect={canLink}
                   />
                   <div
                     className="flex-1 min-w-0"
@@ -328,7 +320,33 @@ export default function StackedAvatarsPopover({
                       </p>
                     )}
                   </div>
-                </Wrapper>
+                </div>
+              );
+
+              if (!canLink || !person.nickname) {
+                return (
+                  <div
+                    key={person.id}
+                  >
+                    {row}
+                  </div>
+                );
+              }
+
+              return (
+                <MemberHoverCard
+                  key={person.id}
+                  nickname={person.nickname}
+                  fullName={person.fullName}
+                  avatarUrl={person.avatarUrl}
+                >
+                  <Link
+                    href={`/@${person.nickname}`}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {row}
+                  </Link>
+                </MemberHoverCard>
               );
             })}
           </div>

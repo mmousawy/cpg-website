@@ -14,6 +14,7 @@ import { memo, useCallback, useEffect, useState, type ReactNode } from 'react';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
 import CommentActionsPopover from './CommentActionsPopover';
+import MemberHoverCard from './MemberHoverCard';
 import Textarea from './Textarea';
 
 import SendSVG from 'public/icons/arrow-right.svg';
@@ -191,12 +192,18 @@ function ComposerCard({
       className="bg-background-float rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
     >
       {profile?.nickname ? (
-        <Link
-          href={`/@${profile.nickname}`}
-          className="inline-flex items-center gap-2.5 mb-2 group rounded-lg"
+        <MemberHoverCard
+          nickname={profile.nickname}
+          fullName={profile.full_name}
+          avatarUrl={profile.avatar_url}
         >
-          {profileHeader}
-        </Link>
+          <Link
+            href={`/@${profile.nickname}`}
+            className="inline-flex items-center gap-2.5 mb-2 group rounded-lg"
+          >
+            {profileHeader}
+          </Link>
+        </MemberHoverCard>
       ) : (
         <div
           className="flex gap-2.5 mb-2"
@@ -447,32 +454,56 @@ const CommentItem = memo(function CommentItem({
         <div
           className="flex items-start justify-between gap-2 mb-2"
         >
-          <Link
-            href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'}
-            className="flex gap-2.5 items-center group rounded-lg"
-          >
-            <Avatar
-              avatarUrl={comment.profile?.avatar_url}
-              fullName={comment.profile?.full_name}
-              hoverEffect
-              size="sm"
-            />
-            <div>
-              <p
-                className="text-sm font-medium group-hover:text-primary transition-colors leading-tight"
+          {comment.profile?.nickname ? (
+            <MemberHoverCard
+              nickname={comment.profile.nickname}
+              fullName={comment.profile.full_name}
+              avatarUrl={comment.profile.avatar_url}
+            >
+              <Link
+                href={`/@${comment.profile.nickname}`}
+                className="flex gap-2.5 items-center group rounded-lg"
               >
-                {comment.profile?.full_name || 'Anonymous'}
-              </p>
-              {comment.profile?.nickname && (
+                <Avatar
+                  avatarUrl={comment.profile.avatar_url}
+                  fullName={comment.profile.full_name}
+                  hoverEffect
+                  size="sm"
+                />
+                <div>
+                  <p
+                    className="text-sm font-medium group-hover:text-primary transition-colors leading-tight"
+                  >
+                    {comment.profile.full_name || 'Anonymous'}
+                  </p>
+                  <p
+                    className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
+                  >
+                    @
+                    {comment.profile.nickname}
+                  </p>
+                </div>
+              </Link>
+            </MemberHoverCard>
+          ) : (
+            <div
+              className="flex gap-2.5 items-center rounded-lg"
+            >
+              <Avatar
+                avatarUrl={comment.profile?.avatar_url}
+                fullName={comment.profile?.full_name}
+                hoverEffect
+                size="sm"
+              />
+              <div>
                 <p
-                  className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
+                  className="text-sm font-medium leading-tight"
                 >
-                  @
-                  {comment.profile.nickname}
+                  {comment.profile?.full_name || 'Anonymous'}
                 </p>
-              )}
+              </div>
             </div>
-          </Link>
+          )}
           <div
             className="flex items-center gap-2"
           >

@@ -13,6 +13,8 @@ import { getScrollContainer, isMobilePinnedShell } from '@/utils/scrollContainer
 const PULL_THRESHOLD_PX = 72;
 const MAX_PULL_PX = 120;
 const REFRESH_HOLD_MS = 800;
+/** Wait until the finger has moved this far before choosing an axis. */
+const AXIS_LOCK_PX = 10;
 
 function RefreshIcon({ className }: { className?: string }) {
   return (
@@ -47,6 +49,7 @@ export default function MobilePullToRefresh() {
   const router = useRouter();
   const [pullPx, setPullPx] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const touchStartXRef = useRef(0);
   const touchStartYRef = useRef(0);
   // "candidate": finger is down at the top of the scroller but we haven't
   // detected a downward pull yet, so native scroll (upward swipe) is still
@@ -65,7 +68,9 @@ export default function MobilePullToRefresh() {
     if (!container.contains(e.target as Node)) return;
     if (container.scrollTop > 0) return;
 
-    touchStartYRef.current = e.touches[0]?.clientY ?? 0;
+    const touch = e.touches[0];
+    touchStartXRef.current = touch?.clientX ?? 0;
+    touchStartYRef.current = touch?.clientY ?? 0;
     candidateRef.current = true;
     pullingRef.current = false;
   }, []);
@@ -73,18 +78,27 @@ export default function MobilePullToRefresh() {
   const onTouchMove = useCallback((e: TouchEvent) => {
     if (!candidateRef.current && !pullingRef.current) return;
 
-    const y = e.touches[0]?.clientY ?? 0;
+    const touch = e.touches[0];
+    const x = touch?.clientX ?? 0;
+    const y = touch?.clientY ?? 0;
+    const deltaX = x - touchStartXRef.current;
     const rawDelta = y - touchStartYRef.current;
 
     if (!pullingRef.current) {
-      // Still in the candidate window: if the user swipes up (or barely
-      // moves), let native scrolling take over and drop the gesture entirely.
-      // Only activate the pull once they've moved down past a small slop.
-      const ACTIVATION_SLOP_PX = 6;
-      if (rawDelta <= ACTIVATION_SLOP_PX) {
-        if (rawDelta < 0) {
-          candidateRef.current = false;
-        }
+      // Sliders claim a gesture once sideways travel wins. A diagonal drag
+      // still moves down, so deciding on downward distance alone shows the
+      // refresh indicator while the slider is moving. Stay quiet until the
+      // finger is clearly pulling down, and drop the gesture if it is not.
+      const absX = Math.abs(deltaX);
+      if (rawDelta < 0 && (rawDelta < -AXIS_LOCK_PX || absX > AXIS_LOCK_PX)) {
+        candidateRef.current = false;
+        return;
+      }
+      if (absX >= AXIS_LOCK_PX && absX >= rawDelta) {
+        candidateRef.current = false;
+        return;
+      }
+      if (rawDelta < AXIS_LOCK_PX || absX >= rawDelta) {
         return;
       }
       // Also bail out if the scroller has moved off the top (e.g. inertial
@@ -200,8 +214,8 @@ export default function MobilePullToRefresh() {
             refreshing
               ? undefined
               : {
-                  transform: `rotate(${progress * 360}deg)`,
-                  transition: isPulling ? 'none' : 'transform 220ms ease',
+                transform: `rotate(${progress * 360}deg)`,
+                transition: isPulling ? 'none' : 'transform 220ms ease',
           }
           }
         >

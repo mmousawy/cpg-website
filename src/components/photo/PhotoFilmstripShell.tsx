@@ -42,6 +42,8 @@ function readTranslateX(element: HTMLElement | null): number {
 
 const SWIPE_SNAP_MS = 250;
 const SWIPE_RUBBER_BAND = 0.32;
+/** Background visible between the current photo and the one sliding in. */
+const SWIPE_GAP_PX = 16;
 
 function PhotoFilmstripShellInner({
   siblingPhotos,
@@ -356,7 +358,8 @@ function PhotoFilmstripShellInner({
       return;
     }
     setSwipeLocked(true);
-    const target = direction === 'next' ? -width : width;
+    const distance = width + SWIPE_GAP_PX;
+    const target = direction === 'next' ? -distance : distance;
     animateSwipeTo(target, {
       onDone: () => {
         // Navigate only after the old photo is off-screen. Committing earlier
@@ -449,8 +452,9 @@ function PhotoFilmstripShellInner({
       if (cancelled) return;
       // Bring the real photo on-screen UNDER the overlay first. Lifting in the
       // same turn leaves the first on-screen paint of children uncovered —
-      // they were sitting at ±100% width (especially +width for prev) and
-      // often haven't been rasterized yet, which flashes blurhash/blank.
+      // they were sitting a slide away, plus the gap (especially to the right
+      // for prev) and often haven't been rasterized yet, which flashes
+      // blurhash/blank.
       resetSwipeTransforms();
       const img = photoContainerRef.current?.querySelector('#gallery img');
       const reveal = () => {
@@ -528,7 +532,9 @@ function PhotoFilmstripShellInner({
                 ref={overlayCallbackRef}
                 className="absolute inset-0 flex items-center justify-center bg-background"
                 style={{
-                  transform: peekOrigin === 'left' ? 'translateX(-100%)' : 'translateX(100%)',
+                  transform: peekOrigin === 'left'
+                    ? `translateX(calc(-100% - ${SWIPE_GAP_PX}px))`
+                    : `translateX(calc(100% + ${SWIPE_GAP_PX}px))`,
                 }}
               >
                 <BlurImage

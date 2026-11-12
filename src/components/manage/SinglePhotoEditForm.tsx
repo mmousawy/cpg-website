@@ -6,6 +6,7 @@ import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
+import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
@@ -330,12 +331,18 @@ export default function SinglePhotoEditForm({
                 className="min-w-0 flex-1 flex flex-col"
               >
                 {photo.owner_profile.nickname ? (
-                  <Link
-                    href={`/@${photo.owner_profile.nickname}`}
-                    className="font-medium text-foreground hover:text-primary truncate"
+                  <MemberHoverCard
+                    nickname={photo.owner_profile.nickname}
+                    fullName={photo.owner_profile.full_name}
+                    avatarUrl={photo.owner_profile.avatar_url}
                   >
-                    {photo.owner_profile.full_name || `@${photo.owner_profile.nickname}`}
-                  </Link>
+                    <Link
+                      href={`/@${photo.owner_profile.nickname}`}
+                      className="font-medium text-foreground hover:text-primary truncate"
+                    >
+                      {photo.owner_profile.full_name || `@${photo.owner_profile.nickname}`}
+                    </Link>
+                  </MemberHoverCard>
                 ) : (
                   <span
                     className="font-medium truncate"

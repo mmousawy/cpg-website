@@ -8,6 +8,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import HelpLink from '@/components/shared/HelpLink';
+import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import { RichDescription } from '@/components/shared/RichDescription';
 import ShareButton from '@/components/shared/ShareButton';
 import { SignUpCTASection } from '@/components/shared/SignUpCTA';
@@ -470,35 +471,57 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
               <div
                 className="flex flex-wrap gap-4"
               >
-                {hosts.map((host) => (
-                  <Link
-                    key={host.id}
-                    href={host.nickname ? `/@${host.nickname}` : '#'}
-                    className="flex items-center gap-3 rounded-lg group"
-                  >
-                    <Avatar
-                      avatarUrl={host.avatar_url}
-                      fullName={host.full_name}
-                      size="md"
-                      hoverEffect
-                    />
-                    <div>
-                      <p
-                        className="font-medium group-hover:text-primary transition-colors leading-tight"
-                      >
-                        {host.full_name || 'Host'}
-                      </p>
-                      {host.nickname && (
+                {hosts.map((host) => {
+                  const hostLink = (
+                    <Link
+                      href={host.nickname ? `/@${host.nickname}` : '#'}
+                      className="flex items-center gap-3 rounded-lg group"
+                    >
+                      <Avatar
+                        avatarUrl={host.avatar_url}
+                        fullName={host.full_name}
+                        size="md"
+                        hoverEffect
+                      />
+                      <div>
                         <p
-                          className="text-sm opacity-70 group-hover:opacity-100 group-hover:text-primary transition-colors"
+                          className="font-medium group-hover:text-primary transition-colors leading-tight"
                         >
-                          @
-                          {host.nickname}
+                          {host.full_name || 'Host'}
                         </p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
+                        {host.nickname && (
+                          <p
+                            className="text-sm opacity-70 group-hover:opacity-100 group-hover:text-primary transition-colors"
+                          >
+                            @
+                            {host.nickname}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  );
+
+                  if (!host.nickname) {
+                    return (
+                      <div
+                        key={host.id}
+                      >
+                        {hostLink}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <MemberHoverCard
+                      key={host.id}
+                      nickname={host.nickname}
+                      fullName={host.full_name}
+                      avatarUrl={host.avatar_url}
+                    >
+                      {hostLink}
+                    </MemberHoverCard>
+                  );
+                })}
               </div>
             </div>
           )}

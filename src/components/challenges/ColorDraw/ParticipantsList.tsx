@@ -1,6 +1,7 @@
 'use client';
 
 import Avatar from '@/components/auth/Avatar';
+import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import { getColorLabel } from '@/lib/colorDraw';
 import Link from 'next/link';
 import ColorSwatch from './ColorSwatch';
@@ -75,10 +76,32 @@ export default function ParticipantsList({ draws, onColorClick }: ParticipantsLi
                 >
                   {displayName}
                 </span>
+              ) : draw.profiles?.nickname ? (
+                <MemberHoverCard
+                  nickname={draw.profiles.nickname}
+                  fullName={draw.profiles.full_name}
+                  avatarUrl={draw.profiles.avatar_url}
+                >
+                  <Link
+                    href={`/@${draw.profiles.nickname}`}
+                    className="flex items-center gap-2 transition-colors hover:text-primary"
+                  >
+                    <Avatar
+                      avatarUrl={draw.profiles.avatar_url}
+                      fullName={draw.profiles.full_name}
+                      nickname={draw.profiles.nickname}
+                      size="xs"
+                    />
+                    <span
+                      className="truncate text-sm font-medium"
+                    >
+                      {displayName}
+                    </span>
+                  </Link>
+                </MemberHoverCard>
               ) : (
-                <Link
-                  href={draw.profiles?.nickname ? `/@${draw.profiles.nickname}` : '#'}
-                  className="flex items-center gap-2 transition-colors hover:text-primary"
+                <span
+                  className="flex items-center gap-2"
                 >
                   <Avatar
                     avatarUrl={draw.profiles?.avatar_url}
@@ -91,7 +114,7 @@ export default function ParticipantsList({ draws, onColorClick }: ParticipantsLi
                   >
                     {displayName}
                   </span>
-                </Link>
+                </span>
               )}
             </div>
           </li>
