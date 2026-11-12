@@ -10,30 +10,14 @@ test.describe('Global search', () => {
       'Search across albums, photos, members, gear, events, scene, and tags',
     )).toBeVisible();
 
-    // Search by unique full name (profile search_vector weight A), not hyphenated nickname tokens.
-    const query = memberUser.fullName;
-    const memberProfileUrl = `/@${memberUser.nickname}`;
-    const searchResponse = page.waitForResponse(
-      (res) => {
-        if (!res.url().includes('/api/search') || !res.ok()) return false;
-        const url = new URL(res.url());
-        return url.searchParams.get('q') === query;
-      },
-      { timeout: 20_000 },
-    );
+    // global_search builds a tsquery from word characters, so a hyphenated
+    // nickname is sent as separate tokens (`test 173…`).
+    const query = memberUser.nickname.replace(/-/g, ' ');
     await dialog.getByRole('searchbox').fill(query);
-    const response = await searchResponse;
-    const payload = (await response.json()) as {
-      results?: Array<{ entity_type: string; url?: string | null }>;
-    };
-    expect(
-      payload.results?.some(
-        (r) => r.entity_type === 'members' && r.url === memberProfileUrl,
-      ),
-    ).toBeTruthy();
 
-    await expect(
-      dialog.getByRole('link', { name: new RegExp(`@${memberUser.nickname}`) }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(dialog.getByRole('heading', { name: 'Members', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(dialog.locator(`a[href="/@${memberUser.nickname}"]`)).toBeVisible();
   });
 });

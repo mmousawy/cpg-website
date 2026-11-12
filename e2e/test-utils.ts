@@ -151,7 +151,6 @@ export interface TestUser {
   email: string;
   password: string;
   nickname: string;
-  fullName: string;
   userId: string;
 }
 
@@ -160,7 +159,6 @@ export type CreateTestUserOptions = {
   completeOnboarding?: boolean;
   /** When true, the profile is created with is_admin = true. */
   asAdmin?: boolean;
-  fullName?: string;
 };
 
 /**
@@ -175,7 +173,6 @@ export async function createTestUser(
   const email = generateTestEmail();
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
-  const fullName = options.fullName ?? `E2E Member ${nickname}`;
   const completeOnboarding = options.completeOnboarding !== false;
   const asAdmin = options.asAdmin === true;
 
@@ -188,7 +185,7 @@ export async function createTestUser(
   const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const response = await apiRequest.post('/api/test/setup', {
-      data: { email, password, nickname, fullName, completeOnboarding, asAdmin },
+      data: { email, password, nickname, fullName: 'Test User', completeOnboarding, asAdmin },
       headers: withInternalApiHeaders(),
     });
 
@@ -222,7 +219,6 @@ export async function createTestUser(
       email,
       password: data.password || password,
       nickname: data.nickname || nickname,
-      fullName,
       userId: data.userId,
     };
   }

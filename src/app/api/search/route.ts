@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
   try {
     const results = await searchEntities(query.trim(), types, limit, includeTestContent);
 
+    // Add cache headers for client-side caching (5 minutes)
     return NextResponse.json(
       {
         results,
@@ -43,9 +44,7 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          'Cache-Control': includeTestContent
-            ? 'private, no-store'
-            : 'public, s-maxage=300, stale-while-revalidate=600',
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
         },
       },
     );
