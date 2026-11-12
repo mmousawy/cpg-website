@@ -28,19 +28,13 @@ function mergeSearchResults(results: SearchResult[], limit: number): SearchResul
 }
 
 /**
- * Search across all entity types using PostgreSQL Full-Text Search
- * Tagged with 'search' for cache invalidation
- *
- * @param query - Search query string (minimum 2 characters)
- * @param types - Entity types to search (defaults to all)
- * @param limit - Maximum number of results (defaults to 20)
- * @returns Array of search results ordered by relevance
+ * Cached public search (test profiles are filtered out).
+ * E2E uses `includeTestContent` and bypasses this layer so results are not served from a stale entry.
  */
-export async function searchEntities(
+async function searchEntitiesCached(
   query: string,
-  types: SearchEntityType[] = ALL_SEARCH_ENTITY_TYPES,
-  limit = 20,
-  includeTestContent = false,
+  types: SearchEntityType[],
+  limit: number,
 ): Promise<SearchResult[]> {
   'use cache';
   // Cache search results for 5 minutes
@@ -48,7 +42,15 @@ export async function searchEntities(
   // 5-minute TTL; stale: 0 matches next.config search profile
   cacheLife({ stale: 0, revalidate: 300, expire: 3600 });
   cacheTag('search');
+  return performSearch(query, types, limit, false);
+}
 
+async function performSearch(
+  query: string,
+  types: SearchEntityType[],
+  limit: number,
+  includeTestContent: boolean,
+): Promise<SearchResult[]> {
   // Don't search if query is too short
   if (!query || query.trim().length < 2) {
     return [];
@@ -77,11 +79,34 @@ export async function searchEntities(
   }
 
   if (includeGear) {
-    cacheTag('user-gear');
+    if (!includeTestContent) {
+      cacheTag('user-gear');
+    }
     const grouped = await getGroupedMemberGearDiscovery(includeTestContent);
     const gearHits = searchGearPages(grouped, trimmed);
     results = [...results, ...gearHits];
   }
 
   return mergeSearchResults(results, limit);
+}
+
+/**
+ * Search across all entity types using PostgreSQL Full-Text Search
+ * Tagged with 'search' for cache invalidation
+ *
+ * @param query - Search query string (minimum 2 characters)
+ * @param types - Entity types to search (defaults to all)
+ * @param limit - Maximum number of results (defaults to 20)
+ * @returns Array of search results ordered by relevance
+ */
+export async function searchEntities(
+  query: string,
+  types: SearchEntityType[] = ALL_SEARCH_ENTITY_TYPES,
+  limit = 20,
+  includeTestContent = false,
+): Promise<SearchResult[]> {
+  if (includeTestContent) {
+    return performSearch(query, types, limit, true);
+  }
+  return searchEntitiesCached(query, types, limit);
 }
