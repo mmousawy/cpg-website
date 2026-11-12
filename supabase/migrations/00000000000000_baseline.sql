@@ -3178,6 +3178,10 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  IF nullif(current_setting('cpg.maintain_engagement_counter', true), '') IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
   IF pg_catalog.pg_trigger_depth() > 1 THEN
     RETURN NEW;
   END IF;
@@ -3262,6 +3266,10 @@ CREATE OR REPLACE FUNCTION "public"."protect_photos_engagement_columns"() RETURN
     AS $$
 BEGIN
   IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF nullif(current_setting('cpg.maintain_engagement_counter', true), '') IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
@@ -4163,11 +4171,12 @@ CREATE OR REPLACE FUNCTION "public"."update_album_likes_count"() RETURNS "trigge
     SET "search_path" TO 'public'
     AS $$
 BEGIN
+  PERFORM set_config('cpg.maintain_engagement_counter', '1', true);
   IF TG_OP = 'INSERT' THEN
-    UPDATE albums SET likes_count = likes_count + 1 WHERE id = NEW.album_id;
+    UPDATE public.albums SET likes_count = likes_count + 1 WHERE id = NEW.album_id;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    UPDATE albums SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.album_id;
+    UPDATE public.albums SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.album_id;
     RETURN OLD;
   END IF;
   RETURN NULL;
@@ -4253,11 +4262,12 @@ CREATE OR REPLACE FUNCTION "public"."update_photo_likes_count"() RETURNS "trigge
     SET "search_path" TO 'public'
     AS $$
 BEGIN
+  PERFORM set_config('cpg.maintain_engagement_counter', '1', true);
   IF TG_OP = 'INSERT' THEN
-    UPDATE photos SET likes_count = likes_count + 1 WHERE id = NEW.photo_id;
+    UPDATE public.photos SET likes_count = likes_count + 1 WHERE id = NEW.photo_id;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    UPDATE photos SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.photo_id;
+    UPDATE public.photos SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.photo_id;
     RETURN OLD;
   END IF;
   RETURN NULL;

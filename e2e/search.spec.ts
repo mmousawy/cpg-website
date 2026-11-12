@@ -13,11 +13,15 @@ test.describe('Global search', () => {
     // global_search builds a tsquery from word characters, so a hyphenated
     // nickname is sent as separate tokens (`test 173…`).
     const query = memberUser.nickname.replace(/-/g, ' ');
+    const searchResponse = page.waitForResponse(
+      (res) => res.url().includes('/api/search') && res.ok(),
+      { timeout: 20_000 },
+    );
     await dialog.getByRole('searchbox').fill(query);
+    await searchResponse;
 
-    await expect(dialog.getByRole('heading', { name: 'Members', exact: true })).toBeVisible({
-      timeout: 15_000,
+    await expect(dialog.locator(`a[href="/@${memberUser.nickname}"]`)).toBeVisible({
+      timeout: 10_000,
     });
-    await expect(dialog.locator(`a[href="/@${memberUser.nickname}"]`)).toBeVisible();
   });
 });

@@ -296,7 +296,7 @@ test.describe('Photo Management Flow', () => {
 
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
     await expect(sidebar).toBeVisible();
-    await sidebar.getByRole('button', { name: 'Edit capture details' }).click();
+    await sidebar.locator('#photos-tour-edit-form').getByRole('button', { name: 'Edit capture details' }).click();
     await expect(page.getByRole('heading', { name: 'Capture details', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Choose on map' }).click();
@@ -306,7 +306,7 @@ test.describe('Photo Management Flow', () => {
     await expect(mapDialog.getByRole('heading', { name: 'Choose location' })).toBeVisible({
       timeout: 15_000,
     });
-    await mapDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await mapDialog.getByRole('button', { name: 'Cancel', exact: true }).first().click();
     await expect(mapDialog).not.toBeVisible();
 
     await page.goto('/account/photos');

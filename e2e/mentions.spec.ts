@@ -60,6 +60,7 @@ test.describe('Mentions and photo tags', () => {
     await expect(photoLink).toBeVisible({ timeout: 15_000 });
     await photoLink.click();
     await expect(page).toHaveURL(/\/photo\//);
+    const photoPageUrl = page.url();
 
     const composer = page.getByRole('textbox').last();
     await composer.click();
@@ -72,15 +73,30 @@ test.describe('Mentions and photo tags', () => {
       timeout: 15_000,
     });
 
-    await page.getByRole('button', { name: 'Tag people' }).click();
-    await expect(page.getByText('Click the photo to place a tag.')).toBeVisible();
-    await page.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
-    await page.getByPlaceholder('Nickname').fill(taggedMember.nickname);
+    await page.goto('/account/photos');
+    await dismissDriverTour(page);
+    const uploadedCard = page.locator('[data-testid="photo-card"]').first();
+    await expect(uploadedCard).toBeVisible({ timeout: 15_000 });
+    await uploadedCard.click();
+
+    const editSidebar = page.locator('[data-testid="sidebar-panel"]').first();
+    await editSidebar.getByRole('button', { name: 'Tag people' }).click();
+
+    const tagDialog = page.locator('dialog[open]').filter({
+      has: page.getByRole('heading', { name: 'Tag people' }),
+    });
+    await expect(tagDialog.getByText('Click the photo to place a tag')).toBeVisible();
+    await tagDialog.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
+    await page.getByPlaceholder('Search by nickname').fill(taggedMember.nickname);
     await page.getByRole('button', { name: new RegExp(`@${taggedMember.nickname}`) }).click({
       timeout: 10_000,
     });
+    await tagDialog.getByRole('button', { name: 'Done' }).click();
+    await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
+
+    await page.goto(photoPageUrl);
     await expect(page.getByRole('button', { name: `Tagged ${taggedMember.nickname}` })).toBeVisible({
-      timeout: 10_000,
+      timeout: 15_000,
     });
 
     await page.goto(`/@${taggedMember.nickname}`);
