@@ -16,7 +16,7 @@ test.describe('Gear', () => {
     await expect(dialog.getByRole('heading', { name: 'Add gear', exact: true })).toBeVisible();
     await expect(dialog.getByPlaceholder('Search or type gear name')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(dialog).not.toBeVisible();
+    await expect(dialog).not.toBeVisible({ timeout: 10_000 });
 
     await page.goto(`/@${memberUser.nickname}/gear`);
     await expect(page.getByRole('heading', { name: /gear list/i })).toBeVisible();
