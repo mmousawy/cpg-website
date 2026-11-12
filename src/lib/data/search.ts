@@ -67,7 +67,7 @@ async function performSearch(
 
     const { data, error } = await supabase.rpc('global_search', {
       search_query: trimmed,
-      result_limit: limit,
+      result_limit: includeTestContent ? Math.min(50, limit * 3) : limit,
       search_types: rpcTypes,
     });
 

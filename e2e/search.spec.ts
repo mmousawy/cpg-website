@@ -10,9 +10,8 @@ test.describe('Global search', () => {
       'Search across albums, photos, members, gear, events, scene, and tags',
     )).toBeVisible();
 
-    // global_search builds a tsquery from word characters, so a hyphenated
-    // nickname is sent as separate tokens (`test 173…`).
-    const query = memberUser.nickname.replace(/-/g, ' ');
+    // Search by unique full name (profile search_vector weight A), not hyphenated nickname tokens.
+    const query = memberUser.fullName;
     const memberProfileUrl = `/@${memberUser.nickname}`;
     const searchResponse = page.waitForResponse(
       (res) => {
