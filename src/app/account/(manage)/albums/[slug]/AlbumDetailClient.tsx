@@ -104,7 +104,7 @@ export default function AlbumDetailClient() {
     error: albumError,
   } = isSharedWithMe ? sharedAlbumQuery : ownAlbumQuery;
   const { data: photosData, isLoading: photosLoading } = useAlbumPhotos(album?.id);
-  const photos: PhotoWithAlbums[] = photosData ?? [];
+  const photos = useMemo(() => photosData ?? [], [photosData]);
   const isInviteOnly = album?.join_policy === 'closed';
   const { data: sharedMembers = [] } = useSharedAlbumMembers(
     isSharedWithMe && isInviteOnly && album?.id ? album.id : undefined,

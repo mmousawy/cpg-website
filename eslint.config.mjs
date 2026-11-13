@@ -40,7 +40,7 @@ const eslintConfig = [
   },
   {
     files: ['src/**/*.{js,jsx,ts,tsx}'],
-    ignores: ['src/app/api/**', 'src/lib/og.ts', 'src/lib/accountDeletion/**'],
+    ignores: ['src/app/api/**', 'src/lib/og.ts', 'src/lib/accountDeletion/**', 'src/lib/test/**'],
     rules: {
       'no-restricted-syntax': ['error', {
         selector: "CallExpression[callee.property.name=/^(upload|update|remove|move|copy)$/][callee.object.callee.property.name='from'][callee.object.callee.object.property.name='storage']",

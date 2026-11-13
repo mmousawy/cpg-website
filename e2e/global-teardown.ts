@@ -9,37 +9,46 @@ const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.j
 async function globalTeardown() {
   console.log('\n🧹 Running E2E test cleanup...');
 
-  // Read test emails from file
   let testEmails: string[] = [];
   try {
     if (fs.existsSync(TEST_EMAILS_FILE)) {
       const data = fs.readFileSync(TEST_EMAILS_FILE, 'utf-8');
-      testEmails = JSON.parse(data);
+      testEmails = JSON.parse(data) as string[];
     }
   } catch {
     console.log('No test emails file found or invalid JSON');
-    return;
   }
 
-  if (testEmails.length === 0) {
-    console.log('No test emails to clean up');
-    return;
+  if (testEmails.length > 0) {
+    console.log(`Found ${testEmails.length} tracked test email(s) from this run`);
+  } else {
+    console.log('No tracked test emails file (still sweeping orphan test accounts)');
   }
-
-  console.log(`Found ${testEmails.length} test emails to clean up`);
 
   const apiRequest = await request.newContext(getPlaywrightRequestContextOptions());
 
   try {
     const response = await apiRequest.post('/api/test/cleanup', {
-      data: { emails: testEmails },
+      data: {
+        emails: testEmails,
+        sweepOrphans: true,
+      },
       headers: withInternalApiHeaders(),
     });
 
     if (response.ok()) {
-      const result = await response.json();
-      console.log(`✅ Cleaned up ${result.deleted?.length || 0} test users`);
-      if (result.errors?.length > 0) {
+      const result = await response.json() as {
+        deleted?: string[];
+        notFound?: string[];
+        errors?: string[];
+      };
+      const deleted = result.deleted ?? [];
+      const notFound = result.notFound ?? [];
+      console.log(`✅ Deleted ${deleted.length} test user(s)`);
+      if (notFound.length > 0) {
+        console.log(`ℹ️ ${notFound.length} tracked email(s) had no remaining account`);
+      }
+      if (result.errors?.length) {
         console.log('⚠️ Some errors:', result.errors);
       }
     } else {
@@ -52,7 +61,6 @@ async function globalTeardown() {
     await apiRequest.dispose();
   }
 
-  // Clean up the file
   try {
     if (fs.existsSync(TEST_EMAILS_FILE)) {
       fs.unlinkSync(TEST_EMAILS_FILE);

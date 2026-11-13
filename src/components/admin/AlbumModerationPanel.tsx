@@ -6,6 +6,7 @@ import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import Textarea from '@/components/shared/Textarea';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import TrashSVG from 'public/icons/trash.svg';
@@ -36,6 +37,7 @@ export default function AlbumModerationPanel({
   suspensionReason = null,
 }: AlbumModerationPanelProps) {
   const { isAdmin, isLoading } = useAdmin();
+  const router = useRouter();
 
   const [actionType, setActionType] = useState<'suspend' | 'delete' | null>(null);
   const [selectedReason, setSelectedReason] = useState<string>('');
@@ -155,7 +157,7 @@ export default function AlbumModerationPanel({
 
       setSuccess('Album has been deleted. Redirecting...');
       setTimeout(() => {
-        window.location.href = '/admin';
+        router.push('/admin');
       }, 2000);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred';

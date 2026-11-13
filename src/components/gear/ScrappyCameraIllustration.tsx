@@ -2,6 +2,7 @@
 
 import { scrappyCameraIconUrl } from '@/lib/gear/scrappyCameraIcon';
 import clsx from 'clsx';
+import Image from 'next/image';
 import { useState, type ReactNode } from 'react';
 
 export type ScrappyCameraIllustrationProps = {
@@ -24,12 +25,13 @@ export default function ScrappyCameraIllustration({
   }
 
   return (
-    <img
+    <Image
       key={src}
       src={src}
       alt=""
-      className={clsx('dark:invert', className)}
-      decoding="async"
+      width={184}
+      height={92}
+      className={clsx('h-auto w-auto dark:invert', className)}
       onError={() => setFailed(true)}
     />
   );

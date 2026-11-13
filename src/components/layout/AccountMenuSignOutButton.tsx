@@ -3,7 +3,7 @@
 import { signOutAction } from '@/app/actions/auth';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/hooks/useAuth';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 type AccountMenuSignOutButtonProps = {
   onClose: () => void;
@@ -16,6 +16,7 @@ export default function AccountMenuSignOutButton({
 }: AccountMenuSignOutButtonProps) {
   const { signOut } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const confirm = useConfirm();
 
   return (
@@ -39,7 +40,7 @@ export default function AccountMenuSignOutButton({
           await signOut();
           const isProtectedRoute = pathname.startsWith('/account') || pathname.startsWith('/admin');
           if (isProtectedRoute) {
-            window.location.href = '/';
+            router.push('/');
           }
         } catch (error) {
           console.error('Error signing out:', error);
