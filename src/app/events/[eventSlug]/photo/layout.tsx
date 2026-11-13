@@ -23,13 +23,13 @@ export default async function EventPhotoCollectionLayout({
   const siblingPhotos = eventSlug
     ? await getEventSiblingPhotos(eventSlug, includeTestContent)
     : null;
-
   return (
     <>
       <ScrollToTopOnRouteChange />
       <PhotoFilmstripShell
         siblingPhotos={siblingPhotos ?? []}
         basePath={eventSlug ? `/events/${eventSlug}` : undefined}
+        fallbackLabel="event"
         sidebar={sidebar}
       >
         {children}

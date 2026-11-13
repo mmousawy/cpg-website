@@ -37,4 +37,18 @@ describe('calculateJustifiedLayout', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].items).toHaveLength(1);
   });
+
+  it('splits five landscapes into two rows instead of one short strip', () => {
+    const rows = calculateJustifiedLayout(landscapes(5), 960, {
+      minPhotosPerRow: 2,
+      maxPhotosPerRow: 5,
+      targetRowHeight: 280,
+      maxRowHeight: 350,
+      gap: 8,
+    });
+
+    expect(rows.length).toBe(2);
+    expect(rows.every((row) => row.items.length >= 2)).toBe(true);
+    expect(rows.reduce((sum, row) => sum + row.items.length, 0)).toBe(5);
+  });
 });

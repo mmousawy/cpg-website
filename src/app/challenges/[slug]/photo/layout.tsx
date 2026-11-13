@@ -23,13 +23,13 @@ export default async function ChallengePhotoCollectionLayout({
   const siblingPhotos = slug
     ? await getChallengeSiblingPhotos(slug, includeTestContent)
     : null;
-
   return (
     <>
       <ScrollToTopOnRouteChange />
       <PhotoFilmstripShell
         siblingPhotos={siblingPhotos ?? []}
         basePath={slug ? `/challenges/${slug}` : undefined}
+        fallbackLabel="challenge"
         sidebar={sidebar}
       >
         {children}

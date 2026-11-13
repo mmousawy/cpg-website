@@ -1,6 +1,7 @@
 'use client';
 
 import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
+import PhotoPageBackButton from '@/components/photo/PhotoPageBackButton';
 import {
   PhotoNavigationProvider,
   usePhotoNavigation,
@@ -9,6 +10,7 @@ import type { SiblingPhoto } from '@/components/photo/PhotoPageContent';
 import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
 import BlurImage from '@/components/shared/BlurImage';
 import { useHorizontalSwipe } from '@/hooks/useHorizontalSwipe';
+import { getPhotoCollectionFallbackHref } from '@/utils/photoOverviewNavigation';
 import { prefersReducedMotion } from '@/utils/reduceMotion';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -18,6 +20,7 @@ type PhotoFilmstripShellProps = {
   nickname?: string;
   albumSlug?: string;
   basePath?: string;
+  fallbackLabel?: string;
   sidebar: ReactNode;
   children: ReactNode;
 };
@@ -50,6 +53,7 @@ function PhotoFilmstripShellInner({
   nickname,
   albumSlug,
   basePath,
+  fallbackLabel = 'gallery',
   sidebar,
   children,
 }: PhotoFilmstripShellProps) {
@@ -505,6 +509,12 @@ function PhotoFilmstripShellInner({
     };
   }, [pendingShortId, currentPhotoShortId, siblingPhotos, setPendingShortId, resetSwipeTransforms]);
 
+  const collectionFallbackHref = getPhotoCollectionFallbackHref({
+    nickname,
+    albumSlug,
+    basePath,
+  });
+
   return (
     <div
       className="w-full px-4 pt-4 max-md:px-3 max-md:pt-3 md:p-4 md:flex md:gap-4 md:items-stretch lg:p-8 lg:gap-8"
@@ -517,6 +527,11 @@ function PhotoFilmstripShellInner({
           className="relative flex flex-1 touch-pan-y items-center justify-center overflow-hidden"
           {...swipeHandlers}
         >
+          <PhotoPageBackButton
+            fallbackHref={collectionFallbackHref}
+            fallbackLabel={fallbackLabel}
+            revealTargetRef={photoContainerRef}
+          />
           <div
             ref={swipeLayerRef}
             className="relative flex w-full items-center justify-center"

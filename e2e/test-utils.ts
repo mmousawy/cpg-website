@@ -290,6 +290,33 @@ export function photosUploadInput(page: Page) {
   return page.locator('#photos-tour-upload + input[type="file"]').first();
 }
 
+/** Account photos grid is ready (loaded; empty state or at least one card). */
+export async function waitForPhotoLibrary(page: Page) {
+  const cards = page.locator('[data-testid="photo-card"]');
+  const empty = page.getByText(/don't have any photos yet/i);
+  await page.waitForURL(/\/account\/photos/, { timeout: 15_000 });
+  await expect(page.getByLabel('Loading photos')).toHaveCount(0, { timeout: 20_000 });
+  await expect(empty.or(cards.first())).toBeVisible({ timeout: 20_000 });
+  return cards;
+}
+
+/** Upload one file via the library chrome and wait until a new photo card appears. */
+export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
+  const cards = page.locator('[data-testid="photo-card"]');
+  const countBefore = await cards.count();
+
+  const uploadResponse = page.waitForResponse(
+    (res) => res.url().includes('/api/photos/upload') && res.request().method() === 'POST',
+    { timeout: 90_000 },
+  );
+  await photosUploadInput(page).setInputFiles(imagePath);
+  const response = await uploadResponse;
+  expect(response.ok(), `upload failed: ${response.status()} ${await response.text()}`).toBeTruthy();
+
+  await expect(cards).toHaveCount(countBefore + 1, { timeout: 30_000 });
+  return cards.first();
+}
+
 /** First-run driver.js overlay blocks clicks on the photo grid until it is closed. */
 export async function dismissDriverTour(page: Page): Promise<void> {
   const close = page.locator('.driver-popover-close-btn');

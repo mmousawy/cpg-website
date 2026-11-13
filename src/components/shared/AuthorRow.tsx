@@ -13,7 +13,7 @@ interface AuthorRowProps {
 }
 
 /**
- * Compact author display row: [avatar] Name + nickname
+ * Author display row: [avatar] Name + nickname
  * Used on photo/album pages
  */
 export default function AuthorRow({ profile, className }: AuthorRowProps) {
@@ -28,24 +28,24 @@ export default function AuthorRow({ profile, className }: AuthorRowProps) {
       >
         <Link
           href={`/@${profile.nickname}`}
-          className="group flex items-center gap-2.5 w-fit"
+          className="group flex items-center gap-3 w-fit"
         >
           <Avatar
             avatarUrl={profile.avatar_url}
             fullName={profile.full_name}
             hoverEffect
-            size="sm"
+            size="md"
           />
           <div
             className="flex-1 min-w-0"
           >
             <p
-              className="font-medium text-sm group-hover:text-primary transition-colors leading-tight"
+              className="font-medium text-base group-hover:text-primary transition-colors leading-tight"
             >
               {profile.full_name || profile.nickname}
             </p>
             <p
-              className="text-xs text-foreground/60 group-hover:text-primary/80 transition-colors leading-tight mt-0.5"
+              className="text-sm text-foreground/60 group-hover:text-primary/80 transition-colors leading-tight mt-0.5"
             >
               @
               {profile.nickname}

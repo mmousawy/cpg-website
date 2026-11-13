@@ -6,7 +6,8 @@ import {
   createTestUser,
   dismissDriverTour,
   loginTestUser,
-  photosUploadInput,
+  uploadPhotoInLibrary,
+  waitForPhotoLibrary,
   type TestUser,
 } from './test-utils';
 
@@ -34,10 +35,12 @@ test.describe('Mentions and photo tags', () => {
     )).toBeVisible();
 
     await page.goto('/account/photos');
+    await page.waitForLoadState('load');
+    await waitForPhotoLibrary(page);
+    await dismissDriverTour(page);
+
     const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
-    await photosUploadInput(page).setInputFiles(testImagePath);
-    const photoCard = page.locator('[data-testid="photo-card"]').first();
-    await expect(photoCard).toBeVisible({ timeout: 30_000 });
+    const photoCard = await uploadPhotoInLibrary(page, testImagePath);
     await dismissDriverTour(page);
     await photoCard.click();
 
@@ -45,9 +48,9 @@ test.describe('Mentions and photo tags', () => {
     await expect(sidebar).toBeVisible();
     const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
     if (!(await visibilityToggle.isChecked())) {
-      await sidebar.getByRole('button', { name: 'Public', exact: true }).click();
+      await visibilityToggle.check({ force: true });
     }
-    await expect(visibilityToggle).toBeChecked();
+    await expect(visibilityToggle).toBeChecked({ timeout: 10_000 });
     const saveButton = sidebar.getByRole('button', { name: /^save$/i });
     await expect(saveButton).toBeEnabled({ timeout: 5000 });
     await saveButton.click();
@@ -74,9 +77,9 @@ test.describe('Mentions and photo tags', () => {
     });
 
     await page.goto('/account/photos');
+    await waitForPhotoLibrary(page);
     await dismissDriverTour(page);
     const uploadedCard = page.locator('[data-testid="photo-card"]').first();
-    await expect(uploadedCard).toBeVisible({ timeout: 15_000 });
     await uploadedCard.click();
 
     const editSidebar = page.locator('[data-testid="sidebar-panel"]').first();
@@ -105,6 +108,7 @@ test.describe('Mentions and photo tags', () => {
     });
 
     await page.goto('/account/photos');
+    await waitForPhotoLibrary(page);
     await dismissDriverTour(page);
     const uploaded = page.locator('[data-testid="photo-card"]').first();
     await uploaded.click();

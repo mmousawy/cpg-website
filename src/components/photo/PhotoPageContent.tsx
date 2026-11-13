@@ -2,6 +2,7 @@ import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import EventMiniCard from '@/components/events/EventMiniCard';
 import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
+import PhotoStageWithBack from '@/components/photo/PhotoStageWithBack';
 import PhotoExifDetails from '@/components/photo/PhotoExifDetails';
 import { PhotoMemberTagList } from '@/components/photo/PhotoMemberTags';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
@@ -22,6 +23,7 @@ import { getFormattedExif } from '@/utils/exif';
 import { formatFileSize } from '@/utils/formatFileSize';
 import { getLicenseInfo } from '@/utils/licenses';
 import { formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
+import { getPhotoCollectionFallbackHref } from '@/utils/photoOverviewNavigation';
 import { getPhotoSharePath } from '@/utils/share';
 import Link from 'next/link';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
@@ -398,6 +400,23 @@ export default function PhotoPageContent({
   const albumNickname = albumOwnerNickname || profile.nickname;
   const isInAlbum = !!currentAlbum || !!currentChallenge || !!currentEvent;
   const tightTopMargin = !!(currentAlbum || currentChallenge);
+  const collectionFallbackHref = getPhotoCollectionFallbackHref({
+    nickname: currentAlbum ? albumNickname : profile.nickname,
+    albumSlug: currentAlbum?.slug,
+    basePath: currentChallenge
+      ? `/challenges/${currentChallenge.slug}`
+      : currentEvent
+        ? `/events/${currentEvent.slug}`
+        : `/@${profile.nickname}`,
+  });
+  const showStrip = showFilmstrip && (currentAlbum || currentChallenge || currentEvent) && siblingPhotos && siblingPhotos.length > 1;
+  const fallbackLabel = currentAlbum
+    ? 'album'
+    : currentChallenge
+      ? 'challenge'
+      : currentEvent
+        ? 'event'
+        : 'photostream';
 
   return (
     <div
@@ -406,15 +425,17 @@ export default function PhotoPageContent({
       <div
         className="md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)] md:flex md:flex-col"
       >
-        <div
-          className="flex-1 flex items-center justify-center"
+        <PhotoStageWithBack
+          fallbackHref={collectionFallbackHref}
+          fallbackLabel={fallbackLabel}
+          className="relative flex flex-1 touch-pan-y items-center justify-center overflow-hidden"
         >
           <PhotoLightboxColumn
             photo={photo}
             isInAlbum={isInAlbum}
           />
-        </div>
-        {showFilmstrip && (currentAlbum || currentChallenge || currentEvent) && siblingPhotos && siblingPhotos.length > 1 && (
+        </PhotoStageWithBack>
+        {showStrip && (
           <div
             className="lg:translate-y-4"
           >
