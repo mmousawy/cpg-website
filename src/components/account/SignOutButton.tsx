@@ -4,11 +4,12 @@ import { signOutAction } from '@/app/actions/auth';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function SignOutButton() {
   const { signOut } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const confirm = useConfirm();
 
   return (
@@ -29,7 +30,7 @@ export default function SignOutButton() {
 
         try {
           await signOut();
-          window.location.href = '/';
+          router.push('/');
         } catch (error) {
           console.error('Error signing out:', error);
         }

@@ -52,7 +52,7 @@ export default function AdminEventAttendancePage() {
   const [markingId, setMarkingId] = useState<number | null>(null);
   const [removingId, setRemovingId] = useState<number | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     // Load event
     const { data: eventData } = await supabase
       .from('events')
@@ -73,34 +73,11 @@ export default function AdminEventAttendancePage() {
 
     setRsvps(rsvpsData || []);
     setIsLoading(false);
-  };
+  }, [eventId, supabase]);
 
   useEffect(() => {
-    const loadDataAsync = async () => {
-      // Load event
-      const { data: eventData } = await supabase
-        .from('events')
-        .select('id, title, date, time, location')
-        .eq('id', eventId)
-        .single();
-
-      if (eventData) {
-        setEvent(eventData as Event);
-      }
-
-      // Load RSVPs for this event
-      const { data: rsvpsData } = await supabase
-        .from('events_rsvps')
-        .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, no_show_at, created_at')
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: false });
-
-      setRsvps(rsvpsData || []);
-      setIsLoading(false);
-    };
-
-    loadDataAsync();
-  }, [eventId, supabase]);
+    void loadData();
+  }, [loadData]);
 
   const handleMarkAttended = async (rsvpId: number) => {
     setMarkingId(rsvpId);

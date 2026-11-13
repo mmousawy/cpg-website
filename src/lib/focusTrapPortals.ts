@@ -19,6 +19,12 @@ export function getOverlayPortalRoot(anchor?: HTMLElement | null): HTMLElement |
   }
   const dialog = anchor?.closest('dialog');
   if (dialog instanceof HTMLDialogElement && dialog.open) {
+    // Keep portaled controls inside the FocusTrap panel (dialog children outside the trap
+    // cannot receive or keep focus even with allowOutsideClick).
+    const trapPanel = anchor?.closest('[data-modal-scroll-body]')?.parentElement;
+    if (trapPanel instanceof HTMLElement) {
+      return trapPanel;
+    }
     return dialog;
   }
   return document.body;

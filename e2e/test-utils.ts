@@ -130,6 +130,23 @@ export function generateTestEmail(): string {
   return `test-e2e-${timestamp}-${random}@test.local`;
 }
 
+export function untrackTestEmail(email: string): void {
+  try {
+    if (!fs.existsSync(TEST_EMAILS_FILE)) return;
+    const data = fs.readFileSync(TEST_EMAILS_FILE, 'utf-8');
+    const emails: string[] = JSON.parse(data);
+    const next = emails.filter((e) => e.toLowerCase() !== email.toLowerCase());
+    if (next.length === emails.length) return;
+    if (next.length === 0) {
+      fs.unlinkSync(TEST_EMAILS_FILE);
+    } else {
+      fs.writeFileSync(TEST_EMAILS_FILE, JSON.stringify(next, null, 2));
+    }
+  } catch (error) {
+    console.error('Failed to untrack test email:', error);
+  }
+}
+
 // Track email for cleanup
 export function trackTestEmail(email: string): void {
   try {
@@ -270,16 +287,33 @@ export async function createTestUser(
   throw new Error('createTestUser: exhausted all retries');
 }
 
-/** Delete test users created during E2E runs. */
+type CleanupApiResult = {
+  deleted?: string[];
+  notFound?: string[];
+  errors?: string[];
+};
+
+/** Delete test users created during E2E runs (also sweeps other orphan test accounts). */
 export async function cleanupTestUsers(
   apiRequest: APIRequestContext,
   emails: string[],
-): Promise<void> {
-  if (emails.length === 0) return;
-  await apiRequest.post('/api/test/cleanup', {
-    data: { emails },
+  options?: { sweepOrphans?: boolean },
+): Promise<CleanupApiResult | undefined> {
+  const sweepOrphans = options?.sweepOrphans ?? false;
+  if (emails.length === 0 && !sweepOrphans) return;
+
+  const response = await apiRequest.post('/api/test/cleanup', {
+    data: { emails, sweepOrphans },
     headers: withInternalApiHeaders(),
   });
+
+  if (!response.ok()) return undefined;
+
+  const result = (await response.json()) as CleanupApiResult;
+  for (const deletedEmail of result.deleted ?? []) {
+    untrackTestEmail(deletedEmail);
+  }
+  return result;
 }
 
 /**
@@ -315,6 +349,26 @@ export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
 
   await expect(cards).toHaveCount(countBefore + 1, { timeout: 30_000 });
   return cards.first();
+}
+
+/**
+ * Type in the portaled tag picker like a user (click + focus + keys), not Playwright fill().
+ * Fails when modal focus traps block the picker without `data-portal-overlay`.
+ */
+export async function searchMemberInTagPicker(page: Page, nickname: string): Promise<void> {
+  const picker = page.locator('[data-portal-overlay]').filter({
+    has: page.locator('[data-tag-picker-input]'),
+  });
+  await expect(picker).toBeVisible({ timeout: 15_000 });
+
+  const searchInput = picker.locator('[data-tag-picker-input]');
+  await searchInput.click();
+  await expect(searchInput).toBeFocused({ timeout: 5_000 });
+  await searchInput.pressSequentially(nickname, { delay: 25 });
+
+  await picker.getByRole('button', { name: new RegExp(`@${nickname}`) }).click({
+    timeout: 10_000,
+  });
 }
 
 /** First-run driver.js overlay blocks clicks on the photo grid until it is closed. */

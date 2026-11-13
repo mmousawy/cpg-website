@@ -3,9 +3,11 @@
 import { signOutAction } from '@/app/actions/auth';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 export default function UnderReviewSignOut() {
   const { signOut } = useAuth();
+  const router = useRouter();
 
   return (
     <form
@@ -14,7 +16,7 @@ export default function UnderReviewSignOut() {
         e.preventDefault();
         try {
           await signOut();
-          window.location.href = '/login';
+          router.push('/login');
         } catch (error) {
           console.error('Error signing out:', error);
         }

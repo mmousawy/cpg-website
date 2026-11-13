@@ -6,6 +6,7 @@ import {
   createTestUser,
   dismissDriverTour,
   loginTestUser,
+  searchMemberInTagPicker,
   uploadPhotoInLibrary,
   waitForPhotoLibrary,
   type TestUser,
@@ -90,10 +91,7 @@ test.describe('Mentions and photo tags', () => {
     });
     await expect(tagDialog.getByText('Click the photo to place a tag')).toBeVisible();
     await tagDialog.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
-    await page.getByPlaceholder('Search by nickname').fill(taggedMember.nickname);
-    await page.getByRole('button', { name: new RegExp(`@${taggedMember.nickname}`) }).click({
-      timeout: 10_000,
-    });
+    await searchMemberInTagPicker(page, taggedMember.nickname);
     await tagDialog.getByRole('button', { name: 'Done' }).click();
     await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
 

@@ -4,6 +4,7 @@ import Avatar from '@/components/auth/Avatar';
 import { modalPopoverZClassName } from '@/components/layout/mobileChrome';
 import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import { useMentionSearch } from '@/hooks/useMentionSearch';
+import { getOverlayPortalRoot, PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
 import type { MentionProfile } from '@/lib/mentions/types';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -163,7 +164,8 @@ export function PhotoMemberTagLayer({
   const tagOverlayRef = useRef<HTMLDivElement>(null);
   const tagPickerRef = useRef<HTMLDivElement>(null);
   const tagSearchInputRef = useRef<HTMLInputElement>(null);
-  const { results, loading } = useMentionSearch(point && query ? query : null);
+  const mentionQuery = point && query.trim().length > 0 ? query : null;
+  const { results, loading } = useMentionSearch(mentionQuery);
 
   const updatePickerLayout = useCallback(() => {
     if (!point || !tagPickerRef.current || !tagOverlayRef.current) {
@@ -184,19 +186,29 @@ export function PhotoMemberTagLayer({
       return;
     }
     updatePickerLayout();
-    window.addEventListener('resize', updatePickerLayout);
-    window.addEventListener('scroll', updatePickerLayout, true);
-    return () => {
-      window.removeEventListener('resize', updatePickerLayout);
-      window.removeEventListener('scroll', updatePickerLayout, true);
+    const onViewportChange = () => {
+      requestAnimationFrame(() => updatePickerLayout());
     };
-  }, [point, query, results.length, loading, error, updatePickerLayout]);
+    window.addEventListener('resize', onViewportChange);
+    window.visualViewport?.addEventListener('resize', onViewportChange);
+    window.visualViewport?.addEventListener('scroll', onViewportChange);
+    return () => {
+      window.removeEventListener('resize', onViewportChange);
+      window.visualViewport?.removeEventListener('resize', onViewportChange);
+      window.visualViewport?.removeEventListener('scroll', onViewportChange);
+    };
+  }, [point, updatePickerLayout]);
+
+  useLayoutEffect(() => {
+    if (!point) return;
+    requestAnimationFrame(() => updatePickerLayout());
+  }, [point, results.length, loading, error, updatePickerLayout]);
 
   useEffect(() => {
     onTagModeChange?.(tagMode);
   }, [tagMode, onTagModeChange]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!point) return;
     const frame = requestAnimationFrame(() => {
       tagSearchInputRef.current?.focus({ preventScroll: true });
@@ -319,16 +331,19 @@ export function PhotoMemberTagLayer({
       {point && typeof document !== 'undefined' ? createPortal(
         <div
           ref={tagPickerRef}
+          {...{ [PORTAL_OVERLAY_ATTR]: '' }}
           className={clsx(
             'fixed w-56 rounded-md border border-border-color bg-background p-2 shadow-lg',
             modalPopoverZClassName,
-            !pickerLayout && 'pointer-events-none opacity-0',
+            !pickerLayout && 'invisible',
           )}
           style={{
             top: pickerLayout?.top ?? 0,
             left: pickerLayout?.left ?? 0,
           }}
           onClick={(event) => event.stopPropagation()}
+          onMouseDown={(event) => event.stopPropagation()}
+          onTouchStart={(event) => event.stopPropagation()}
         >
           <input
             ref={tagSearchInputRef}
@@ -405,7 +420,7 @@ export function PhotoMemberTagLayer({
             </div>
           ) : null}
         </div>,
-        document.body,
+        getOverlayPortalRoot(tagOverlayRef.current) ?? document.body,
       ) : null}
     </>
   );

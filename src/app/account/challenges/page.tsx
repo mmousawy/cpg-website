@@ -133,16 +133,15 @@ export default function MyChallengesPage() {
     });
   }, []);
 
-  const allSubmissions = submissions ?? [];
-
   const { pendingGroups, yourGroups, joinedChallengeIds } = useMemo(() => {
+    const allSubmissions = submissions ?? [];
     const groups = groupSubmissionsByChallenge(allSubmissions);
     const pending = groups.filter(groupHasPending);
     const yours = groups.filter((g) => !groupHasPending(g));
     const joinedIds = new Set(groups.map((g) => g.challengeId));
 
     return { pendingGroups: pending, yourGroups: yours, joinedChallengeIds: joinedIds };
-  }, [allSubmissions]);
+  }, [submissions]);
 
   const openChallenges = useMemo(() => {
     if (submissionsPending) return [];

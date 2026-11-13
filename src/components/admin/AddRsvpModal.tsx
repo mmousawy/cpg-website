@@ -95,7 +95,7 @@ export default function AddRsvpModal({ eventId, onAdded, onClose }: AddRsvpModal
     setError(null);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!selectedMember) return;
 
     setIsSubmitting(true);
@@ -116,7 +116,7 @@ export default function AddRsvpModal({ eventId, onAdded, onClose }: AddRsvpModal
     }
 
     setIsSubmitting(false);
-  };
+  }, [eventId, selectedMember]);
 
   // Sync modal footer buttons
   const footerContent = useMemo(
@@ -133,7 +133,7 @@ export default function AddRsvpModal({ eventId, onAdded, onClose }: AddRsvpModal
         </Button>
       </div>
     ),
-    [selectedMember, isSubmitting],
+    [handleSubmit, isSubmitting, selectedMember],
   );
 
   useEffect(() => {
