@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.48.1](https://github.com/mmousawy/cpg-website/compare/v1.48.0...v1.48.1) (2026-11-13)
+
+
+### 🐛 Bug Fixes
+
+* enhance E2E test cleanup and search functionality ([3c2a196](https://github.com/mmousawy/cpg-website/commit/3c2a196f662fbcc59b01b1934b3879e65d43acb3))
+
 ## [1.48.0](https://github.com/mmousawy/cpg-website/compare/v1.47.6...v1.48.0) (2026-11-13)
 
 
