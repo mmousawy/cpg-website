@@ -1,6 +1,7 @@
 'use client';
 
 import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
+import PhotoPageBackButton from '@/components/photo/PhotoPageBackButton';
 import {
   PhotoNavigationProvider,
   usePhotoNavigation,
@@ -9,6 +10,7 @@ import type { SiblingPhoto } from '@/components/photo/PhotoPageContent';
 import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
 import BlurImage from '@/components/shared/BlurImage';
 import { useHorizontalSwipe } from '@/hooks/useHorizontalSwipe';
+import { getPhotoCollectionFallbackHref } from '@/utils/photoOverviewNavigation';
 import { prefersReducedMotion } from '@/utils/reduceMotion';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -18,6 +20,7 @@ type PhotoFilmstripShellProps = {
   nickname?: string;
   albumSlug?: string;
   basePath?: string;
+  fallbackLabel?: string;
   sidebar: ReactNode;
   children: ReactNode;
 };
@@ -42,12 +45,15 @@ function readTranslateX(element: HTMLElement | null): number {
 
 const SWIPE_SNAP_MS = 250;
 const SWIPE_RUBBER_BAND = 0.32;
+/** Background visible between the current photo and the one sliding in. */
+const SWIPE_GAP_PX = 16;
 
 function PhotoFilmstripShellInner({
   siblingPhotos,
   nickname,
   albumSlug,
   basePath,
+  fallbackLabel = 'gallery',
   sidebar,
   children,
 }: PhotoFilmstripShellProps) {
@@ -356,7 +362,8 @@ function PhotoFilmstripShellInner({
       return;
     }
     setSwipeLocked(true);
-    const target = direction === 'next' ? -width : width;
+    const distance = width + SWIPE_GAP_PX;
+    const target = direction === 'next' ? -distance : distance;
     animateSwipeTo(target, {
       onDone: () => {
         // Navigate only after the old photo is off-screen. Committing earlier
@@ -449,8 +456,9 @@ function PhotoFilmstripShellInner({
       if (cancelled) return;
       // Bring the real photo on-screen UNDER the overlay first. Lifting in the
       // same turn leaves the first on-screen paint of children uncovered —
-      // they were sitting at ±100% width (especially +width for prev) and
-      // often haven't been rasterized yet, which flashes blurhash/blank.
+      // they were sitting a slide away, plus the gap (especially to the right
+      // for prev) and often haven't been rasterized yet, which flashes
+      // blurhash/blank.
       resetSwipeTransforms();
       const img = photoContainerRef.current?.querySelector('#gallery img');
       const reveal = () => {
@@ -501,6 +509,12 @@ function PhotoFilmstripShellInner({
     };
   }, [pendingShortId, currentPhotoShortId, siblingPhotos, setPendingShortId, resetSwipeTransforms]);
 
+  const collectionFallbackHref = getPhotoCollectionFallbackHref({
+    nickname,
+    albumSlug,
+    basePath,
+  });
+
   return (
     <div
       className="w-full px-4 pt-4 max-md:px-3 max-md:pt-3 md:p-4 md:flex md:gap-4 md:items-stretch lg:p-8 lg:gap-8"
@@ -513,6 +527,11 @@ function PhotoFilmstripShellInner({
           className="relative flex flex-1 touch-pan-y items-center justify-center overflow-hidden"
           {...swipeHandlers}
         >
+          <PhotoPageBackButton
+            fallbackHref={collectionFallbackHref}
+            fallbackLabel={fallbackLabel}
+            revealTargetRef={photoContainerRef}
+          />
           <div
             ref={swipeLayerRef}
             className="relative flex w-full items-center justify-center"
@@ -528,7 +547,9 @@ function PhotoFilmstripShellInner({
                 ref={overlayCallbackRef}
                 className="absolute inset-0 flex items-center justify-center bg-background"
                 style={{
-                  transform: peekOrigin === 'left' ? 'translateX(-100%)' : 'translateX(100%)',
+                  transform: peekOrigin === 'left'
+                    ? `translateX(calc(-100% - ${SWIPE_GAP_PX}px))`
+                    : `translateX(calc(100% + ${SWIPE_GAP_PX}px))`,
                 }}
               >
                 <BlurImage

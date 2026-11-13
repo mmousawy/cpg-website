@@ -59,7 +59,13 @@ export const membersFAQ: FAQSection = {
       title: 'Viewing member profiles',
       content: (
         <p>
-          Click on any member card to visit their profile. You can see their bio, interests, public photos, and albums. Profiles also show when they joined and their achievements and stats. You can follow a member from their profile page — their new uploads will then appear in your activity feed.
+          Click on any member card to visit their profile. You can see their bio, interests, public photos, and albums. If they have been tagged on public photos, a
+          {' '}
+          <strong>
+            Tagged
+          </strong>
+          {' '}
+          section shows those images. Profiles also show when they joined and their achievements and stats. You can follow a member from their profile page — their new uploads will then appear in your activity feed.
         </p>
       ),
     },

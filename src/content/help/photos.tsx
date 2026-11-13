@@ -137,6 +137,87 @@ export const photosFAQ: FAQSection = {
       ),
     },
     {
+      id: 'member-mentions',
+      title: 'Mentioning members (@nickname)',
+      content: (
+        <>
+          <p
+            className="mb-3"
+          >
+            In comments and in photo or album descriptions, type
+            {' '}
+            <strong>
+              @
+            </strong>
+            {' '}
+            followed by a member&apos;s nickname to mention them — for example
+            {' '}
+            <strong>
+              @murtada
+            </strong>
+            . While you type, a short list of matching nicknames appears; use the arrow keys and Enter, or click a row, to insert the mention.
+          </p>
+          <p
+            className="mb-3"
+          >
+            Published mentions link to that member&apos;s profile and show a preview when you hover. Editing the same text again does not send duplicate mention notifications. Hashtag tags on photos and albums (for example
+            {' '}
+            <strong>
+              #street
+            </strong>
+            ) are separate from @mentions.
+          </p>
+          <p>
+            If someone has turned off tagging in their account settings, you cannot pick them from the list and an @nickname in text stays plain (no link) until they opt back in. You can still @mention yourself when tagging is off for your account.
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'photo-member-tags',
+      title: 'Tagging people on a photo',
+      content: (
+        <>
+          <p
+            className="mb-3"
+          >
+            Open
+            {' '}
+            <strong>
+              Account → Photos
+            </strong>
+            , select a photo, and choose
+            {' '}
+            <strong>
+              Tag people
+            </strong>
+            {' '}
+            to open a larger view. Click a spot on the image, then choose a member from the nickname search. Each person can only appear once per photo; picking them again moves the dot. On the public photo page, tags show as dots on the image (hover for a profile card) and in the sidebar list — you cannot place new tags there.
+          </p>
+          <p
+            className="mb-3"
+          >
+            Tagged members get an in-app notification (and an email if they keep
+            {' '}
+            <strong>
+              Notifications
+            </strong>
+            {' '}
+            on). Tagged members, owners, and admins can remove a tag from the photo page sidebar or from the manage sidebar.
+          </p>
+          <p>
+            Tags are not shown in gallery grids or the fullscreen zoom view. Public photos you are tagged in appear in the
+            {' '}
+            <strong>
+              Tagged
+            </strong>
+            {' '}
+            section on your profile when the photo is visible to others.
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'sharing',
       title: 'Sharing photos and challenges',
       content: (

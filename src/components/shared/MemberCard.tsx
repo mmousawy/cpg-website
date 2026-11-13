@@ -1,4 +1,5 @@
 import Avatar from '@/components/auth/Avatar';
+import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import Link from 'next/link';
 
 interface MemberCardProps {
@@ -23,40 +24,46 @@ export default function MemberCard({ member, badge, className }: MemberCardProps
   }
 
   return (
-    <Link
-      href={`/@${member.nickname}`}
-      className={`group flex flex-col items-center gap-2 rounded-lg border border-border-color bg-background-light px-2 py-3 transition-colors hover:border-primary hover:bg-background ${className || ''}`}
+    <MemberHoverCard
+      nickname={member.nickname}
+      fullName={member.full_name}
+      avatarUrl={member.avatar_url}
     >
-      <Avatar
-        avatarUrl={member.avatar_url}
-        fullName={member.full_name}
-        size="lg"
-        hoverEffect
-      />
-      <div
-        className="flex grow flex-col items-center text-center"
+      <Link
+        href={`/@${member.nickname}`}
+        className={`group flex flex-col items-center gap-2 rounded-lg border border-border-color bg-background-light px-2 py-3 transition-colors hover:border-primary hover:bg-background ${className || ''}`}
       >
-        <p
-          className="font-medium text-sm leading-tight"
+        <Avatar
+          avatarUrl={member.avatar_url}
+          fullName={member.full_name}
+          size="lg"
+          hoverEffect
+        />
+        <div
+          className="flex grow flex-col items-center text-center"
         >
-          {member.full_name || `@${member.nickname}`}
-        </p>
-        {member.full_name && (
           <p
-            className="mt-0.5 text-xs text-foreground/60"
+            className="font-medium text-sm leading-tight"
           >
-            @
-            {member.nickname}
+            {member.full_name || `@${member.nickname}`}
           </p>
-        )}
-        {badge && (
-          <p
-            className="mt-auto pt-2 text-xs text-foreground/90"
-          >
-            {badge}
-          </p>
-        )}
-      </div>
-    </Link>
+          {member.full_name && (
+            <p
+              className="mt-0.5 text-xs text-foreground/60"
+            >
+              @
+              {member.nickname}
+            </p>
+          )}
+          {badge && (
+            <p
+              className="mt-auto pt-2 text-xs text-foreground/90"
+            >
+              {badge}
+            </p>
+          )}
+        </div>
+      </Link>
+    </MemberHoverCard>
   );
 }

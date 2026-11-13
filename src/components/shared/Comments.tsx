@@ -10,40 +10,23 @@ import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import { scrollBehavior } from '@/utils/reduceMotion';
 import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { memo, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
 import CommentActionsPopover from './CommentActionsPopover';
-import Textarea from './Textarea';
+import MentionField from './MentionField';
+import MentionText, { MentionDirectoryProvider, useMentionDirectory } from './MentionText';
+import MemberHoverCard from './MemberHoverCard';
 
 import SendSVG from 'public/icons/arrow-right.svg';
 import ChevronDownSVG from 'public/icons/chevron-down.svg';
 import ReplySVG from 'public/icons/reply.svg';
 
-const URL_REGEX = /https?:\/\/[^\s<]+/g;
-
-function renderCommentText(text: string) {
-  const parts = text.split(URL_REGEX);
-  const urls = text.match(URL_REGEX);
-  if (!urls) return text;
-
-  return parts.reduce<ReactNode[]>((acc, part, i) => {
-    acc.push(part);
-    if (urls[i]) {
-      acc.push(
-        <a
-          key={i}
-          href={urls[i]}
-          target="_blank"
-          rel="nofollow noreferrer noopener"
-          className="text-accent underline break-all"
-        >
-          {urls[i]}
-        </a>,
-      );
-    }
-    return acc;
-  }, []);
+function renderCommentText(text: string, authorId?: string) {
+  return <MentionText
+    text={text}
+    authorId={authorId}
+  />;
 }
 
 interface Comment {
@@ -191,12 +174,18 @@ function ComposerCard({
       className="bg-background-float rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
     >
       {profile?.nickname ? (
-        <Link
-          href={`/@${profile.nickname}`}
-          className="inline-flex items-center gap-2.5 mb-2 group rounded-lg"
+        <MemberHoverCard
+          nickname={profile.nickname}
+          fullName={profile.full_name}
+          avatarUrl={profile.avatar_url}
         >
-          {profileHeader}
-        </Link>
+          <Link
+            href={`/@${profile.nickname}`}
+            className="inline-flex items-center gap-2.5 mb-2 group rounded-lg"
+          >
+            {profileHeader}
+          </Link>
+        </MemberHoverCard>
       ) : (
         <div
           className="flex gap-2.5 mb-2"
@@ -252,12 +241,12 @@ const ReplyComposer = memo(function ReplyComposer({
           }}
           className="space-y-2"
         >
-          <Textarea
+          <MentionField
             value={replyText}
-            onChange={(e) => onReplyTextChange(e.target.value)}
-            onFocus={(e) => {
+            onChange={onReplyTextChange}
+            onFocus={() => {
               if (!user) {
-                e.target.blur();
+                (document.activeElement as HTMLElement | null)?.blur();
                 showAuthPrompt({ feature: 'leave comments' });
               }
             }}
@@ -323,12 +312,12 @@ const CommentComposer = memo(function CommentComposer({
           onSubmit={onSubmit}
           className="space-y-2"
         >
-          <Textarea
+          <MentionField
             value={commentText}
-            onChange={(e) => onCommentTextChange(e.target.value)}
-            onFocus={(e) => {
+            onChange={onCommentTextChange}
+            onFocus={() => {
               if (!user) {
-                e.target.blur();
+                (document.activeElement as HTMLElement | null)?.blur();
                 showAuthPrompt({ feature: 'leave comments' });
               }
             }}
@@ -447,32 +436,56 @@ const CommentItem = memo(function CommentItem({
         <div
           className="flex items-start justify-between gap-2 mb-2"
         >
-          <Link
-            href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'}
-            className="flex gap-2.5 items-center group rounded-lg"
-          >
-            <Avatar
-              avatarUrl={comment.profile?.avatar_url}
-              fullName={comment.profile?.full_name}
-              hoverEffect
-              size="sm"
-            />
-            <div>
-              <p
-                className="text-sm font-medium group-hover:text-primary transition-colors leading-tight"
+          {comment.profile?.nickname ? (
+            <MemberHoverCard
+              nickname={comment.profile.nickname}
+              fullName={comment.profile.full_name}
+              avatarUrl={comment.profile.avatar_url}
+            >
+              <Link
+                href={`/@${comment.profile.nickname}`}
+                className="flex gap-2.5 items-center group rounded-lg"
               >
-                {comment.profile?.full_name || 'Anonymous'}
-              </p>
-              {comment.profile?.nickname && (
+                <Avatar
+                  avatarUrl={comment.profile.avatar_url}
+                  fullName={comment.profile.full_name}
+                  hoverEffect
+                  size="sm"
+                />
+                <div>
+                  <p
+                    className="text-sm font-medium group-hover:text-primary transition-colors leading-tight"
+                  >
+                    {comment.profile.full_name || 'Anonymous'}
+                  </p>
+                  <p
+                    className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
+                  >
+                    @
+                    {comment.profile.nickname}
+                  </p>
+                </div>
+              </Link>
+            </MemberHoverCard>
+          ) : (
+            <div
+              className="flex gap-2.5 items-center rounded-lg"
+            >
+              <Avatar
+                avatarUrl={comment.profile?.avatar_url}
+                fullName={comment.profile?.full_name}
+                hoverEffect
+                size="sm"
+              />
+              <div>
                 <p
-                  className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
+                  className="text-sm font-medium leading-tight"
                 >
-                  @
-                  {comment.profile.nickname}
+                  {comment.profile?.full_name || 'Anonymous'}
                 </p>
-              )}
+              </div>
             </div>
-          </Link>
+          )}
           <div
             className="flex items-center gap-2"
           >
@@ -537,9 +550,9 @@ const CommentItem = memo(function CommentItem({
             }}
             className="space-y-2"
           >
-            <Textarea
+            <MentionField
               value={editText}
-              onChange={(e) => setEditText(e.target.value)}
+              onChange={setEditText}
               rows={3}
               disabled={isSavingEdit || currentIsSubmitting}
               className="block max-w-160 text-sm"
@@ -570,7 +583,7 @@ const CommentItem = memo(function CommentItem({
           <p
             className="text-sm text-foreground/90 max-w-[60ch] whitespace-pre-wrap leading-normal"
           >
-            {renderCommentText(comment.comment_text)}
+            {renderCommentText(comment.comment_text, comment.user_id)}
           </p>
         )}
       </div>
@@ -1227,6 +1240,20 @@ export default function Comments({
     }
     : null;
 
+  const mentionTexts = useMemo(() => {
+    const texts: string[] = [];
+    const walk = (list: Comment[]) => {
+      for (const comment of list) {
+        texts.push(comment.comment_text);
+        if (comment.replies) walk(comment.replies);
+        if (comment.nestedReplies) walk(comment.nestedReplies);
+      }
+    };
+    walk(comments);
+    return texts;
+  }, [comments]);
+  const mentionProfiles = useMentionDirectory(mentionTexts);
+
   if (!user) {
     return (
       <div
@@ -1254,14 +1281,17 @@ export default function Comments({
   }
 
   return (
-    <div
-      id="comments"
-      className="space-y-2"
+    <MentionDirectoryProvider
+      profiles={mentionProfiles}
     >
-      <h3
-        className="text-lg font-semibold font-heading"
+      <div
+        id="comments"
+        className="space-y-2"
       >
-        {comments.length > 0 ? (() => {
+        <h3
+          className="text-lg font-semibold font-heading"
+        >
+          {comments.length > 0 ? (() => {
           const countReplies = (comment: Comment): number => {
             let count = 1; // Count this comment
             if (comment.replies) {
@@ -1275,18 +1305,18 @@ export default function Comments({
           const totalCount = comments.reduce((sum, c) => sum + countReplies(c), 0);
           return `${totalCount} ${totalCount === 1 ? 'Comment' : 'Comments'}`;
         })() : 'Comments'}
-      </h3>
+        </h3>
 
-      {/* Comments List */}
-      <div
-        className="space-y-3"
-      >
-        {isLoading && comments.length === 0 ? (
-          <p
-            className="text-sm text-foreground/80"
-          >
-            Loading comments...
-          </p>
+        {/* Comments List */}
+        <div
+          className="space-y-3"
+        >
+          {isLoading && comments.length === 0 ? (
+            <p
+              className="text-sm text-foreground/80"
+            >
+              Loading comments...
+            </p>
         ) : comments.length === 0 ? (
           <p
             className="text-sm text-foreground/80"
@@ -1321,26 +1351,27 @@ export default function Comments({
             ))}
           </div>
         )}
-      </div>
+        </div>
 
-      {!replyingTo && canInteract && (
-        <CommentComposer
-          profile={currentUserProfile}
-          commentText={commentText}
-          onCommentTextChange={setCommentText}
-          onSubmit={handleSubmitComment}
-          isSubmitting={isSubmitting}
-          user={user}
-          showAuthPrompt={stableShowAuthPrompt}
-        />
+        {!replyingTo && canInteract && (
+          <CommentComposer
+            profile={currentUserProfile}
+            commentText={commentText}
+            onCommentTextChange={setCommentText}
+            onSubmit={handleSubmitComment}
+            isSubmitting={isSubmitting}
+            user={user}
+            showAuthPrompt={stableShowAuthPrompt}
+          />
       )}
-      {!replyingTo && user && !canInteract && (
-        <p
-          className="mt-4 text-sm text-foreground/60"
-        >
-          Commenting is unavailable while your account is under review.
-        </p>
+        {!replyingTo && user && !canInteract && (
+          <p
+            className="mt-4 text-sm text-foreground/60"
+          >
+            Commenting is unavailable while your account is under review.
+          </p>
       )}
-    </div>
+      </div>
+    </MentionDirectoryProvider>
   );
 }

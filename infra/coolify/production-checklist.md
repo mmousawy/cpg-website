@@ -34,8 +34,10 @@ Run after [production-cutover.md](./production-cutover.md) DNS points at the VPS
 
 ## Smoke tests
 
-- [ ] Homepage, gallery, events, login (Google, Discord, email)
-- [ ] Upload photo, RSVP, search
+- [ ] Homepage, gallery, `/gallery/photos`, events, `/scene`, challenges, members, help, and login (Google, Discord, email)
+- [ ] Upload photo, library filter, capture-details map picker, RSVP, search (members, gear, and scene)
+- [ ] `/account/gear` and a public `/@nickname/gear` page
+- [ ] `@mention` in a comment and a photo people-tag
 - [ ] Admin panel
 - [ ] No `/_vercel/insights` requests in network tab (self-hosted)
 - [ ] Execute one cron task manually in Coolify; confirm 200

@@ -667,6 +667,38 @@ export type Database = {
           },
         ]
       }
+      content_mentions: {
+        Row: {
+          created_at: string
+          id: string
+          mentioned_user_id: string
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mentioned_user_id: string
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mentioned_user_id?: string
+          source_id?: string
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'content_mentions_mentioned_user_id_fkey'
+            columns: ['mentioned_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       email_preferences: {
         Row: {
           email_type_id: number
@@ -1368,6 +1400,58 @@ export type Database = {
           },
         ]
       }
+      photo_member_tags: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          photo_id: string
+          profile_id: string
+          x: number
+          y: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          photo_id: string
+          profile_id: string
+          x: number
+          y: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          photo_id?: string
+          profile_id?: string
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'photo_member_tags_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'photo_member_tags_photo_id_fkey'
+            columns: ['photo_id']
+            isOneToOne: false
+            referencedRelation: 'photos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'photo_member_tags_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       photo_tags: {
         Row: {
           created_at: string | null
@@ -1567,6 +1651,7 @@ export type Database = {
       profiles: {
         Row: {
           album_card_style: string | null
+          allow_member_tags: boolean
           avatar_url: string | null
           banner_blurhash: string | null
           banner_url: string | null
@@ -1610,6 +1695,7 @@ export type Database = {
         }
         Insert: {
           album_card_style?: string | null
+          allow_member_tags?: boolean
           avatar_url?: string | null
           banner_blurhash?: string | null
           banner_url?: string | null
@@ -1653,6 +1739,7 @@ export type Database = {
         }
         Update: {
           album_card_style?: string | null
+          allow_member_tags?: boolean
           avatar_url?: string | null
           banner_blurhash?: string | null
           banner_url?: string | null
@@ -2549,6 +2636,16 @@ export type Database = {
           p_items: Json
         }
         Returns: undefined
+      }
+      search_mention_members: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          nickname: string
+          similarity: number
+        }[]
       }
       submit_to_challenge: {
         Args: { p_challenge_id: string; p_photo_ids: string[] }

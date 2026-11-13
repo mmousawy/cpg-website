@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Json } from '@/database.types';
 import type { BatchUpdatePhotoDetailsBody } from '@/lib/photos/batchUpdatePhotoDetailsSchema';
+import { syncContentMentions } from '@/lib/mentions/syncContentMentions';
 import { planPhotoTagSync } from '@/lib/photos/photoTagSync';
 
 import type { BatchUpdatePhotoExifResult } from '@/lib/photos/batchUpdatePhotoExif';
@@ -205,6 +206,37 @@ export async function batchUpdatePhotoDetails(
     }
 
     affectedTags = plan.affectedTags;
+  }
+
+  const applyUnsetFields = options?.applyUnsetFields ?? false;
+  const descriptionUpdated = applyUnsetFields
+    ? patch.description !== undefined
+    : Boolean(patch.description);
+
+  if (descriptionUpdated) {
+    const [{ data: actor }, { data: updatedPhotos }] = await Promise.all([
+      supabase.from('profiles').select('nickname').eq('id', userId).maybeSingle(),
+      supabase.from('photos').select('id, title, short_id, url, description').in('id', photoIds),
+    ]);
+    const nickname = actor?.nickname;
+    if (nickname) {
+      await Promise.all((updatedPhotos ?? []).map((photo) => {
+        if (!photo.short_id) return Promise.resolve();
+        return syncContentMentions({
+          sourceType: 'photo',
+          sourceId: photo.id,
+          text: photo.description ?? '',
+          actorId: userId,
+          notificationType: 'mention_photo',
+          entityType: 'photo',
+          entityId: photo.id,
+          entityTitle: photo.title || 'Untitled photo',
+          entityLink: `/@${nickname}/photo/${photo.short_id}`,
+          entityThumbnail: photo.url,
+          contextLabel: 'a photo description',
+        });
+      }));
+    }
   }
 
   const affectedAlbumSlugs = new Set<string>();

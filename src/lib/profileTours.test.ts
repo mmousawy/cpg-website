@@ -14,6 +14,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
     id: 'user-123',
     tours: {},
     album_card_style: null,
+    allow_member_tags: true,
     motion: null,
     photo_captions: null,
     photo_grid_density: null,

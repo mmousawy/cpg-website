@@ -24,13 +24,13 @@ export default async function ProfilePhotoCollectionLayout({
   const siblingPhotos = nickname
     ? await getProfileSiblingPhotos(nickname, includeTestContent)
     : null;
-
   return (
     <>
       <ScrollToTopOnRouteChange />
       <PhotoFilmstripShell
         siblingPhotos={siblingPhotos ?? []}
         basePath={nickname ? `/@${nickname}` : undefined}
+        fallbackLabel="photostream"
         sidebar={sidebar}
       >
         {children}

@@ -34,15 +34,19 @@ Full setup: [infra/supabase-staging/README.md](../supabase-staging/README.md).
 
 ## Smoke tests (invite-only signup)
 
-- [ ] Public pages (home, gallery, events) load without signing in
+Playwright covers the same flows on push (`pnpm test:e2e` against this host). Walk the list when a deploy needs a manual pass.
+
+- [ ] Public pages load without signing in: home, gallery, `/gallery/photos`, events, `/scene`, challenges, members, help
 - [ ] `/signup` without `?bypass=` redirects to login
 - [ ] `/signup?bypass=` (admin generator or E2E `/api/test/signup-bypass`) can create a member account
 - [ ] Regular (non-admin) members can log in and use `/account`
 - [ ] Login with Google / Discord as promoted admin still reaches `/admin`
-- [ ] Homepage, gallery, events, challenges load (empty until seeded)
-- [ ] Upload a photo — lands in **staging** storage only
-- [ ] Create test event on staging — **not** visible on production
-- [ ] Global search (Cmd/Ctrl+K)
+- [ ] Upload a photo — lands in **staging** storage only. Library **Filter photos** can hide it (Public) and **Clear filters** brings it back. **Edit capture details** opens **Choose on map**
+- [ ] `/account/gear` opens **Add gear**. `/@nickname/gear` loads
+- [ ] Comment with `@nickname` links that member. **Tag people** on a photo shows on their profile **Tagged** grid. Account has “Allow other members to tag you…”
+- [ ] Create test event on staging — **not** visible on production. A non-admin RSVP shows on the event
+- [ ] Global search (header **Search** or Cmd/Ctrl+K) names gear and scene, and finds a member
+- [ ] `/under-review?preview-review=true` and `/network-blocked?preview-block=true` render without an account
 - [ ] No mixed-content warnings in devtools
 
 ## SSL / Cloudflare

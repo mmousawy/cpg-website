@@ -51,7 +51,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             ref={inputRef}
             type="checkbox"
             id={id}
-            className="peer sr-only"
+            className="peer sr-only focus-visible:outline-none"
             aria-label={`Toggle ${leftLabel} and ${rightLabel}`}
             onChange={onChange}
             {...props}
@@ -74,6 +74,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             className={clsx(
               'relative h-6 w-11 cursor-pointer rounded-full transition-colors',
               'bg-foreground/20 peer-checked:bg-primary',
+              'peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background',
             )}
             tabIndex={-1}
             aria-hidden="true"

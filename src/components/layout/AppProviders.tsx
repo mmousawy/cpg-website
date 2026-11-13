@@ -2,6 +2,7 @@
 
 import AuthenticatedProviders from '@/components/layout/AuthenticatedProviders';
 import { AuthStackContext } from '@/context/AuthStackContext';
+import { PhotoOverviewProvider } from '@/context/PhotoOverviewContext';
 
 type AppProvidersProps = {
   children: React.ReactNode;
@@ -17,7 +18,9 @@ export default function AppProviders({ children }: AppProvidersProps) {
       value={true}
     >
       <AuthenticatedProviders>
-        {children}
+        <PhotoOverviewProvider>
+          {children}
+        </PhotoOverviewProvider>
       </AuthenticatedProviders>
     </AuthStackContext.Provider>
   );

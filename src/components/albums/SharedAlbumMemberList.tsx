@@ -2,6 +2,7 @@
 
 import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
+import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import type { SharedAlbumMemberProfile } from '@/types/albums';
 import Link from 'next/link';
 
@@ -131,13 +132,19 @@ export default function SharedAlbumMemberList({
                   <div
                     className="min-w-0 flex-1 flex flex-col"
                   >
-                    {profileUrl ? (
-                      <Link
-                        href={profileUrl}
-                        className="font-medium text-foreground hover:text-primary truncate block"
+                    {profileUrl && member.profiles?.nickname ? (
+                      <MemberHoverCard
+                        nickname={member.profiles.nickname}
+                        fullName={member.profiles.full_name}
+                        avatarUrl={member.profiles.avatar_url}
                       >
-                        {displayName}
-                      </Link>
+                        <Link
+                          href={profileUrl}
+                          className="font-medium text-foreground hover:text-primary truncate block"
+                        >
+                          {displayName}
+                        </Link>
+                      </MemberHoverCard>
                     ) : (
                       <span
                         className="font-medium truncate block"

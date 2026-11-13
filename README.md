@@ -36,6 +36,8 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Photo uploads with EXIF extraction (camera, lens, settings, GPS)
 - Photo captions
 - Album comments and tags with reply threading
+- `@nickname` mentions in comments and photo/album descriptions (autocomplete, hover cards, notifications)
+- Photo spot tags: owners and admins tag members on the image; profile **Tagged** strip for public photos
 - Public/private visibility
 - Full-size viewing (PhotoSwipe)
 - Masonry grid layout
@@ -71,6 +73,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Custom avatar uploads
 - Bio, website, social links (with auto-detected icons)
 - Interests (up to 10 per profile)
+- Opt out of being tagged in comments, descriptions, and photos (`allow_member_tags` on the public profile settings)
 - Activity stats
 - Gear: shooting formats, daily driver, and an inventory at `/account/gear`, shown on the profile and at `/@username/gear`
 - Self-service account deletion (30-day retention with admin revert)
@@ -281,7 +284,7 @@ supabase/
 
 | Table | Description |
 | --- | --- |
-| `profiles` | User profiles (`under_review_at`, `suspended_at`) |
+| `profiles` | User profiles (`under_review_at`, `suspended_at`, `allow_member_tags`) |
 | `events` | Events/meetups |
 | `events_rsvps` | RSVPs and attendance |
 | `event_announcements` | Event email announcement tracking |
@@ -306,6 +309,8 @@ supabase/
 | `challenge_color_draws` | Challenge color draw records (user/guest color assignments) |
 | `challenge_comments` | Challenge-comment junction |
 | `comments` | Comment content with threading support |
+| `content_mentions` | Server-only index of `@nickname` mentions on comments, photos, and albums |
+| `photo_member_tags` | Member spot tags on photos (normalized x/y, one tag per person per photo) |
 | `notifications` | In-app notifications |
 | `email_types` | Email preference types |
 | `email_preferences` | User email opt-in/out |
@@ -476,6 +481,8 @@ Leave the **staging** Coolify app on git branch **`staging`** (auto-deploy on). 
 - [x] In-app notifications
 - [x] Community photo albums
 - [x] Reply to comments
+- [x] Member `@mentions` in comments and descriptions
+- [x] Photo spot tags and profile **Tagged** strip
 
 ### Discovery
 

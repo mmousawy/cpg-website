@@ -4,6 +4,7 @@ const scrollPositionsByRoute = new Map<string, number>();
 
 let historyTraversalPending = false;
 let skipScrollToTopForRouteChange = false;
+let pendingScrollRestoreRouteKey: string | null = null;
 let trackingInstalled = false;
 
 export function getRouteScrollCacheKey(): string {
@@ -39,6 +40,24 @@ export function restoreCachedRouteScrollPosition(): boolean {
   if (scrollY === undefined) return false;
   scrollContainerTo(scrollY, 'auto');
   return true;
+}
+
+/** Before navigating back to a cached overview, restore its scroll instead of scrolling to top. */
+export function prepareScrollRestoreForNavigation(targetPathWithSearch: string) {
+  pendingScrollRestoreRouteKey = targetPathWithSearch;
+  skipScrollToTopForRouteChange = true;
+}
+
+/** True when the active URL matches a prepared overview restore (consumes the pending key). */
+export function consumePendingScrollRestore(): boolean {
+  if (!pendingScrollRestoreRouteKey) return false;
+  const currentKey = getRouteScrollCacheKey();
+  const target = pendingScrollRestoreRouteKey;
+  pendingScrollRestoreRouteKey = null;
+  if (currentKey === target) {
+    return true;
+  }
+  return false;
 }
 
 /**

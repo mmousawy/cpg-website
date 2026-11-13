@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.48.0](https://github.com/mmousawy/cpg-website/compare/v1.47.6...v1.48.0) (2026-11-13)
+
+
+### ✨ Features
+
+* enhance tagging and mention features across the platform ([e82fe6c](https://github.com/mmousawy/cpg-website/commit/e82fe6cf0257d3822d18962ac26f76787079e194))
+* integrate MemberHoverCard across various components ([64bbd28](https://github.com/mmousawy/cpg-website/commit/64bbd285666d99db3ac6c7a22f6d2132213e9ab3))
+
+
+### 🐛 Bug Fixes
+
+* add allow_member_tags property to profile ([76f7ba7](https://github.com/mmousawy/cpg-website/commit/76f7ba708f300fe8012a2e4249f10bbfb0b2d56c))
+* enhance E2E testing and search functionality ([fff0e11](https://github.com/mmousawy/cpg-website/commit/fff0e115c08a0a578bf8110e211369535226e756))
+* enhance E2E tests for gear and global search functionality ([ff4a9b0](https://github.com/mmousawy/cpg-website/commit/ff4a9b0e54285345843892852a9f035a18fdf78d))
+* enhance E2E tests for photo upload and library interactions ([f890eca](https://github.com/mmousawy/cpg-website/commit/f890ecadd8b0b396c845fe02b1b237a966fdb14e))
+* enhance photo tagging and management features ([95a5295](https://github.com/mmousawy/cpg-website/commit/95a5295fc13ae8b45e62568d7311a8a58ee65de5))
+* enhance search functionality and caching behavior ([5e6a215](https://github.com/mmousawy/cpg-website/commit/5e6a215eec5f884946c7b5b97ec5c170cdda93e2))
+* improve E2E tests and search functionality ([699b354](https://github.com/mmousawy/cpg-website/commit/699b3541181dbfa347249fcedaa09f4b3faffa4f))
+* improve E2E tests for gear and global search functionality ([1740a2b](https://github.com/mmousawy/cpg-website/commit/1740a2b33dbf289378fadcab2eae458df4f3190d))
+* improve photo tagging and management workflows ([f3521ed](https://github.com/mmousawy/cpg-website/commit/f3521edbd64061b88d7d9d80ac21392c3fa408c6))
+* refine search functionality and E2E tests ([5bfdd6c](https://github.com/mmousawy/cpg-website/commit/5bfdd6caa42b00150c85876dab1fc8af87a0bc75))
+
+
+### ♻️ Refactoring
+
+* optimize PhotoOverviewContext for better state management ([efa1dbb](https://github.com/mmousawy/cpg-website/commit/efa1dbbacd7ea9f40bfbae254ee9c19b88019fba))
+
 ## [1.47.6](https://github.com/mmousawy/cpg-website/compare/v1.47.5...v1.47.6) (2026-11-09)
 
 

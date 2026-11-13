@@ -13,7 +13,12 @@ import { isNetworkBlockedPath } from '@/utils/networkBlockedPath';
 import { isOnboardingPath } from '@/utils/onboardingPath';
 import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 import {
+  getRoutePathWithSearch,
+  syncPhotoOverviewOnRouteChange,
+} from '@/utils/photoOverviewNavigation';
+import {
   consumeHistoryTraversal,
+  consumePendingScrollRestore,
   ensureRouteScrollNavigationTracking,
   restoreCachedRouteScrollPosition,
 } from '@/utils/routeScrollNavigation';
@@ -31,6 +36,9 @@ ensureRouteScrollNavigationTracking();
 export default function DocumentRouteState() {
   const pathname = usePathname();
   const prevPathnameRef = useRef(pathname);
+  const prevRouteKeyRef = useRef(
+    typeof window !== 'undefined' ? getRoutePathWithSearch(pathname) : pathname,
+  );
 
   const pinnedMobileShell = isMobilePinnedShellPath(pathname);
 
@@ -44,12 +52,20 @@ export default function DocumentRouteState() {
       'mobile-terminal-sticky-settle',
       isMobileTerminalStickySettlePath(pathname),
     );
+    syncPhotoOverviewOnRouteChange(
+      pathname,
+      prevPathnameRef.current,
+      prevRouteKeyRef.current,
+    );
+
     const isHistoryTraversal = consumeHistoryTraversal();
+    const pendingScrollRestore = consumePendingScrollRestore();
+    const shouldRestoreScroll = isHistoryTraversal || pendingScrollRestore;
     if (pinnedMobileShell && window.matchMedia('(max-width: 639px)').matches) {
       if (history.scrollRestoration) {
         history.scrollRestoration = 'manual';
       }
-      if (!isHistoryTraversal) {
+      if (!shouldRestoreScroll) {
         resetWindowScroll();
       }
     }
@@ -63,7 +79,7 @@ export default function DocumentRouteState() {
       resetMobileStickyChromeDocumentState();
     }
     if (!window.location.hash) {
-      if (isHistoryTraversal) {
+      if (shouldRestoreScroll) {
         const restore = () => {
           const restored = restoreCachedRouteScrollPosition();
           if (!restored) {
@@ -77,6 +93,7 @@ export default function DocumentRouteState() {
       }
     }
     prevPathnameRef.current = pathname;
+    prevRouteKeyRef.current = getRoutePathWithSearch(pathname);
   }, [pathname, pinnedMobileShell]);
 
   return null;

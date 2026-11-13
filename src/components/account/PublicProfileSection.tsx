@@ -7,6 +7,7 @@ import ProfileImageUploadSections, {
 } from '@/components/account/ProfileImageUploadSections';
 import Container from '@/components/layout/Container';
 import StickySectionHeading from '@/components/layout/StickySectionHeading';
+import Checkbox from '@/components/shared/Checkbox';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
@@ -221,6 +222,19 @@ export default function PublicProfileSection({
               )}
             />
           </div>
+
+          <Controller
+            name="allowMemberTags"
+            control={control}
+            render={({ field }) => (
+              <Checkbox
+                id="allow-member-tags"
+                checked={field.value ?? true}
+                onChange={(event) => field.onChange(event.target.checked)}
+                label="Allow other members to tag you in comments, descriptions, and photos"
+              />
+            )}
+          />
         </div>
       </Container>
     </div>

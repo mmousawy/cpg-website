@@ -123,14 +123,21 @@ export function calculateJustifiedLayout(
     return [buildRow(photoData, containerWidth, gap)];
   }
 
-  // Calculate ideal photos per row for balancing
-  const estimatedRows = Math.max(1, Math.round(n / ((minPhotosPerRow + maxPhotosPerRow) / 2)));
+  // Estimate rows from total aspect vs target height so 5 landscapes become 2 rows, not 1
+  const totalAspect = photoData.reduce((sum, p) => sum + p.aspectRatio, 0);
+  const targetAspectPerRow = containerWidth / targetRowHeight;
+  const minRows = Math.ceil(n / maxPhotosPerRow);
+  const maxRows = Math.max(minRows, Math.floor(n / minPhotosPerRow));
+  const estimatedRows = Math.max(
+    minRows,
+    Math.min(maxRows, Math.max(1, Math.round(totalAspect / targetAspectPerRow))),
+  );
   const idealPhotosPerRow = n / estimatedRows;
 
   // Dynamic programming approach
   // dp[i] = { cost, prev, prevRowSize, prevSignature } for optimal layout of photos 0..i-1
   const dp: Array<{ cost: number; prev: number; prevRowSize: number; prevSignature: string }> = new Array(n + 1);
-  dp[0] = { cost: 0, prev: -1, prevRowSize: idealPhotosPerRow, prevSignature: '' };
+  dp[0] = { cost: 0, prev: -1, prevRowSize: 0, prevSignature: '' };
 
   for (let i = 1; i <= n; i++) {
     dp[i] = { cost: Infinity, prev: -1, prevRowSize: 0, prevSignature: '' };
@@ -157,8 +164,9 @@ export function calculateJustifiedLayout(
         heightPenalty = 50 + Math.min(excess, 300) * 2;
       }
 
-      // Balance penalty: no penalty for ±1, heavy penalty for ±2+
-      const sizeDiff = Math.abs((i - j) - dp[j].prevRowSize);
+      // Balance penalty: no penalty for ±1, heavy penalty for ±2+. Skip the first row.
+      const prevRowSize = dp[j].prevRowSize;
+      const sizeDiff = prevRowSize === 0 ? 0 : Math.abs((i - j) - prevRowSize);
       const balancePenalty = sizeDiff <= 1 ? 0 : sizeDiff * sizeDiff * 50;
 
       // Light penalty for extreme deviation from ideal

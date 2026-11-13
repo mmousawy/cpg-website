@@ -3,6 +3,8 @@ import { userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 import {
   enqueueCommentNotificationEmail,
+  enqueueMentionNotificationEmail,
+  type MentionEmailItem,
   type QueuedCommentEmailItem,
 } from '@/lib/notifications/emailQueue';
 import type {
@@ -47,9 +49,12 @@ type ActorEntry = {
   avatar?: string | null;
 };
 
-export type PendingEmailPayload = QueuedCommentEmailItem & {
+export type PendingEmailPayload = (QueuedCommentEmailItem & {
   batchEntityType?: string;
-};
+  kind?: undefined;
+}) | (MentionEmailItem & {
+  batchEntityType?: string;
+});
 
 type InternalNotificationData = NotificationData & {
   _pendingEmail?: PendingEmailPayload;
@@ -571,11 +576,22 @@ async function queuePendingEmail(
     return;
   }
 
+  if ('kind' in pendingEmail && (pendingEmail.kind === 'mention' || pendingEmail.kind === 'photo_tag')) {
+    await enqueueMentionNotificationEmail({
+      recipientUserId: userId,
+      entityId,
+      notificationId,
+      item: pendingEmail,
+      batchEntityType: pendingEmail.batchEntityType,
+    });
+    return;
+  }
+
   await enqueueCommentNotificationEmail({
     recipientUserId: userId,
     entityId,
     notificationId,
-    item: pendingEmail,
+    item: pendingEmail as QueuedCommentEmailItem,
     batchEntityType: pendingEmail.batchEntityType,
   });
 }

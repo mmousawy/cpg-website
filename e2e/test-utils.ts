@@ -53,6 +53,46 @@ export function withInternalApiHeaders(
 
 /** Same header Playwright sends so e2e users appear on public pages. */
 export const E2E_INCLUDE_TEST_HEADER = 'x-cpg-e2e-include-test';
+/** Cookie name — must match `E2E_INCLUDE_TEST_COOKIE` in includeTestContent.ts */
+export const E2E_INCLUDE_TEST_COOKIE = 'cpg_e2e_include_test';
+
+export type PlaywrightCookie = {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  secure: boolean;
+  sameSite: 'Lax' | 'Strict' | 'None';
+  httpOnly: boolean;
+  expires: number;
+};
+
+/** Cookies for browser fetch() and navigations (mirrors verified E2E header). */
+export function getE2EPlaywrightCookies(baseURL: string): PlaywrightCookie[] {
+  const secret = getInternalApiSecret();
+  if (!secret) return [];
+
+  const url = new URL(baseURL);
+  return [{
+    name: E2E_INCLUDE_TEST_COOKIE,
+    value: secret,
+    domain: url.hostname,
+    path: '/',
+    secure: url.protocol === 'https:',
+    sameSite: 'Lax',
+    httpOnly: true,
+    expires: Math.floor(Date.now() / 1000) + 60 * 60,
+  }];
+}
+
+/** APIRequestContext options — omit browser-only storageState cookies. */
+export function getPlaywrightRequestContextOptions(): {
+  baseURL: string;
+  extraHTTPHeaders: Record<string, string>;
+  } {
+  const { baseURL, extraHTTPHeaders } = getPlaywrightApiContextOptions();
+  return { baseURL, extraHTTPHeaders };
+}
 
 export function withE2EIncludeTestHeaders(
   headers: Record<string, string> = {},
@@ -65,17 +105,21 @@ export function withE2EIncludeTestHeaders(
   };
 }
 
-/** Shared Playwright request context options (mirrors playwright.config.ts). */
-export function getPlaywrightApiContextOptions(): {
+export type PlaywrightApiContextOptions = {
   baseURL: string;
   extraHTTPHeaders: Record<string, string>;
-  } {
-  const baseUrl = resolveE2EBaseUrl();
-  const headers = withE2EIncludeTestHeaders({});
+  e2eCookies: PlaywrightCookie[];
+};
+
+/** Shared Playwright request context options (mirrors playwright.config.ts). */
+export function getPlaywrightApiContextOptions(): PlaywrightApiContextOptions {
+  const baseURL = resolveE2EBaseUrl();
+  const extraHTTPHeaders = withE2EIncludeTestHeaders({});
 
   return {
-    baseURL: baseUrl,
-    extraHTTPHeaders: headers,
+    baseURL,
+    extraHTTPHeaders,
+    e2eCookies: getE2EPlaywrightCookies(baseURL),
   };
 }
 
@@ -161,29 +205,20 @@ export type CreateTestUserOptions = {
   asAdmin?: boolean;
 };
 
-function resolveCreateTestUserOptions(options: CreateTestUserOptions): CreateTestUserOptions {
-  // Deployed staging still signs out non-admins. Specs that need a member
-  // pass `{ asAdmin: false }` after that gate is removed.
-  if (isStagingE2ETarget() && options.asAdmin !== false) {
-    return { ...options, asAdmin: true };
-  }
-  return options;
-}
-
 /**
  * Create a fully verified test user via the test setup API.
  * Uses Playwright's request context so auth headers match browser tests.
+ * Pass `{ asAdmin: true }` only when the spec needs an admin (event create auto-RSVPs every admin).
  */
 export async function createTestUser(
   apiRequest: APIRequestContext,
   options: CreateTestUserOptions = {},
 ): Promise<TestUser> {
-  const resolved = resolveCreateTestUserOptions(options);
   const email = generateTestEmail();
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
-  const completeOnboarding = resolved.completeOnboarding !== false;
-  const asAdmin = resolved.asAdmin === true;
+  const completeOnboarding = options.completeOnboarding !== false;
+  const asAdmin = options.asAdmin === true;
 
   if (!getInternalApiSecret()) {
     throw new Error(
@@ -253,6 +288,33 @@ export async function cleanupTestUsers(
  */
 export function photosUploadInput(page: Page) {
   return page.locator('#photos-tour-upload + input[type="file"]').first();
+}
+
+/** Account photos grid is ready (loaded; empty state or at least one card). */
+export async function waitForPhotoLibrary(page: Page) {
+  const cards = page.locator('[data-testid="photo-card"]');
+  const empty = page.getByText(/don't have any photos yet/i);
+  await page.waitForURL(/\/account\/photos/, { timeout: 15_000 });
+  await expect(page.getByLabel('Loading photos')).toHaveCount(0, { timeout: 20_000 });
+  await expect(empty.or(cards.first())).toBeVisible({ timeout: 20_000 });
+  return cards;
+}
+
+/** Upload one file via the library chrome and wait until a new photo card appears. */
+export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
+  const cards = page.locator('[data-testid="photo-card"]');
+  const countBefore = await cards.count();
+
+  const uploadResponse = page.waitForResponse(
+    (res) => res.url().includes('/api/photos/upload') && res.request().method() === 'POST',
+    { timeout: 90_000 },
+  );
+  await photosUploadInput(page).setInputFiles(imagePath);
+  const response = await uploadResponse;
+  expect(response.ok(), `upload failed: ${response.status()} ${await response.text()}`).toBeTruthy();
+
+  await expect(cards).toHaveCount(countBefore + 1, { timeout: 30_000 });
+  return cards.first();
 }
 
 /** First-run driver.js overlay blocks clicks on the photo grid until it is closed. */

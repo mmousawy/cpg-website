@@ -52,6 +52,10 @@ const notificationIcons: Record<string, string> = {
   comment_photo: '💬',
   comment_album: '💬',
   comment_event: '💬',
+  mention_comment: '💬',
+  mention_photo: '💬',
+  mention_album: '💬',
+  photo_member_tag: '👤',
   follow: '👤',
   followed_upload: '📷',
   event_reminder: '📅',
@@ -68,6 +72,10 @@ const notificationMessages: Record<string, (actor: string | null, data?: Notific
   comment_photo: (actor, data) => formatCommentMessage(actor, data, 'your photo'),
   comment_album: (actor, data) => formatCommentMessage(actor, data, 'your album'),
   comment_event: (actor, data) => formatCommentMessage(actor, data, 'the event'),
+  mention_comment: (actor, data) => `${actor || 'Someone'} mentioned you in a comment${data?.title ? ` on ${data.title}` : ''}`,
+  mention_photo: (actor, data) => `${actor || 'Someone'} mentioned you in a photo description${data?.title ? ` on ${data.title}` : ''}`,
+  mention_album: (actor, data) => `${actor || 'Someone'} mentioned you in an album description${data?.title ? ` on ${data.title}` : ''}`,
+  photo_member_tag: (actor, data) => `${actor || 'Someone'} tagged you in a photo${data?.title ? `: ${data.title}` : ''}`,
   follow: (actor) => `${actor || 'Someone'} started following you`,
   followed_upload: (actor, data) => {
     const count = (data?.photoCount as number) || 1;

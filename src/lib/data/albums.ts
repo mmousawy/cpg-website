@@ -435,6 +435,29 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
 }
 
 /**
+ * Count public, non-event albums that still have photos.
+ * Matches the set `getUserPublicAlbums` would return.
+ */
+export async function getUserPublicAlbumCount(userId: string, nickname: string) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag(`profile-${nickname}`);
+  cacheTag('albums');
+
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('albums')
+    .select('id, album_photos_active!inner(id)')
+    .eq('user_id', userId)
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .is('event_id', null);
+
+  return data?.length ?? 0;
+}
+
+/**
  * Get event album for an event (auto-created by trigger)
  * Tagged with 'albums' and 'events' for cache invalidation
  */

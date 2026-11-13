@@ -24,7 +24,6 @@ export default async function AlbumPhotoCollectionLayout({
   const siblingPhotos = nickname && albumSlug
     ? await getAlbumSiblingPhotos(nickname, albumSlug)
     : null;
-
   return (
     <>
       <ScrollToTopOnRouteChange />
@@ -32,6 +31,7 @@ export default async function AlbumPhotoCollectionLayout({
         siblingPhotos={siblingPhotos ?? []}
         nickname={nickname}
         albumSlug={albumSlug}
+        fallbackLabel="album"
         sidebar={sidebar}
       >
         {children}

@@ -12,6 +12,7 @@ import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import {
   type CommentEmailEntityType,
 } from '@/lib/notifications/emailQueue';
+import { syncContentMentions } from '@/lib/mentions/syncContentMentions';
 import {
   scheduleNotification,
 } from '@/lib/notifications/schedule';
@@ -72,6 +73,101 @@ async function resolveCommentEntity(
   }
 
   return null;
+}
+
+async function syncCommentMentions(
+  supabase: SupabaseClient,
+  params: {
+    commentId: string;
+    commentText: string;
+    actorId: string;
+    entityType: CommentEntityType;
+    entityId: string;
+    entityTitle?: string;
+    entityLink?: string;
+    entityThumbnail?: string | null;
+    skipNotifyUserIds?: string[];
+  },
+) {
+  let entityTitle = params.entityTitle ?? '';
+  let entityLink = params.entityLink ?? '';
+  let entityThumbnail = params.entityThumbnail ?? null;
+
+  if (!entityLink) {
+    if (params.entityType === 'photo') {
+      const { data: photo } = await supabase
+        .from('photos')
+        .select('title, url, short_id, profiles!photos_user_id_fkey(nickname)')
+        .eq('id', params.entityId)
+        .maybeSingle();
+      const nickname = (photo?.profiles as unknown as { nickname: string | null } | null)?.nickname;
+      entityTitle = photo?.title || 'Untitled photo';
+      entityThumbnail = photo?.url ?? null;
+      if (nickname && photo?.short_id) {
+        entityLink = `/@${nickname}/photo/${photo.short_id}#comments`;
+      }
+    } else if (params.entityType === 'album') {
+      const { data: album } = await supabase
+        .from('albums')
+        .select('title, slug, cover_image_url, profiles!albums_user_id_fkey(nickname)')
+        .eq('id', params.entityId)
+        .maybeSingle();
+      const nickname = (album?.profiles as unknown as { nickname: string | null } | null)?.nickname;
+      entityTitle = album?.title || 'Album';
+      entityThumbnail = album?.cover_image_url ?? null;
+      if (nickname && album?.slug) {
+        entityLink = `/@${nickname}/album/${album.slug}#comments`;
+      }
+    } else if (params.entityType === 'event') {
+      const { data: event } = await supabase
+        .from('events')
+        .select('title, slug, cover_image')
+        .eq('id', Number(params.entityId))
+        .maybeSingle();
+      entityTitle = event?.title || 'Event';
+      entityThumbnail = event?.cover_image ?? null;
+      if (event?.slug) entityLink = `/events/${event.slug}#comments`;
+    } else if (params.entityType === 'challenge') {
+      const { data: challenge } = await supabase
+        .from('challenges')
+        .select('title, slug, cover_image_url')
+        .eq('id', params.entityId)
+        .maybeSingle();
+      entityTitle = challenge?.title || 'Challenge';
+      entityThumbnail = challenge?.cover_image_url ?? null;
+      if (challenge?.slug) entityLink = `/challenges/${challenge.slug}#comments`;
+    } else {
+      const { data: sceneEvent } = await supabase
+        .from('scene_events')
+        .select('title, slug, cover_image_url')
+        .eq('id', params.entityId)
+        .maybeSingle();
+      entityTitle = sceneEvent?.title || 'Event';
+      entityThumbnail = sceneEvent?.cover_image_url ?? null;
+      if (sceneEvent?.slug) entityLink = `/scene/${sceneEvent.slug}#comments`;
+    }
+  }
+
+  const { data: storedComment } = await supabase
+    .from('comments')
+    .select('comment_text')
+    .eq('id', params.commentId)
+    .maybeSingle();
+
+  await syncContentMentions({
+    sourceType: 'comment',
+    sourceId: params.commentId,
+    text: storedComment?.comment_text ?? params.commentText,
+    actorId: params.actorId,
+    notificationType: 'mention_comment',
+    entityType: params.entityType,
+    entityId: params.entityId,
+    entityTitle,
+    entityLink,
+    entityThumbnail,
+    contextLabel: 'a comment',
+    skipNotifyUserIds: params.skipNotifyUserIds,
+  });
 }
 
 async function revalidateCommentEntity(
@@ -230,6 +326,13 @@ export async function PATCH(request: NextRequest) {
   const entity = await resolveCommentEntity(supabase, commentId);
   if (entity) {
     await revalidateCommentEntity(supabase, entity.entityType, entity.entityId);
+    await syncCommentMentions(supabase, {
+      commentId,
+      commentText: commentText.trim(),
+      actorId: user.id,
+      entityType: entity.entityType,
+      entityId: entity.entityId,
+    });
   }
 
   return NextResponse.json({ success: true, commentId }, { status: 200 });
@@ -864,6 +967,27 @@ export async function POST(request: NextRequest) {
       emailEntityType: entityType as CommentEmailEntityType,
       isReply: false,
       includeEmail: !!ownerProfile.email,
+    });
+  }
+
+  if (commentId) {
+    const skipNotifyUserIds: string[] = [];
+    if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id) {
+      skipNotifyUserIds.push(parentCommentAuthorId);
+    }
+    if (!parentCommentId && ownerId && ownerId !== user.id && (entityType === 'album' || entityType === 'photo')) {
+      skipNotifyUserIds.push(ownerId);
+    }
+    await syncCommentMentions(supabase, {
+      commentId,
+      commentText: commentText.trim(),
+      actorId: user.id,
+      entityType,
+      entityId,
+      entityTitle,
+      entityLink,
+      entityThumbnail,
+      skipNotifyUserIds,
     });
   }
 

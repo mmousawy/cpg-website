@@ -4,9 +4,10 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
+import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
-import Textarea from '@/components/shared/Textarea';
+import MentionField from '@/components/shared/MentionField';
 import Toggle from '@/components/shared/Toggle';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
 import { useOpenPhotoExifModal } from '@/hooks/useOpenPhotoExifModal';
@@ -429,12 +430,18 @@ export default function BulkPhotoEditForm({
                       size="xxs"
                     />
                     {owner.nickname ? (
-                      <Link
-                        href={`/@${owner.nickname}`}
-                        className="text-foreground/80 font-medium hover:text-primary"
+                      <MemberHoverCard
+                        nickname={owner.nickname}
+                        fullName={owner.full_name}
+                        avatarUrl={owner.avatar_url}
                       >
-                        {handle}
-                      </Link>
+                        <Link
+                          href={`/@${owner.nickname}`}
+                          className="text-foreground/80 font-medium hover:text-primary"
+                        >
+                          {handle}
+                        </Link>
+                      </MemberHoverCard>
                     ) : (
                       <span
                         className="text-foreground/80 font-medium"
@@ -492,10 +499,17 @@ export default function BulkPhotoEditForm({
             >
               Description
             </label>
-            <Textarea
-              id="bulk_description"
-              {...register('description')}
-              rows={3}
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <MentionField
+                  id="bulk_description"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  rows={3}
+                />
+              )}
             />
             <p
               className="text-xs text-foreground/50"

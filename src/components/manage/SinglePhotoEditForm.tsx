@@ -6,10 +6,11 @@ import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
+import MemberHoverCard from '@/components/shared/MemberHoverCard';
 import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
-import Textarea from '@/components/shared/Textarea';
+import MentionField from '@/components/shared/MentionField';
 import Toggle from '@/components/shared/Toggle';
 import { routes } from '@/config/routes';
 import type { PhotoFilter } from '@/hooks/photoQueryCache';
@@ -25,6 +26,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { getAlbumDisplayName } from './AlbumListItem';
+import ManagePhotoMemberTagsSection from './ManagePhotoMemberTagsSection';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
 
@@ -330,12 +332,18 @@ export default function SinglePhotoEditForm({
                 className="min-w-0 flex-1 flex flex-col"
               >
                 {photo.owner_profile.nickname ? (
-                  <Link
-                    href={`/@${photo.owner_profile.nickname}`}
-                    className="font-medium text-foreground hover:text-primary truncate"
+                  <MemberHoverCard
+                    nickname={photo.owner_profile.nickname}
+                    fullName={photo.owner_profile.full_name}
+                    avatarUrl={photo.owner_profile.avatar_url}
                   >
-                    {photo.owner_profile.full_name || `@${photo.owner_profile.nickname}`}
-                  </Link>
+                    <Link
+                      href={`/@${photo.owner_profile.nickname}`}
+                      className="font-medium text-foreground hover:text-primary truncate"
+                    >
+                      {photo.owner_profile.full_name || `@${photo.owner_profile.nickname}`}
+                    </Link>
+                  </MemberHoverCard>
                 ) : (
                   <span
                     className="font-medium truncate"
@@ -451,12 +459,23 @@ export default function SinglePhotoEditForm({
             >
               Description
             </label>
-            <Textarea
-              id={`description-${photo.id}`}
-              {...register('description')}
-              rows={3}
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <MentionField
+                  id={`description-${photo.id}`}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  rows={3}
+                />
+              )}
             />
           </div>
+
+          <ManagePhotoMemberTagsSection
+            photo={photo}
+          />
 
           <Toggle
             id={`is_public-${photo.id}`}

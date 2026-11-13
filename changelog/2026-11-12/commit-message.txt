@@ -1,0 +1,71 @@
+feat: member @mentions and photo spot tags
+
+Mentions in text:
+- `@nickname` in comments, photo descriptions, and album descriptions
+- Contenteditable composer with prefix nickname search (`search_mention_members`), inline highlight, and MemberHoverCard on committed tokens
+- Published text links mentions via batched directory lookup; opted-out members stay plain text unless self-mention
+- `content_mentions` synced server-side after save; mention notifications (in-app + debounced email) respect the existing Notifications email preference
+
+Photo spot tags:
+- Owners and admins place tags on the photo; dots on the detail image with sidebar list and remove rules
+- `photo_member_tag` notifications; public **Tagged** grid on member profiles
+
+Account & help:
+- Checkbox to allow or refuse being tagged; opt-out clears existing mention rows and photo dots via trigger
+
+Database (consolidated into baseline):
+- `profiles.allow_member_tags`, `content_mentions`, `photo_member_tags`, `search_mention_members`, opt-out trigger
+- `content_mentions` RLS: service_role policy only (client grants revoked)
+
+UI polish:
+- Toggle focus ring; contenteditable focus outline matches inputs; narrower mention dropdown
+
+Files changed (46):
+
+New (15):
+- src/app/api/members/mention-directory/route.ts
+- src/app/api/members/mention-search/route.ts
+- src/app/api/mentions/sync/route.ts
+- src/app/api/photos/[photoId]/member-tags/route.ts
+- src/components/photo/PhotoMemberTags.tsx
+- src/components/shared/MentionField.tsx
+- src/components/shared/MentionSuggestionList.tsx
+- src/components/shared/MentionText.tsx
+- src/emails/mention-notification.tsx
+- src/hooks/useMentionSearch.ts
+- src/lib/mentions/parseMentions.test.ts
+- src/lib/mentions/parseMentions.ts
+- src/lib/mentions/syncContentMentions.ts
+- src/lib/mentions/types.ts
+- src/lib/notifications/mentionEmailCopy.ts
+
+Modified (31):
+- README.md
+- src/app/[nickname]/(profile)/page.tsx
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/api/comments/route.ts
+- src/app/globals.css
+- src/components/account/PublicProfileSection.tsx
+- src/components/manage/BulkPhotoEditForm.tsx
+- src/components/manage/SharedAlbumEditForm.tsx
+- src/components/manage/SingleAlbumEditForm.tsx
+- src/components/manage/SinglePhotoEditForm.tsx
+- src/components/notifications/NotificationContent.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/photo/PhotoWithLightbox.tsx
+- src/components/shared/Comments.tsx
+- src/components/shared/DetailSidebar.tsx
+- src/components/shared/Toggle.tsx
+- src/content/help/account.tsx
+- src/database.types.ts
+- src/emails/weekly-digest.tsx
+- src/hooks/useAccountForm.ts
+- src/hooks/useAlbumMutations.ts
+- src/lib/data/profiles.ts
+- src/lib/email/renderDebouncedEmailBatch.tsx
+- src/lib/email/templateKeys.ts
+- src/lib/notifications/emailQueue.ts
+- src/lib/notifications/schedule.ts
+- src/lib/photos/batchUpdatePhotoDetails.ts
+- src/types/notifications.ts
+- supabase/migrations/00000000000000_baseline.sql

@@ -1046,6 +1046,27 @@ $$;
 ALTER FUNCTION "public"."cleanup_expired_auth_tokens"() OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."clear_mentions_on_tag_opt_out"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF TG_OP = 'UPDATE'
+     AND OLD.allow_member_tags IS TRUE
+     AND NEW.allow_member_tags IS FALSE THEN
+    DELETE FROM public.content_mentions
+    WHERE mentioned_user_id = NEW.id;
+    DELETE FROM public.photo_member_tags
+    WHERE profile_id = NEW.id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."clear_mentions_on_tag_opt_out"() OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO ''
@@ -2465,13 +2486,20 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  WITH search_tsquery AS (
-    SELECT to_tsquery('english',
+  WITH normalized_query AS (
+    SELECT regexp_replace(btrim(search_query), '-', ' ', 'g') AS q
+  ),
+  search_tsquery AS (
+    SELECT to_tsquery(
+      'english',
       regexp_replace(
-        regexp_replace(search_query, '\s+', ' & ', 'g'),
+        regexp_replace((SELECT q FROM normalized_query), '\s+', ' & ', 'g'),
         '(\w+)', '\1:*', 'g'
       )
     ) AS query
+  ),
+  nickname_handle AS (
+    SELECT replace(btrim(search_query), ' ', '-') AS handle
   ),
   all_results AS (
     SELECT
@@ -2482,13 +2510,21 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
       p.avatar_url AS image_url,
       NULL::text AS image_blurhash,
       CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname ELSE NULL END AS url,
-      ts_rank(p.search_vector, sq.query) AS rank
+      CASE
+        WHEN p.search_vector @@ sq.query THEN ts_rank(p.search_vector, sq.query)
+        ELSE 0.85::real
+      END AS rank
     FROM profiles p
     CROSS JOIN search_tsquery sq
+    CROSS JOIN nickname_handle nh
     WHERE 'members' = ANY(search_types)
       AND p.suspended_at IS NULL
       AND p.nickname IS NOT NULL
-      AND p.search_vector @@ sq.query
+      AND length(btrim(search_query)) >= 2
+      AND (
+        p.search_vector @@ sq.query
+        OR p.nickname ILIKE nh.handle || '%'
+      )
 
     UNION ALL
 
@@ -2630,7 +2666,7 @@ $$;
 ALTER FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) OWNER TO "supabase_admin";
 
 
-COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search across albums, photos, members, events, scene events, challenges, and tags. SECURITY DEFINER with explicit public-only filters.';
+COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search. Hyphenated nicknames normalized for FTS; member handle prefix fallback.';
 
 
 
@@ -3157,6 +3193,10 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  IF nullif(current_setting('cpg.maintain_engagement_counter', true), '') IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
   IF pg_catalog.pg_trigger_depth() > 1 THEN
     RETURN NEW;
   END IF;
@@ -3241,6 +3281,10 @@ CREATE OR REPLACE FUNCTION "public"."protect_photos_engagement_columns"() RETURN
     AS $$
 BEGIN
   IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF nullif(current_setting('cpg.maintain_engagement_counter', true), '') IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
@@ -3864,6 +3908,46 @@ $$;
 ALTER FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."search_mention_members"("p_query" "text", "p_limit" integer DEFAULT 8) RETURNS TABLE("id" "uuid", "nickname" "text", "full_name" "text", "avatar_url" "text", "similarity" real)
+    LANGUAGE "plpgsql" STABLE
+    SET "search_path" TO 'public', 'extensions'
+    AS $_$
+DECLARE
+  v_query text := lower(trim(COALESCE(p_query, '')));
+  v_limit integer := LEAST(GREATEST(COALESCE(p_limit, 8), 1), 8);
+BEGIN
+  IF v_query = '' OR v_query !~ '^[a-z0-9-]+$' THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    p.id,
+    p.nickname,
+    p.full_name,
+    p.avatar_url,
+    similarity(p.nickname, v_query) AS similarity
+  FROM public.profiles p
+  WHERE p.nickname IS NOT NULL
+    AND p.suspended_at IS NULL
+    AND p.nickname LIKE v_query || '%'
+    AND (
+      p.allow_member_tags = true
+      OR p.id = (SELECT auth.uid())
+    )
+  ORDER BY similarity(p.nickname, v_query) DESC, length(p.nickname), p.nickname
+  LIMIT v_limit;
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."search_mention_members"("p_query" "text", "p_limit" integer) OWNER TO "supabase_admin";
+
+
+COMMENT ON FUNCTION "public"."search_mention_members"("p_query" "text", "p_limit" integer) IS 'Nickname-prefix search for @mentions and photo tags, ranked by trigram similarity.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."set_photo_sort_order"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -4102,11 +4186,12 @@ CREATE OR REPLACE FUNCTION "public"."update_album_likes_count"() RETURNS "trigge
     SET "search_path" TO 'public'
     AS $$
 BEGIN
+  PERFORM set_config('cpg.maintain_engagement_counter', '1', true);
   IF TG_OP = 'INSERT' THEN
-    UPDATE albums SET likes_count = likes_count + 1 WHERE id = NEW.album_id;
+    UPDATE public.albums SET likes_count = likes_count + 1 WHERE id = NEW.album_id;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    UPDATE albums SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.album_id;
+    UPDATE public.albums SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.album_id;
     RETURN OLD;
   END IF;
   RETURN NULL;
@@ -4192,11 +4277,12 @@ CREATE OR REPLACE FUNCTION "public"."update_photo_likes_count"() RETURNS "trigge
     SET "search_path" TO 'public'
     AS $$
 BEGIN
+  PERFORM set_config('cpg.maintain_engagement_counter', '1', true);
   IF TG_OP = 'INSERT' THEN
-    UPDATE photos SET likes_count = likes_count + 1 WHERE id = NEW.photo_id;
+    UPDATE public.photos SET likes_count = likes_count + 1 WHERE id = NEW.photo_id;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    UPDATE photos SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.photo_id;
+    UPDATE public.photos SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.photo_id;
     RETURN OLD;
   END IF;
   RETURN NULL;
@@ -4530,7 +4616,6 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "theme" "text" DEFAULT 'system'::"text",
     "newsletter_opt_in" boolean DEFAULT false NOT NULL,
     "terms_accepted_at" timestamp with time zone,
-    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("full_name", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("nickname", ''::"text")), 'A'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("bio", ''::"text")), 'B'::"char"))) STORED,
     "default_license" "public"."license_type" DEFAULT 'all-rights-reserved'::"public"."license_type" NOT NULL,
     "copyright_name" "text",
     "watermark_enabled" boolean DEFAULT false NOT NULL,
@@ -4553,6 +4638,8 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "under_review_at" timestamp with time zone,
     "deletion_source" "text",
     "is_service_account" boolean DEFAULT false NOT NULL,
+    "allow_member_tags" boolean DEFAULT true NOT NULL,
+    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("full_name", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("replace"("nickname", '-'::"text", ' '::"text"), ''::"text")), 'A'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("bio", ''::"text")), 'B'::"char"))) STORED,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_deletion_source_check" CHECK ((("deletion_source" IS NULL) OR ("deletion_source" = ANY (ARRAY['self'::"text", 'admin'::"text", 'inactivity'::"text", 'suspension'::"text"])))),
@@ -4599,6 +4686,10 @@ COMMENT ON COLUMN "public"."profiles"."deletion_source" IS 'Why deletion_schedul
 
 
 COMMENT ON COLUMN "public"."profiles"."is_service_account" IS 'System/scraper identity: no member email/notifications, not eligible for inactivity deletion';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."allow_member_tags" IS 'When false, other members cannot @mention or photo-tag this profile.';
 
 
 
@@ -4684,6 +4775,19 @@ COMMENT ON COLUMN "public"."comments"."parent_comment_id" IS 'Self-referencing f
 
 COMMENT ON COLUMN "public"."comments"."edited_at" IS 'Timestamp when the comment author last edited the comment text. NULL if never edited.';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."content_mentions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "source_type" "text" NOT NULL,
+    "source_id" "uuid" NOT NULL,
+    "mentioned_user_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "content_mentions_source_type_check" CHECK (("source_type" = ANY (ARRAY['comment'::"text", 'photo'::"text", 'album'::"text"])))
+);
+
+
+ALTER TABLE "public"."content_mentions" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."email_preferences" (
@@ -4991,6 +5095,22 @@ CREATE TABLE IF NOT EXISTS "public"."photo_likes" (
 
 
 ALTER TABLE "public"."photo_likes" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."photo_member_tags" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "photo_id" "uuid" NOT NULL,
+    "profile_id" "uuid" NOT NULL,
+    "x" numeric NOT NULL,
+    "y" numeric NOT NULL,
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "photo_member_tags_x_check" CHECK ((("x" >= (0)::numeric) AND ("x" <= (1)::numeric))),
+    CONSTRAINT "photo_member_tags_y_check" CHECK ((("y" >= (0)::numeric) AND ("y" <= (1)::numeric)))
+);
+
+
+ALTER TABLE "public"."photo_member_tags" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."photo_tags" (
@@ -5407,6 +5527,16 @@ ALTER TABLE ONLY "public"."comments"
 
 
 
+ALTER TABLE ONLY "public"."content_mentions"
+    ADD CONSTRAINT "content_mentions_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."content_mentions"
+    ADD CONSTRAINT "content_mentions_source_user_key" UNIQUE ("source_type", "source_id", "mentioned_user_id");
+
+
+
 ALTER TABLE ONLY "public"."email_preferences"
     ADD CONSTRAINT "email_preferences_pkey" PRIMARY KEY ("user_id", "email_type_id");
 
@@ -5539,6 +5669,16 @@ ALTER TABLE ONLY "public"."photo_comments"
 
 ALTER TABLE ONLY "public"."photo_likes"
     ADD CONSTRAINT "photo_likes_pkey" PRIMARY KEY ("photo_id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."photo_member_tags"
+    ADD CONSTRAINT "photo_member_tags_photo_profile_key" UNIQUE ("photo_id", "profile_id");
+
+
+
+ALTER TABLE ONLY "public"."photo_member_tags"
+    ADD CONSTRAINT "photo_member_tags_pkey" PRIMARY KEY ("id");
 
 
 
@@ -5893,6 +6033,14 @@ CREATE INDEX "idx_comments_user" ON "public"."comments" USING "btree" ("user_id"
 
 
 
+CREATE INDEX "idx_content_mentions_mentioned_user" ON "public"."content_mentions" USING "btree" ("mentioned_user_id");
+
+
+
+CREATE INDEX "idx_content_mentions_source" ON "public"."content_mentions" USING "btree" ("source_type", "source_id");
+
+
+
 CREATE INDEX "idx_email_preferences_email_type_id" ON "public"."email_preferences" USING "btree" ("email_type_id");
 
 
@@ -6002,6 +6150,14 @@ CREATE INDEX "idx_photo_likes_photo_id" ON "public"."photo_likes" USING "btree" 
 
 
 CREATE INDEX "idx_photo_likes_user_id" ON "public"."photo_likes" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_photo_member_tags_photo_id" ON "public"."photo_member_tags" USING "btree" ("photo_id");
+
+
+
+CREATE INDEX "idx_photo_member_tags_profile_id" ON "public"."photo_member_tags" USING "btree" ("profile_id");
 
 
 
@@ -6265,6 +6421,10 @@ CREATE OR REPLACE TRIGGER "trigger_auto_assign_sort_order" BEFORE INSERT ON "pub
 
 
 
+CREATE OR REPLACE TRIGGER "trigger_clear_mentions_on_tag_opt_out" AFTER UPDATE OF "allow_member_tags" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."clear_mentions_on_tag_opt_out"();
+
+
+
 CREATE OR REPLACE TRIGGER "trigger_photo_tags_count" AFTER INSERT OR DELETE ON "public"."photo_tags" FOR EACH ROW EXECUTE FUNCTION "public"."update_tag_count"();
 
 
@@ -6440,6 +6600,11 @@ ALTER TABLE ONLY "public"."comments"
 
 
 
+ALTER TABLE ONLY "public"."content_mentions"
+    ADD CONSTRAINT "content_mentions_mentioned_user_id_fkey" FOREIGN KEY ("mentioned_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."email_preferences"
     ADD CONSTRAINT "email_preferences_email_type_id_fkey" FOREIGN KEY ("email_type_id") REFERENCES "public"."email_types"("id") ON DELETE CASCADE;
 
@@ -6557,6 +6722,21 @@ ALTER TABLE ONLY "public"."photo_likes"
 
 ALTER TABLE ONLY "public"."photo_likes"
     ADD CONSTRAINT "photo_likes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."photo_member_tags"
+    ADD CONSTRAINT "photo_member_tags_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."photo_member_tags"
+    ADD CONSTRAINT "photo_member_tags_photo_id_fkey" FOREIGN KEY ("photo_id") REFERENCES "public"."photos"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."photo_member_tags"
+    ADD CONSTRAINT "photo_member_tags_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -6910,6 +7090,30 @@ CREATE POLICY "Only admins can update events" ON "public"."events" FOR UPDATE US
 
 
 
+CREATE POLICY "Owner or admin can move photo member tags" ON "public"."photo_member_tags" FOR UPDATE USING ((EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_member_tags"."photo_id") AND (("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_member_tags"."photo_id") AND (("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"())))) AND (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "photo_member_tags"."profile_id") AND (("profiles"."allow_member_tags" = true) OR ("profiles"."id" = ( SELECT "auth"."uid"() AS "uid"))))))));
+
+
+
+CREATE POLICY "Owner or admin can tag members on photos" ON "public"."photo_member_tags" FOR INSERT WITH CHECK ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) AND (EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_member_tags"."photo_id") AND ("photos"."deleted_at" IS NULL) AND (("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"())))) AND (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "photo_member_tags"."profile_id") AND ("profiles"."suspended_at" IS NULL) AND ("profiles"."nickname" IS NOT NULL) AND (("profiles"."allow_member_tags" = true) OR ("profiles"."id" = ( SELECT "auth"."uid"() AS "uid"))))))));
+
+
+
+CREATE POLICY "Owner, admin, or tagged member can remove photo member tags" ON "public"."photo_member_tags" FOR DELETE USING ((("profile_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"() OR (EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_member_tags"."photo_id") AND ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+
+
+
 CREATE POLICY "Photo likes are publicly readable" ON "public"."photo_likes" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."photos"
   WHERE (("photos"."id" = "photo_likes"."photo_id") AND (("photos"."is_public" = true) OR ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"())))));
@@ -6969,6 +7173,10 @@ CREATE POLICY "Select albums policy" ON "public"."albums" FOR SELECT USING ((("u
 
 
 CREATE POLICY "Select email preferences policy" ON "public"."email_preferences" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
+
+
+
+CREATE POLICY "Service role manages content mentions" ON "public"."content_mentions" TO "service_role" USING (true) WITH CHECK (true);
 
 
 
@@ -7176,6 +7384,12 @@ CREATE POLICY "View photo comment links" ON "public"."photo_comments" FOR SELECT
 
 
 
+CREATE POLICY "View photo member tags" ON "public"."photo_member_tags" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_member_tags"."photo_id") AND (("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"() OR (("photos"."is_public" = true) AND ("photos"."deleted_at" IS NULL)))))));
+
+
+
 CREATE POLICY "View profiles" ON "public"."profiles" FOR SELECT USING (("public"."is_admin"() OR ("id" = ( SELECT "auth"."uid"() AS "uid")) OR (("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL) AND ("under_review_at" IS NULL))));
 
 
@@ -7250,6 +7464,9 @@ ALTER TABLE "public"."challenges" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."comments" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."content_mentions" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."email_preferences" ENABLE ROW LEVEL SECURITY;
 
 
@@ -7310,6 +7527,9 @@ ALTER TABLE "public"."photo_comments" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."photo_likes" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."photo_member_tags" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."photo_tags" ENABLE ROW LEVEL SECURITY;
@@ -7852,6 +8072,12 @@ GRANT ALL ON FUNCTION "public"."cleanup_expired_auth_tokens"() TO "service_role"
 
 
 
+REVOKE ALL ON FUNCTION "public"."clear_mentions_on_tag_opt_out"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."clear_mentions_on_tag_opt_out"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."clear_mentions_on_tag_opt_out"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") TO "postgres";
 GRANT ALL ON FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") TO "authenticated";
@@ -8179,6 +8405,13 @@ GRANT ALL ON FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."sh
 
 
 
+GRANT ALL ON FUNCTION "public"."search_mention_members"("p_query" "text", "p_limit" integer) TO "postgres";
+GRANT ALL ON FUNCTION "public"."search_mention_members"("p_query" "text", "p_limit" integer) TO "anon";
+GRANT ALL ON FUNCTION "public"."search_mention_members"("p_query" "text", "p_limit" integer) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."search_mention_members"("p_query" "text", "p_limit" integer) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "anon";
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "authenticated";
@@ -8484,6 +8717,11 @@ GRANT SELECT("under_review_at") ON TABLE "public"."profiles" TO "authenticated";
 
 
 
+GRANT SELECT("allow_member_tags") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("allow_member_tags") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_photos" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_photos" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_photos" TO "authenticated";
@@ -8502,6 +8740,10 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."comments" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."comments" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."comments" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."content_mentions" TO "service_role";
 
 
 
@@ -8641,6 +8883,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_likes" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_likes" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_likes" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_member_tags" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_member_tags" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_member_tags" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_member_tags" TO "service_role";
 
 
 
