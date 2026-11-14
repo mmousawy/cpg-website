@@ -8,6 +8,7 @@ import {
   expectVisiblePhotoMemberTag,
   loginTestUser,
   searchMemberInTagPicker,
+  setSidebarPhotoPublic,
   uploadPhotoInLibrary,
   waitForPhotoLibrary,
   waitForTagPeopleModal,
@@ -49,11 +50,7 @@ test.describe('Mentions and photo tags', () => {
 
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
     await expect(sidebar).toBeVisible();
-    const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
-    if (!(await visibilityToggle.isChecked())) {
-      await sidebar.getByRole('button', { name: 'Public', exact: true }).click();
-    }
-    await expect(visibilityToggle).toBeChecked({ timeout: 10_000 });
+    await setSidebarPhotoPublic(page, sidebar);
     const saveButton = sidebar.getByRole('button', { name: /^save$/i });
     await expect(saveButton).toBeEnabled({ timeout: 10_000 });
     await saveButton.click();

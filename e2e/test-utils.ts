@@ -334,6 +334,25 @@ export async function waitForPhotoLibrary(page: Page) {
   return cards;
 }
 
+/**
+ * Set the manage-photo visibility toggle to Public.
+ * The "Public" label only toggles — so a stale unread can flip it back to private.
+ * Retry until it sticks; the form can reset once when the selected photo hydrates.
+ */
+export async function setSidebarPhotoPublic(
+  page: Page,
+  sidebar = page.locator('[data-testid="sidebar-panel"]').first(),
+): Promise<void> {
+  const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
+  await expect(visibilityToggle).toBeVisible({ timeout: 10_000 });
+  await expect(async () => {
+    if (!(await visibilityToggle.isChecked())) {
+      await sidebar.getByRole('button', { name: 'Public', exact: true }).click();
+    }
+    await expect(visibilityToggle).toBeChecked();
+  }).toPass({ timeout: 10_000 });
+}
+
 /** Upload one file via the library chrome and wait until a new photo card appears. */
 export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
   const cards = page.locator('[data-testid="photo-card"]');

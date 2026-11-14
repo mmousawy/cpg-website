@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useCallback, useRef } from 'react';
 
 interface ToggleProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   /** Label for the left side (unchecked state) */
@@ -24,12 +24,22 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
   ({ className, leftLabel, rightLabel, label, id, onChange, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Forward the ref
-    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+    const setInputRef = useCallback((node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    }, [ref]);
 
     // Handle click on the toggle area
     const handleToggleClick = useCallback(() => {
       if (inputRef.current && !props.disabled) {
+        inputRef.current.click();
+      }
+    }, [props.disabled]);
+
+    const setChecked = useCallback((checked: boolean) => {
+      if (!inputRef.current || props.disabled) return;
+      if (inputRef.current.checked !== checked) {
         inputRef.current.click();
       }
     }, [props.disabled]);
@@ -48,19 +58,19 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
         >
           {/* Hidden checkbox */}
           <input
-            ref={inputRef}
+            {...props}
+            ref={setInputRef}
             type="checkbox"
             id={id}
             className="peer sr-only focus-visible:outline-none"
             aria-label={`Toggle ${leftLabel} and ${rightLabel}`}
             onChange={onChange}
-            {...props}
           />
 
           {/* Left label (active when unchecked) */}
           <button
             type="button"
-            onClick={handleToggleClick}
+            onClick={() => setChecked(false)}
             className="text-foreground peer-checked:text-foreground/40 cursor-pointer text-sm font-medium transition-colors"
             tabIndex={-1}
           >
@@ -91,7 +101,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
           {/* Right label (active when checked) */}
           <button
             type="button"
-            onClick={handleToggleClick}
+            onClick={() => setChecked(true)}
             className="text-foreground/40 peer-checked:text-foreground cursor-pointer text-sm font-medium transition-colors"
             tabIndex={-1}
           >

@@ -8,6 +8,7 @@ import {
   deleteTestEvent,
   dismissDriverTour,
   loginTestUser,
+  setSidebarPhotoPublic,
   uploadPhotoInLibrary,
   waitForPhotoLibrary,
   type TestEvent,
@@ -115,12 +116,7 @@ test.describe('Revalidation smoke', () => {
 
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
     await expect(sidebar).toBeVisible({ timeout: 10_000 });
-
-    const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
-    if (!(await visibilityToggle.isChecked())) {
-      await sidebar.getByRole('button', { name: 'Public', exact: true }).click();
-    }
-    await expect(visibilityToggle).toBeChecked();
+    await setSidebarPhotoPublic(page, sidebar);
 
     const saveButton = sidebar.getByRole('button', { name: /^save$/i });
     await expect(saveButton).toBeEnabled({ timeout: 10_000 });
