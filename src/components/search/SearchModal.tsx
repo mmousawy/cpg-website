@@ -194,7 +194,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <p
                   className="mt-2 text-sm text-foreground/40"
                 >
-                  Search across albums, photos, members, gear, events, scene, and tags
+                  Search across albums, photos, members, gear, events, scene, tags, and help
                 </p>
               </div>
             ) : (

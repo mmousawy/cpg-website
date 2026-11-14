@@ -5,7 +5,7 @@ import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useConfirmState } from '@/app/providers/ConfirmProvider';
-import { modalOverlayZClassName } from '@/components/layout/mobileChrome';
+import { confirmOverlayZClassName } from '@/components/layout/mobileChrome';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
@@ -68,7 +68,7 @@ export default function ConfirmModal() {
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 overflow-auto overscroll-contain',
-        modalOverlayZClassName,
+        confirmOverlayZClassName,
         'flex size-full max-h-none max-w-none p-3 max-sm:p-4',
         'bg-black/60',
         'transition-[visibility,opacity] duration-200 ease-out',

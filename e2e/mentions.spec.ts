@@ -92,7 +92,7 @@ test.describe('Mentions and photo tags', () => {
     await expect(tagDialog.getByText('Click the photo to place a tag')).toBeVisible();
     await tagDialog.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
     await searchMemberInTagPicker(page, taggedMember.nickname);
-    await tagDialog.getByRole('button', { name: 'Done' }).click();
+    await tagDialog.getByRole('button', { name: 'Save' }).click();
     await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
 
     await page.goto(photoPageUrl);

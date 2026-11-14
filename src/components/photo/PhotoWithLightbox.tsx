@@ -1,12 +1,14 @@
 'use client';
 
 import { useProgressRouter } from '@/components/layout/NavigationProgress';
+import { usePhotoLightboxOpen } from '@/context/PhotoLightboxOpenContext';
 import { recordView } from '@/utils/recordView';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import clsx from 'clsx';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BlurImage from '../shared/BlurImage';
 import LoadingSpinner from '../shared/LoadingSpinner';
+import type { PhotoMemberTag } from '@/lib/data/photoMemberTags';
 import { PhotoMemberTagLayer } from './PhotoMemberTags';
 
 function keepLightboxKeysOffThePage(lightbox: PhotoSwipeLightboxInstance) {
@@ -40,6 +42,7 @@ type PhotoWithLightboxProps = {
   basePath?: string;
   /** When set, member spot-tag dots are shown on this photo (placement is only in Account → Photos). */
   photoId?: string;
+  memberTags?: PhotoMemberTag[];
 };
 
 export default function PhotoWithLightbox({
@@ -55,20 +58,35 @@ export default function PhotoWithLightbox({
   albumSlug,
   basePath,
   photoId,
+  memberTags,
 }: PhotoWithLightboxProps) {
   const galleryRef = useRef<HTMLDivElement>(null);
-  const imageAnchorRef = useRef<HTMLAnchorElement>(null);
+  const imageFrameRef = useRef<HTMLDivElement>(null);
   const lightboxRef = useRef<PhotoSwipeLightboxInstance | null>(null);
   const initialIndexRef = useRef(0);
   const skipInitialLightboxViewRef = useRef(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
   const router = useProgressRouter();
+  const lightboxOpen = usePhotoLightboxOpen();
 
   const hasGallery = !!galleryPhotos && galleryPhotos.length > 1;
 
+  const lightboxPhotos = useMemo((): GalleryPhoto[] => {
+    if (hasGallery && galleryPhotos) {
+      return galleryPhotos;
+    }
+    return [{
+      id: photoId ?? 'current',
+      shortId: currentShortId ?? '',
+      url,
+      width,
+      height,
+    }];
+  }, [hasGallery, galleryPhotos, photoId, currentShortId, url, width, height]);
+
   const getPageImage = useCallback(() => (
-    imageAnchorRef.current?.querySelector('img')
+    imageFrameRef.current?.querySelector('img')
   ), []);
 
   const imageUrlsMatch = useCallback((a: string, b: string) => {
@@ -86,46 +104,22 @@ export default function PhotoWithLightbox({
       : `/@${nickname}/album/${albumSlug}/photo/${shortId}`
   ), [basePath, nickname, albumSlug]);
 
-  // Single-image mode: bind PhotoSwipe to the visible anchor
+  const getCurrentIndex = useCallback(() => {
+    if (hasGallery && galleryPhotos && currentShortId) {
+      const index = galleryPhotos.findIndex((photo) => photo.shortId === currentShortId);
+      return index >= 0 ? index : 0;
+    }
+    return 0;
+  }, [hasGallery, galleryPhotos, currentShortId]);
+
+  // Programmatic dataSource gallery (single image or collection)
   useEffect(() => {
-    if (hasGallery || !galleryRef.current) return;
-
-    let mounted = true;
-
-    initPhotoSwipe().then((PhotoSwipeLightbox) => {
-      if (!mounted || !galleryRef.current) return;
-
-      const lightbox = new PhotoSwipeLightbox({
-        gallery: galleryRef.current,
-        children: 'a',
-        pswpModule: () => import('photoswipe'),
-        showHideAnimationType: 'zoom',
-      });
-
-      keepLightboxKeysOffThePage(lightbox);
-      lightbox.init();
-      lightboxRef.current = lightbox;
-    });
-
-    return () => {
-      mounted = false;
-      if (lightboxRef.current) {
-        lightboxRef.current.destroy();
-        lightboxRef.current = null;
-      }
-    };
-  }, [hasGallery]);
-
-  // Multi-image mode: programmatic dataSource gallery with navigation on close
-  useEffect(() => {
-    if (!hasGallery || !galleryPhotos) return;
-
     let mounted = true;
 
     initPhotoSwipe().then((PhotoSwipeLightbox) => {
       if (!mounted) return;
 
-      const dataSource = galleryPhotos.map((photo) => ({
+      const dataSource = lightboxPhotos.map((photo) => ({
         src: photo.url,
         width: photo.width || 1200,
         height: photo.height || 800,
@@ -140,14 +134,14 @@ export default function PhotoWithLightbox({
       keepLightboxKeysOffThePage(lightbox);
 
       lightbox.addFilter('itemData', (itemData, index) => {
-        if (index !== initialIndexRef.current || !imageAnchorRef.current) {
+        if (index !== initialIndexRef.current || !imageFrameRef.current) {
           return itemData;
         }
 
-        const pageImg = imageAnchorRef.current.querySelector('img');
+        const pageImg = imageFrameRef.current.querySelector('img');
         return {
           ...itemData,
-          element: imageAnchorRef.current,
+          element: imageFrameRef.current,
           msrc: pageImg ? (pageImg.currentSrc || pageImg.src) : itemData.msrc,
           alt: pageImg?.alt || itemData.alt,
         };
@@ -177,10 +171,10 @@ export default function PhotoWithLightbox({
 
       lightbox.on('change', () => {
         const pswp = lightbox.pswp;
-        if (!pswp || !galleryPhotos) return;
+        if (!pswp) return;
 
-        const photo = galleryPhotos[pswp.currIndex];
-        if (!photo?.id) return;
+        const photo = lightboxPhotos[pswp.currIndex];
+        if (!photo?.id || photo.id === 'current') return;
 
         if (skipInitialLightboxViewRef.current && pswp.currIndex === initialIndexRef.current) {
           skipInitialLightboxViewRef.current = false;
@@ -201,8 +195,9 @@ export default function PhotoWithLightbox({
       });
 
       lightbox.on('close', () => {
+        if (!hasGallery) return;
         const pswp = lightbox.pswp;
-        if (!pswp || !currentShortId) return;
+        if (!pswp || !currentShortId || !galleryPhotos) return;
 
         const closedPhoto = galleryPhotos[pswp.currIndex];
         if (closedPhoto && closedPhoto.shortId !== currentShortId) {
@@ -221,7 +216,16 @@ export default function PhotoWithLightbox({
         lightboxRef.current = null;
       }
     };
-  }, [hasGallery, galleryPhotos, currentShortId, getPhotoHref, router, getPageImage, imageUrlsMatch]);
+  }, [
+    lightboxPhotos,
+    hasGallery,
+    galleryPhotos,
+    currentShortId,
+    getPhotoHref,
+    router,
+    getPageImage,
+    imageUrlsMatch,
+  ]);
 
   const openGallery = useCallback((index: number, initialPoint?: { x: number; y: number } | null) => {
     initialIndexRef.current = index;
@@ -229,16 +233,14 @@ export default function PhotoWithLightbox({
     lightboxRef.current?.loadAndOpen(index, undefined, initialPoint ?? null);
   }, []);
 
-  const handleImageClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (!hasGallery || !galleryPhotos || !currentShortId) return;
+  const openCurrentLightbox = useCallback(() => {
+    openGallery(getCurrentIndex(), null);
+  }, [openGallery, getCurrentIndex]);
 
-    event.preventDefault();
-    const index = galleryPhotos.findIndex((photo) => photo.shortId === currentShortId);
-    const initialPoint = event.clientX || event.clientY
-      ? { x: event.clientX, y: event.clientY }
-      : null;
-    openGallery(index >= 0 ? index : 0, initialPoint);
-  }, [hasGallery, galleryPhotos, currentShortId, openGallery]);
+  useEffect(() => {
+    lightboxOpen?.register(openCurrentLightbox);
+    return () => lightboxOpen?.register(null);
+  }, [lightboxOpen, openCurrentLightbox]);
 
   // Show spinner after 200ms delay (avoid flash for fast loads)
   useEffect(() => {
@@ -254,7 +256,7 @@ export default function PhotoWithLightbox({
   return (
     <div
       id="gallery"
-      className="flex w-full text-center relative"
+      className="relative flex w-full text-center"
       ref={galleryRef}
     >
       {/* Loading spinner - shows after 200ms, fades out when loaded */}
@@ -273,17 +275,16 @@ export default function PhotoWithLightbox({
         </div>
       </div>
 
-      <div
-        className="relative mx-auto w-fit"
+      <figure
+        data-photo-fit-frame=""
+        className="relative mx-auto w-full max-w-full"
+        style={{ ['--photo-aspect' as string]: String(width / height) }}
       >
-        <a
-          ref={imageAnchorRef}
-          href={url}
-          data-pswp-src={url}
-          data-pswp-width={width}
-          data-pswp-height={height}
-          onClick={hasGallery ? handleImageClick : undefined}
-          className={clsx('block', hasGallery && 'cursor-zoom-in!')}
+        <div
+          ref={imageFrameRef}
+          data-photo-page-image=""
+          data-photo-page-src={url}
+          className="relative mx-auto block w-full max-w-full"
         >
           <BlurImage
             src={url}
@@ -294,21 +295,21 @@ export default function PhotoWithLightbox({
             contain
             unoptimized
             onLoad={() => setIsLoaded(true)}
-            className={clsx(
-              isInAlbum ? 'max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]'
-                : 'max-h-[calc(100vh-90px)] sm:max-h-[calc(100vh-106px)] lg:max-h-[calc(100vh-138px)] ',
-            )}
+            className={isInAlbum
+              ? 'w-full [--photo-max-h:calc(100vh-162px)] sm:[--photo-max-h:calc(100vh-180px)] md:[--photo-max-h:calc(100vh-172px)] lg:[--photo-max-h:calc(100vh-218px)]'
+              : 'w-full [--photo-max-h:calc(100vh-98px)] sm:[--photo-max-h:calc(100vh-114px)] md:[--photo-max-h:calc(100vh-106px)] lg:[--photo-max-h:calc(100vh-138px)]'}
             style={{
               aspectRatio: `${width}/${height}`,
             }}
           />
-        </a>
+        </div>
         {photoId ? (
           <PhotoMemberTagLayer
             photoId={photoId}
+            initialMemberTags={memberTags}
           />
         ) : null}
-      </div>
+      </figure>
     </div>
   );
 }

@@ -8,6 +8,10 @@ import { createPortal } from 'react-dom';
 
 const TOOLTIP_MOTION_MS = 150;
 
+/** Shared chrome for tooltip panels and inline tag-name callouts. */
+export const tooltipSurfaceClassName =
+  'rounded-md border border-border-color-strong bg-background-float px-2 py-1.5 text-xs text-foreground shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.15)] dark:shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.4)]';
+
 interface TooltipProps {
   /** Content to show in the tooltip */
   content: React.ReactNode;
@@ -223,7 +227,8 @@ export default function Tooltip({
           <div
             ref={tooltipRef}
             className={clsx(
-              'fixed rounded-md border border-border-color-strong bg-background-float px-2 py-1.5 text-xs text-foreground shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.15)] dark:shadow-[2px_4px_6px_-1px_rgba(0,0,0,0.4)]',
+              'fixed',
+              tooltipSurfaceClassName,
               'transition-[opacity,translate] duration-150 ease-out motion-reduce:transition-none',
               entered
                 ? 'translate-x-0 translate-y-0 opacity-100'

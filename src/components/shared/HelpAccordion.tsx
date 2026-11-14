@@ -58,40 +58,44 @@ export default function HelpAccordion({ id, title, children }: HelpAccordionProp
       id={id}
       className="border-b border-border-color last:border-b-0 last:pb-0"
     >
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex w-full cursor-pointer list-none items-center justify-between gap-4 py-5 text-left font-semibold text-primary dark:text-primary-light transition-colors hover:text-primary/90 dark:hover:text-primary-light/90"
-        aria-expanded={isOpen}
+      <h3
+        className="m-0"
       >
-        <span>
-          {title}
-        </span>
-        <span
-          className={`shrink-0 text-primary/70 dark:text-primary-light/80 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={`flex w-full cursor-pointer list-none items-center justify-between gap-4 py-5 text-left text-base font-semibold transition-colors ${isOpen ? 'text-foreground' : 'text-primary hover:text-primary/90 dark:text-primary-light dark:hover:text-primary-light/90'}`}
+          aria-expanded={isOpen}
         >
-          <svg
-            className="size-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <span>
+            {title}
+          </span>
+          <span
+            className={`shrink-0 text-primary/70 dark:text-primary-light/80 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </span>
-      </button>
+            <svg
+              className="size-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </span>
+        </button>
+      </h3>
       <div
         className="overflow-hidden transition-[height] duration-300 ease-out"
         style={{ height: isOpen ? height : 0 }}
       >
         <div
           ref={contentRef}
-          className="pb-6 pl-0 text-foreground/80 [&_ul]:mb-4 [&_ul]:ml-6 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ol]:mb-4 [&_ol]:ml-6 [&_ol]:list-decimal [&_ol]:space-y-1.5"
+          className="pb-6 pl-0 text-sm text-foreground/80 [&_ul]:mb-4 [&_ul]:ml-6 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ol]:mb-4 [&_ol]:ml-6 [&_ol]:list-decimal [&_ol]:space-y-1.5"
         >
           {children}
         </div>

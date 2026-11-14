@@ -146,9 +146,8 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
           )}
         </div>
 
-        {/* Sidebar - sticky, scrollable */}
         <DetailSidebar
-          sticky
+          ariaLabel="Album details"
           actions={(
             <AlbumActionsPopover
               albumId={album.id}

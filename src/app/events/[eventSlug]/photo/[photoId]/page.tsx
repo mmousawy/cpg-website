@@ -1,4 +1,5 @@
 import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
+import { withPhotoMemberTagsHydration } from '@/components/photo/withPhotoMemberTagsHydration';
 import JsonLd from '@/components/shared/JsonLd';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -82,12 +83,15 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  return (
+  return withPhotoMemberTagsHydration(
+    result.photo.id,
+    result.photo.user_id,
+    result.memberTags,
     <CachedEventPhotoPage
       eventSlug={eventSlug}
       photoId={photoId}
       result={result}
-    />
+    />,
   );
 }
 
@@ -135,9 +139,11 @@ async function CachedEventPhotoPage({
       )}
       <PhotoLightboxColumn
         photo={result.photo}
+        profile={result.profile}
         isInAlbum
         siblingPhotos={result.siblingPhotos}
         basePath={`/events/${eventSlug}`}
+        memberTags={result.memberTags}
       />
     </>
   );

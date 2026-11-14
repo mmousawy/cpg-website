@@ -1,4 +1,5 @@
 import { PhotoMetadataColumn } from '@/components/photo/PhotoPageContent';
+import { withPhotoMemberTagsHydration } from '@/components/photo/withPhotoMemberTagsHydration';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
@@ -35,12 +36,15 @@ export default async function ProfilePhotoSidebar({ params }: { params: Params }
     notFound();
   }
 
-  return (
+  return withPhotoMemberTagsHydration(
+    result.photo.id,
+    result.photo.user_id,
+    result.memberTags,
     <CachedProfilePhotoSidebar
       nickname={nickname}
       photoId={photoId}
       result={result}
-    />
+    />,
   );
 }
 
@@ -64,6 +68,7 @@ async function CachedProfilePhotoSidebar({
       profile={result.profile}
       albums={result.albums}
       challenges={result.challenges}
+      memberTags={result.memberTags}
     />
   );
 }

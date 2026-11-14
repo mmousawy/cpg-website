@@ -14,7 +14,7 @@ interface SearchInputProps {
 export default function SearchInput({
   value,
   onChange,
-  placeholder = 'Search albums, photos, members, events...',
+  placeholder = 'Search albums, photos, members, events, help...',
   autoFocus = false,
 }: SearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);

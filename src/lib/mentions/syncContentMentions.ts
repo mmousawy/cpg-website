@@ -120,6 +120,7 @@ export async function syncContentMentions(
       actorAvatarUrl: actor?.avatar_url ?? null,
       actorProfileLink: actorNickname ? `/@${actorNickname}` : null,
       entityTitle: params.entityTitle,
+      entityThumbnail: params.entityThumbnail ?? null,
       entityLink: params.entityLink,
       contextLabel: params.contextLabel,
     },

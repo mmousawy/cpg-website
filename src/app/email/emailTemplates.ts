@@ -1,4 +1,4 @@
-type EmailTemplateComponent = React.ComponentType<{ preview?: boolean; [key: string]: unknown }>;
+type EmailTemplateComponent = React.ComponentType<{ preview?: boolean;[key: string]: unknown }>;
 type EmailModule = { default: EmailTemplateComponent };
 
 export const emailTemplateLoaders: Record<string, () => Promise<EmailModule>> = {
@@ -21,6 +21,7 @@ export const emailTemplateLoaders: Record<string, () => Promise<EmailModule>> = 
   'member-deleted': () => import('@/emails/member-notification').then((mod) => ({
     default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'deleted' }),
   })) as unknown as Promise<EmailModule>,
+  'mention-notification': () => import('@/emails/mention-notification') as unknown as Promise<EmailModule>,
   'member-joined': () => import('@/emails/member-notification').then((mod) => ({
     default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'joined' }),
   })) as unknown as Promise<EmailModule>,

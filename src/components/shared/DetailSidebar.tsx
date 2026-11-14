@@ -4,6 +4,8 @@ import MentionText from './MentionText';
 
 type DetailSidebarProps = {
   children: ReactNode;
+  /** Accessible name for the complementary column (photo/album details). */
+  ariaLabel?: string;
   /** Overflow menu pinned to the top-right corner */
   actions?: ReactNode;
   /** Tighter top margin when stacked under a filmstrip/photo (mobile) */
@@ -22,13 +24,15 @@ type DetailSidebarProps = {
  */
 export default function DetailSidebar({
   children,
+  ariaLabel = 'Details',
   actions,
   tightTopMargin = false,
   sticky = false,
   className,
 }: DetailSidebarProps) {
   return (
-    <div
+    <aside
+      aria-label={ariaLabel}
       className={clsx(
         'relative -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 sm:pb-8',
         'md:mx-0 md:mt-0 md:flex md:w-96 md:shrink-0 md:flex-col md:rounded-lg md:border md:border-border-color md:px-6 md:pt-6 md:pb-6',
@@ -54,7 +58,24 @@ export default function DetailSidebar({
       >
         {children}
       </div>
-    </div>
+    </aside>
+  );
+}
+
+/** Secondary section title in detail sidebars (Tagged people, Seen in, etc.). */
+export function DetailSidebarSectionHeading({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <h2
+      className={clsx('mb-1.5 text-xs font-medium text-foreground/80', className)}
+    >
+      {children}
+    </h2>
   );
 }
 
@@ -70,24 +91,41 @@ export function DetailSidebarAuthor({ children }: { children: ReactNode }) {
 
 export function DetailSidebarTitle({
   title,
+  accessibleTitle,
   description,
   authorId,
 }: {
+  /** Visible page title (e.g. photo title when the uploader set one). */
   title?: ReactNode;
+  /** h1 text when `title` is omitted — shown to assistive tech only (e.g. untitled photos). */
+  accessibleTitle?: string;
   description?: string | null;
   authorId?: string | null;
 }) {
-  if (!title && !description) return null;
+  const displayTitle =
+    title !== undefined && title !== null && String(title).trim() !== ''
+      ? title
+      : null;
+  const h1Text = displayTitle ?? accessibleTitle?.trim();
+  const hasDescription = Boolean(description?.trim());
+  if (!h1Text && !hasDescription) return null;
+
+  const hasVisibleBlock = Boolean(displayTitle) || hasDescription;
 
   return (
     <div
-      className="mb-6"
+      className={clsx(hasVisibleBlock && 'mb-6')}
     >
-      {title ? (
+      {h1Text ? (
         <h1
-          className="mb-3 text-2xl font-bold md:text-xl font-heading"
+          className={clsx(
+            'font-heading',
+            displayTitle
+              ? 'mb-3 text-2xl font-bold md:text-xl'
+              : 'sr-only',
+          )}
         >
-          {title}
+          {h1Text}
         </h1>
       ) : null}
       {description ? (

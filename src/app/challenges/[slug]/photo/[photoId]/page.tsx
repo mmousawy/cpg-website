@@ -1,4 +1,5 @@
 import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
+import { withPhotoMemberTagsHydration } from '@/components/photo/withPhotoMemberTagsHydration';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
@@ -80,12 +81,15 @@ export default async function ChallengePhotoPage({ params }: { params: Params })
     notFound();
   }
 
-  return (
+  return withPhotoMemberTagsHydration(
+    result.photo.id,
+    result.photo.user_id,
+    result.memberTags,
     <CachedChallengePhotoPage
       slug={slug}
       photoId={photoId}
       result={result}
-    />
+    />,
   );
 }
 
@@ -107,9 +111,11 @@ async function CachedChallengePhotoPage({
   return (
     <PhotoLightboxColumn
       photo={result.photo}
+      profile={result.profile}
       isInAlbum
       siblingPhotos={result.siblingPhotos}
       basePath={`/challenges/${slug}`}
+      memberTags={result.memberTags}
     />
   );
 }

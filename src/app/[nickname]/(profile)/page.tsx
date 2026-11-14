@@ -6,7 +6,7 @@ import WidePageContainer from '@/components/layout/WidePageContainer';
 import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import { ProfileBelowHeroSection, ProfileHeroBanner, profileHeroPageClassName } from '@/components/profile/ProfileHeader';
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialLinks';
-import Button from '@/components/shared/Button';
+import ArrowLink from '@/components/shared/ArrowLink';
 import ProfileGearSummary from '@/components/profile/ProfileGearSummary';
 import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
@@ -144,6 +144,9 @@ async function ProfileContent({ nickname }: { nickname: string }) {
   );
 
   const published = getPublishedProfileFields(profile);
+  const profileNickname = profile.nickname || nickname;
+  const profilePhotosHref = `/@${encodeURIComponent(profileNickname)}/photos`;
+  const profileAlbumsHref = `/@${encodeURIComponent(profileNickname)}/albums`;
   const profileJsonLd = buildProfilePageJsonLd({
     nickname,
     fullName: profile.full_name,
@@ -218,11 +221,41 @@ async function ProfileContent({ nickname }: { nickname: string }) {
         <WidePageContainer
           className="pt-0!"
         >
+          <StickySectionHeading
+            as="div"
+            pinDesktop
+            stickyClassName="mb-6 sm:mb-6"
+            accessory={
+              totalPhotos > PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE ? (
+                <ArrowLink
+                  href={profilePhotosHref}
+                >
+                  View all
+                  {' '}
+                  {totalPhotos}
+                  {' '}
+                  photos
+                </ArrowLink>
+              ) : undefined
+            }
+          >
+            <h2
+              className="text-xl font-semibold font-heading"
+            >
+              Photostream
+            </h2>
+            <p
+              className="text-sm text-foreground/80 leading-snug"
+            >
+              Latest photos by @
+              {profileNickname}
+            </p>
+          </StickySectionHeading>
           <DensityAwarePhotoGrid
             photos={publicPhotos.map((photo) => ({
               ...photo,
               profile: {
-                nickname: profile.nickname || nickname,
+                nickname: profileNickname,
                 full_name: profile.full_name,
                 avatar_url: profile.avatar_url,
               },
@@ -231,43 +264,9 @@ async function ProfileContent({ nickname }: { nickname: string }) {
               comfortable: PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE,
               compact: PROFILE_PHOTOSTREAM_LIMIT_COMPACT,
             }}
-            profileNickname={profile.nickname || nickname}
+            profileNickname={profileNickname}
             showAttribution
-            header={
-              <StickySectionHeading
-                as="div"
-                stickyClassName="mb-6 sm:mb-6"
-              >
-                <h2
-                  className="text-xl font-semibold font-heading"
-                >
-                  Photostream
-                </h2>
-                <p
-                  className="text-sm text-foreground/80 leading-snug"
-                >
-                  Latest photos by @
-                  {profile.nickname}
-                </p>
-              </StickySectionHeading>
-            }
           />
-          {totalPhotos > PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE && (
-            <div
-              className="mt-4 sm:mt-6 flex justify-center "
-            >
-              <Button
-                href={`/@${encodeURIComponent(profile.nickname || nickname)}/photos`}
-                variant="secondary"
-              >
-                View all
-                {' '}
-                {totalPhotos}
-                {' '}
-                photos
-              </Button>
-            </div>
-          )}
         </WidePageContainer>
       )}
 
@@ -275,28 +274,29 @@ async function ProfileContent({ nickname }: { nickname: string }) {
         <WidePageContainer
           className="pt-0!"
         >
+          <StickySectionHeading
+            as="div"
+            pinDesktop
+            stickyClassName="mb-6 sm:mb-6"
+          >
+            <h2
+              className="text-xl font-semibold font-heading"
+            >
+              Tagged
+            </h2>
+            <p
+              className="text-sm text-foreground/80 leading-snug"
+            >
+              Photos this member is tagged in
+            </p>
+          </StickySectionHeading>
           <DensityAwarePhotoGrid
             photos={taggedPhotos.map((photo) => ({
               ...photo,
               profile: photo.profile,
             })) as StreamPhoto[]}
-            profileNickname={profile.nickname || nickname}
+            profileNickname={profileNickname}
             showAttribution
-            header={(
-              <StickySectionHeading
-                as="div"
-                stickyClassName="mb-6 sm:mb-6"
-              >
-                <h2
-                  className="text-xl font-semibold font-heading"
-                >Tagged</h2>
-                <p
-                  className="text-sm text-foreground/80 leading-snug"
-                >
-                  Photos this member is tagged in
-                </p>
-              </StickySectionHeading>
-            )}
           />
         </WidePageContainer>
       )}
@@ -308,7 +308,19 @@ async function ProfileContent({ nickname }: { nickname: string }) {
         >
           <StickySectionHeading
             as="div"
+            pinDesktop
             stickyClassName="mb-6 sm:mb-6"
+            accessory={(
+              <ArrowLink
+                href={profileAlbumsHref}
+              >
+                View all
+                {' '}
+                {albums.length}
+                {' '}
+                {albums.length === 1 ? 'album' : 'albums'}
+              </ArrowLink>
+            )}
           >
             <h2
               className="text-xl font-semibold font-heading"
@@ -319,26 +331,12 @@ async function ProfileContent({ nickname }: { nickname: string }) {
               className="text-sm text-foreground/80 leading-snug"
             >
               Photo collections by @
-              {profile.nickname}
+              {profileNickname}
             </p>
           </StickySectionHeading>
           <AlbumGrid
             albums={albums}
           />
-          <div
-            className="mt-4 sm:mt-6 flex justify-center "
-          >
-            <Button
-              href={`/@${encodeURIComponent(profile.nickname || nickname)}/albums`}
-              variant="secondary"
-            >
-              View all
-              {' '}
-              {albums.length}
-              {' '}
-              {albums.length === 1 ? 'album' : 'albums'}
-            </Button>
-          </div>
         </WidePageContainer>
       )}
     </>

@@ -1260,11 +1260,11 @@ export default function Comments({
         id="comments"
         className="space-y-2"
       >
-        <h3
+        <h2
           className="text-lg m:text-xl font-semibold font-heading"
         >
           Comments
-        </h3>
+        </h2>
         <p
           className="text-sm text-foreground/80 mb-4"
         >
@@ -1288,24 +1288,24 @@ export default function Comments({
         id="comments"
         className="space-y-2"
       >
-        <h3
+        <h2
           className="text-lg font-semibold font-heading"
         >
           {comments.length > 0 ? (() => {
-          const countReplies = (comment: Comment): number => {
-            let count = 1; // Count this comment
-            if (comment.replies) {
-              count += comment.replies.reduce((sum, r) => sum + countReplies(r), 0);
-            }
-            if (comment.nestedReplies) {
-              count += comment.nestedReplies.reduce((sum, r) => sum + countReplies(r), 0);
-            }
-            return count;
-          };
-          const totalCount = comments.reduce((sum, c) => sum + countReplies(c), 0);
-          return `${totalCount} ${totalCount === 1 ? 'Comment' : 'Comments'}`;
-        })() : 'Comments'}
-        </h3>
+            const countReplies = (comment: Comment): number => {
+              let count = 1; // Count this comment
+              if (comment.replies) {
+                count += comment.replies.reduce((sum, r) => sum + countReplies(r), 0);
+              }
+              if (comment.nestedReplies) {
+                count += comment.nestedReplies.reduce((sum, r) => sum + countReplies(r), 0);
+              }
+              return count;
+            };
+            const totalCount = comments.reduce((sum, c) => sum + countReplies(c), 0);
+            return `${totalCount} ${totalCount === 1 ? 'Comment' : 'Comments'}`;
+          })() : 'Comments'}
+        </h2>
 
         {/* Comments List */}
         <div
@@ -1317,40 +1317,40 @@ export default function Comments({
             >
               Loading comments...
             </p>
-        ) : comments.length === 0 ? (
-          <p
-            className="text-sm text-foreground/80"
-          >
-            No comments yet. Be the first to comment!
-          </p>
-        ) : (
-          <div
-            className={`space-y-3 transition-opacity duration-200 ${isRefetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}
-          >
-            {comments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                topLevelCommentId={comment.id}
-                depth={0}
-                isReplyingTo={replyingTo}
-                replyTextValue={replyText[comment.id] || ''}
-                allReplyText={replyText}
-                onReplyClick={handleReplyClick}
-                onReplyTextChange={handleReplyTextChange}
-                onSubmitReply={handleSubmitReply}
-                onDeleteComment={handleDeleteComment}
-                onEditComment={handleEditComment}
-                formatDateFn={formatDate}
-                user={canInteract ? user : null}
-                currentUserProfile={currentUserProfile}
-                isAdmin={isAdmin}
-                isSubmitting={isSubmitting}
-                showAuthPrompt={stableShowAuthPrompt}
-              />
-            ))}
-          </div>
-        )}
+          ) : comments.length === 0 ? (
+            <p
+              className="text-sm text-foreground/80"
+            >
+              No comments yet. Be the first to comment!
+            </p>
+          ) : (
+            <div
+              className={`space-y-3 transition-opacity duration-200 ${isRefetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}
+            >
+              {comments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  topLevelCommentId={comment.id}
+                  depth={0}
+                  isReplyingTo={replyingTo}
+                  replyTextValue={replyText[comment.id] || ''}
+                  allReplyText={replyText}
+                  onReplyClick={handleReplyClick}
+                  onReplyTextChange={handleReplyTextChange}
+                  onSubmitReply={handleSubmitReply}
+                  onDeleteComment={handleDeleteComment}
+                  onEditComment={handleEditComment}
+                  formatDateFn={formatDate}
+                  user={canInteract ? user : null}
+                  currentUserProfile={currentUserProfile}
+                  isAdmin={isAdmin}
+                  isSubmitting={isSubmitting}
+                  showAuthPrompt={stableShowAuthPrompt}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {!replyingTo && canInteract && (
@@ -1363,14 +1363,14 @@ export default function Comments({
             user={user}
             showAuthPrompt={stableShowAuthPrompt}
           />
-      )}
+        )}
         {!replyingTo && user && !canInteract && (
           <p
             className="mt-4 text-sm text-foreground/60"
           >
             Commenting is unavailable while your account is under review.
           </p>
-      )}
+        )}
       </div>
     </MentionDirectoryProvider>
   );

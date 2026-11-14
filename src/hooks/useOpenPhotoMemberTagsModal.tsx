@@ -2,8 +2,10 @@
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import PhotoMemberTagsModal from '@/components/manage/PhotoMemberTagsModal';
+import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
+import { getPhotoMemberTagsClientState } from '@/lib/photoMemberTags/clientStore';
 import type { PhotoWithAlbums } from '@/types/photos';
-import { useCallback, useContext, useRef } from 'react';
+import { Fragment, useCallback, useContext, useRef } from 'react';
 
 export function useOpenPhotoMemberTagsModal() {
   const modalContext = useContext(ModalContext);
@@ -18,12 +20,31 @@ export function useOpenPhotoMemberTagsModal() {
       modalContext.setTitle('Tag people');
       modalContext.setFlushContentTop(false);
       modalContext.setFooter(null);
-      modalContext.setContent(
+      const cachedMemberTags = getPhotoMemberTagsClientState(photo.id);
+      const contentKey = `photo-member-tags-${photo.id}-${sessionKey}`;
+      const modal = (
         <PhotoMemberTagsModal
-          key={`photo-member-tags-${photo.id}-${sessionKey}`}
           photo={photo}
+          initialMemberTags={cachedMemberTags.loaded ? cachedMemberTags.tags : undefined}
           onClose={() => modalContext.setIsOpen(false)}
-        />,
+        />
+      );
+      modalContext.setContent(
+        typeof window !== 'undefined' && window.__unsavedChangesContext
+          ? (
+            <Fragment
+              key={contentKey}
+            >
+              {modal}
+            </Fragment>
+          )
+          : (
+            <UnsavedChangesProvider
+              key={contentKey}
+            >
+              {modal}
+            </UnsavedChangesProvider>
+          ),
       );
       modalContext.setIsOpen(true);
     },

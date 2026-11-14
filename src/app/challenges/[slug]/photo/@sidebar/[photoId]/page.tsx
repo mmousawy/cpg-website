@@ -1,4 +1,5 @@
 import { PhotoMetadataColumn } from '@/components/photo/PhotoPageContent';
+import { withPhotoMemberTagsHydration } from '@/components/photo/withPhotoMemberTagsHydration';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
@@ -34,12 +35,15 @@ export default async function ChallengePhotoSidebar({ params }: { params: Params
     notFound();
   }
 
-  return (
+  return withPhotoMemberTagsHydration(
+    result.photo.id,
+    result.photo.user_id,
+    result.memberTags,
     <CachedChallengePhotoSidebar
       slug={slug}
       photoId={photoId}
       result={result}
-    />
+    />,
   );
 }
 
@@ -66,6 +70,7 @@ async function CachedChallengePhotoSidebar({
       challenges={result.challenges}
       currentChallenge={result.currentChallenge}
       tightTopMargin
+      memberTags={result.memberTags}
     />
   );
 }

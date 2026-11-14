@@ -9,6 +9,7 @@ function ProfileStatsBadgesPlaceholder() {
       className="mt-8"
     >
       <StickySectionHeading
+        pinDesktop
         stickyClassName="mb-3 sm:mb-4"
       >
         Achievements
