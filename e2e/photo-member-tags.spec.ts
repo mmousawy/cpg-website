@@ -11,6 +11,7 @@ import {
   searchMemberInTagPicker,
   uploadPhotoInLibrary,
   waitForPhotoLibrary,
+  waitForTagPeopleModal,
   type TestUser,
 } from './test-utils';
 
@@ -40,11 +41,7 @@ async function openTagPeopleModal(
   await expect(sidebar.getByRole('button', { name: 'Tag people' })).toBeVisible({ timeout: 15_000 });
   await sidebar.getByRole('button', { name: 'Tag people' }).click();
 
-  const tagDialog = page.locator('dialog[open]').filter({
-    has: page.getByRole('heading', { name: 'Tag people' }),
-  });
-  await expect(tagDialog.getByText('Click the photo to place a tag')).toBeVisible();
-  return tagDialog;
+  return waitForTagPeopleModal(page);
 }
 
 async function assertPickerTagsMemberInModal(
@@ -62,6 +59,9 @@ async function assertPickerTagsMemberInModal(
   await expect(
     tagDialog.getByRole('button', { name: `Tagged ${taggedNickname}` }),
   ).toBeVisible({ timeout: 15_000 });
+
+  await tagDialog.getByRole('button', { name: 'Save' }).click();
+  await expect(tagDialog).not.toBeVisible({ timeout: 15_000 });
 }
 
 memberTest.describe('Photo member tag picker', () => {
@@ -86,5 +86,47 @@ memberTest.describe('Photo member tag picker', () => {
     memberTest.setTimeout(120_000);
     await page.setViewportSize(MOBILE_VIEWPORT);
     await assertPickerTagsMemberInModal(page, memberUser, taggedMember.nickname, { mobile: true });
+  });
+
+  memberTest('closing the modal dismisses an open tag search box', async ({ page, memberUser }) => {
+    memberTest.setTimeout(120_000);
+    await loginTestUser(page, memberUser.email, memberUser.password);
+
+    const tagDialog = await openTagPeopleModal(page);
+    await tagDialog.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
+    await expect(page.locator('[data-tag-picker-input]')).toBeVisible();
+
+    await tagDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-tag-picker-input]')).toHaveCount(0, { timeout: 5_000 });
+  });
+
+  memberTest('closing with unsaved tag edits asks for confirmation', async ({ page, memberUser }) => {
+    memberTest.setTimeout(120_000);
+    await loginTestUser(page, memberUser.email, memberUser.password);
+
+    const tagDialog = await openTagPeopleModal(page);
+    await tagDialog.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
+    await searchMemberInTagPicker(page, taggedMember.nickname);
+    await expect(
+      tagDialog.getByRole('button', { name: `Tagged ${taggedMember.nickname}` }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    await tagDialog.press('Escape');
+    const unsavedDialog = page.getByRole('heading', { name: 'Unsaved changes' });
+    await expect(unsavedDialog).toBeVisible({ timeout: 10_000 });
+
+    await page.locator('dialog').filter({ has: unsavedDialog }).getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(unsavedDialog).toHaveCount(0);
+    await expect(tagDialog).toBeVisible();
+    await expect(
+      tagDialog.getByRole('button', { name: `Tagged ${taggedMember.nickname}` }),
+    ).toBeVisible();
+    await expect(page.locator('dialog[open]')).toHaveCount(1);
+
+    await tagDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(unsavedDialog).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: 'Leave' }).click();
+    await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
   });
 });

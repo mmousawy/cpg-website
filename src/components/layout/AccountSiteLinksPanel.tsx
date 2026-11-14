@@ -5,14 +5,13 @@ import Link from 'next/link';
 
 import FeedbackButton from '@/components/shared/FeedbackButton';
 import { routes } from '@/config/routes';
-import { useAppTheme } from '@/hooks/useAppTheme';
 import { useAuth } from '@/hooks/useAuth';
-import { useMounted } from '@/hooks/useMounted';
 import AccountMenuChevron from './AccountMenuChevron';
 import AccountMenuSignOutButton from './AccountMenuSignOutButton';
 
 type AccountSiteLinksPanelProps = {
   onBack: () => void;
+  onOpenAppearance: () => void;
   onClose: () => void;
   menuLinkClass: (href: string, exact?: boolean) => string;
 };
@@ -24,27 +23,11 @@ function AccountMenuDivider() {
   />;
 }
 
-function ThemeToggleButton() {
-  const { user, updateProfileTheme } = useAuth();
-  const { resolvedTheme, setTheme } = useAppTheme();
-  const mounted = useMounted();
-
-  const handleThemeToggle = async () => {
-    const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-
-    if (!user) return;
-
-    const { error } = await updateProfileTheme(newTheme);
-    if (error) {
-      console.error('Failed to save theme preference:', error);
-    }
-  };
-
+function SwitchAppearanceEntry({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       type="button"
-      onClick={handleThemeToggle}
+      onClick={onOpen}
       className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base hover:bg-background sm:text-sm"
     >
       <svg
@@ -52,30 +35,27 @@ function ThemeToggleButton() {
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
+        aria-hidden
       >
-        {mounted && resolvedTheme === 'dark' ? (
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-          />
-        ) : (
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-          />
-        )}
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+        />
       </svg>
-      {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      Switch appearance
+      <AccountMenuChevron
+        direction="right"
+        className="ml-auto h-4 w-4 shrink-0 opacity-50"
+      />
     </button>
   );
 }
 
 export default function AccountSiteLinksPanel({
   onBack,
+  onOpenAppearance,
   onClose,
   menuLinkClass,
 }: AccountSiteLinksPanelProps) {
@@ -129,7 +109,9 @@ export default function AccountSiteLinksPanel({
             {routes.accountStats.label}
           </Link>
         )}
-        <ThemeToggleButton />
+        <SwitchAppearanceEntry
+          onOpen={onOpenAppearance}
+        />
       </div>
 
       <AccountMenuDivider />

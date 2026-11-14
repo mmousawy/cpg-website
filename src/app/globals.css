@@ -1572,3 +1572,39 @@ html.reduce-motion *::after {
     background-color 150ms ease,
     border-color 150ms ease;
 }
+
+/* Mobile photo stage: fit the current frame. The stage height animates; the
+   photo must stay fully visible inside it (no crop while a portrait is still
+   in a landscape-height box, and no jump when the file finishes decoding). */
+@media (max-width: 767px) {
+  [data-photo-mobile-stage] [data-photo-stage-slot] {
+    container-type: size;
+    width: 100%;
+    height: 100%;
+  }
+
+  [data-photo-mobile-stage] #gallery {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  [data-photo-mobile-stage] [data-photo-fit-frame] {
+    width: min(100cqw, calc(100cqh * var(--photo-aspect, 1))) !important;
+    height: min(100cqh, calc(100cqw / var(--photo-aspect, 1))) !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    flex-shrink: 0;
+  }
+
+  [data-photo-mobile-stage] [data-photo-fit-frame] > [data-photo-page-image],
+  [data-photo-mobile-stage] [data-photo-fit-frame] > [data-photo-page-image] > span,
+  [data-photo-mobile-stage] [data-photo-fit-frame] > span {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+}

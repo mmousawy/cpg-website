@@ -192,7 +192,31 @@ export const photosFAQ: FAQSection = {
               Tag people
             </strong>
             {' '}
-            to open a larger view. Click a spot on the image, then choose a member from the nickname search. Each person can only appear once per photo; picking them again moves the dot. On the public photo page, tags show as dots on the image (hover for a profile card) and in the sidebar list — you cannot place new tags there.
+            to open a larger view. Click a spot on the image, then choose a member from the nickname search. Drag a dot to reposition it; click a dot for
+            {' '}
+            <strong>
+              Remove tag
+            </strong>
+            {' '}
+            or
+            {' '}
+            <strong>
+              Edit tag
+            </strong>
+            {' '}
+            to pick someone else. Press
+            {' '}
+            <strong>
+              Save
+            </strong>
+            {' '}
+            to keep your changes — they are not written until then. Each person can only appear once per photo. On the public photo page, tags show as dots on the image (hover for a profile card) and in the sidebar; use
+            {' '}
+            <strong>
+              Tag people
+            </strong>
+            {' '}
+            in the sidebar to open the same editor.
           </p>
           <p
             className="mb-3"
@@ -203,7 +227,12 @@ export const photosFAQ: FAQSection = {
               Notifications
             </strong>
             {' '}
-            on). Tagged members, owners, and admins can remove a tag from the photo page sidebar or from the manage sidebar.
+            on) when you press
+            {' '}
+            <strong>
+              Save
+            </strong>
+            .
           </p>
           <p>
             Tags are not shown in gallery grids or the fullscreen zoom view. Public photos you are tagged in appear in the

@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { filterSearchResults } from '@/lib/auth/isTestProfile';
 import { getGroupedMemberGearDiscovery } from '@/lib/data/memberGear';
+import { searchHelpItems } from '@/lib/help/searchHelp';
 import { searchGearPages } from '@/lib/gear/searchGearPages';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { SearchResult, SearchEntityType } from '@/types/search';
@@ -14,6 +15,7 @@ export const ALL_SEARCH_ENTITY_TYPES: SearchEntityType[] = [
   'scene-events',
   'challenges',
   'gear',
+  'help',
 ];
 
 function mergeSearchResults(results: SearchResult[], limit: number): SearchResult[] {
@@ -50,7 +52,8 @@ async function performSearch(
 
   const trimmed = query.trim();
   const includeGear = types.includes('gear');
-  const rpcTypes = types.filter((type) => type !== 'gear');
+  const includeHelp = types.includes('help');
+  const rpcTypes = types.filter((type) => type !== 'gear' && type !== 'help');
 
   let results: SearchResult[] = [];
 
@@ -77,6 +80,11 @@ async function performSearch(
     const grouped = await getGroupedMemberGearDiscovery(includeTestContent);
     const gearHits = searchGearPages(grouped, trimmed);
     results = [...results, ...gearHits];
+  }
+
+  if (includeHelp) {
+    const helpHits = searchHelpItems(trimmed, limit);
+    results = [...results, ...helpHits];
   }
 
   return mergeSearchResults(results, limit);

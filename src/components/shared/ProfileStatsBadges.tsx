@@ -324,6 +324,7 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
       className="mt-8"
     >
       <StickySectionHeading
+        pinDesktop
         stickyClassName="mb-3 sm:mb-4"
       >
         Achievements

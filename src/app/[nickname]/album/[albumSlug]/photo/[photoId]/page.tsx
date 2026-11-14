@@ -1,4 +1,5 @@
 import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
+import { withPhotoMemberTagsHydration } from '@/components/photo/withPhotoMemberTagsHydration';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
@@ -82,12 +83,15 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  return (
+  return withPhotoMemberTagsHydration(
+    result.photo.id,
+    result.photo.user_id,
+    result.memberTags,
     <CachedAlbumPhotoPage
       nickname={nickname}
       photoId={photoId}
       result={result}
-    />
+    />,
   );
 }
 
@@ -109,10 +113,12 @@ async function CachedAlbumPhotoPage({
   return (
     <PhotoLightboxColumn
       photo={result.photo}
+      profile={result.profile}
       isInAlbum
       siblingPhotos={result.siblingPhotos}
       nickname={nickname}
       albumSlug={result.currentAlbum.slug}
+      memberTags={result.memberTags}
     />
   );
 }

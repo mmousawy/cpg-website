@@ -27,17 +27,19 @@ export default function ManagePhotoMemberTagsSection({ photo }: ManagePhotoMembe
           size="sm"
         />
       </span>
+      <PhotoMemberTagList
+        photoId={photo.id}
+        hideHeading
+        className="mb-0 mt-2"
+      />
       <Button
         type="button"
         variant="secondary"
+        className="mt-3"
         onClick={() => openPhotoMemberTagsModal(photo)}
       >
         Tag people
       </Button>
-      <PhotoMemberTagList
-        photoId={photo.id}
-        className="mb-0 mt-3"
-      />
     </div>
   );
 }

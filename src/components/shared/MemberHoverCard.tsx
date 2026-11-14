@@ -318,14 +318,29 @@ export default function MemberHoverCard({
     setCardPosition(null);
   }, []);
 
-  const scheduleOpen = useCallback(() => {
-    if (!canUseHoverCard()) return;
+  const forceClose = useCallback(() => {
+    openRef.current = false;
+    clearOpenTimer();
+    clearCloseTimer();
+    clearExitTimer();
+    setEntered(false);
+    setIsMounted(false);
+    setCardPosition(null);
+  }, []);
+
+  const scheduleOpen = useCallback((options?: { immediate?: boolean }) => {
+    const hoverCapable = canUseHoverCard();
+    if (!hoverCapable && !options?.immediate) return;
     clearCloseTimer();
     clearExitTimer();
     openRef.current = true;
     setWantsPreview(true);
     if (isMounted && cardPosition) {
       setEntered(true);
+      return;
+    }
+    if (options?.immediate) {
+      setIsMounted(true);
       return;
     }
     if (openTimerRef.current) return;
@@ -386,6 +401,7 @@ export default function MemberHoverCard({
   }, [scheduleOpen]);
 
   const handlePointerLeave = useCallback(() => {
+    if (!canUseHoverCard()) return;
     scheduleClose();
   }, [scheduleClose]);
 
@@ -408,17 +424,37 @@ export default function MemberHoverCard({
       }
       handlePointerLeave();
     };
+    const onTriggerPointerDown = (event: Event) => {
+      if (canUseHoverCard()) return;
+      if (trigger instanceof HTMLAnchorElement) return;
+      event.stopPropagation();
+    };
+    const onTriggerClick = (event: Event) => {
+      if (canUseHoverCard()) return;
+      if (trigger instanceof HTMLAnchorElement) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (openRef.current) {
+        forceClose();
+        return;
+      }
+      scheduleOpen({ immediate: true });
+    };
 
     trigger.addEventListener('mouseenter', onMouseEnter);
     trigger.addEventListener('mouseleave', handlePointerLeave);
     trigger.addEventListener('focusin', onFocusIn);
     trigger.addEventListener('focusout', onFocusOut);
+    trigger.addEventListener('pointerdown', onTriggerPointerDown);
+    trigger.addEventListener('click', onTriggerClick);
 
     return () => {
       trigger.removeEventListener('mouseenter', onMouseEnter);
       trigger.removeEventListener('mouseleave', handlePointerLeave);
       trigger.removeEventListener('focusin', onFocusIn);
       trigger.removeEventListener('focusout', onFocusOut);
+      trigger.removeEventListener('pointerdown', onTriggerPointerDown);
+      trigger.removeEventListener('click', onTriggerClick);
     };
   });
 
@@ -442,33 +478,37 @@ export default function MemberHoverCard({
   useEffect(() => {
     if (!isMounted) return;
 
-    const handleScroll = () => {
-      openRef.current = false;
-      clearOpenTimer();
-      clearCloseTimer();
-      clearExitTimer();
-      setEntered(false);
-      setIsMounted(false);
-      setCardPosition(null);
-    };
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      handleScroll();
+      forceClose();
     };
 
-    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('scroll', forceClose, true);
     window.addEventListener('resize', updatePosition);
     window.addEventListener('keydown', handleKeyDown);
-    const unsubscribeRouteChange = subscribeRouteChange(handleScroll);
+    const unsubscribeRouteChange = subscribeRouteChange(forceClose);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('scroll', forceClose, true);
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('keydown', handleKeyDown);
       unsubscribeRouteChange();
     };
-  }, [isMounted, updatePosition]);
+  }, [forceClose, isMounted, updatePosition]);
+
+  useEffect(() => {
+    if (!isMounted || canUseHoverCard()) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (cardRef.current?.contains(target)) return;
+      const trigger = anchorRef.current?.firstElementChild;
+      if (trigger?.contains(target)) return;
+      forceClose();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [forceClose, isMounted]);
 
   useEffect(() => {
     return () => {
@@ -500,6 +540,7 @@ export default function MemberHoverCard({
         createPortal(
           <div
             ref={cardRef}
+            data-member-hover-card=""
             className={clsx(
               'fixed',
               pageFloatingZClassName,

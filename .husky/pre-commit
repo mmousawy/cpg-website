@@ -2,6 +2,9 @@
 # Warnings are allowed, only errors block commits
 npx lint-staged
 
+# Regenerate help search index when help content (or generator) is staged
+node scripts/sync-help-search-index-if-needed.mjs
+
 # Run TypeScript type checking
 # Only fails on errors, warnings are allowed
 npm run typecheck

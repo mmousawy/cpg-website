@@ -33,6 +33,7 @@ export type MentionEmailItem = {
   actorAvatarUrl: string | null;
   actorProfileLink: string | null;
   entityTitle: string;
+  entityThumbnail: string | null;
   entityLink: string;
   contextLabel: string;
 };

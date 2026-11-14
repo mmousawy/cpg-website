@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.49.0](https://github.com/mmousawy/cpg-website/compare/v1.48.1...v1.49.0) (2026-11-14)
+
+
+### ✨ Features
+
+* enhance help search index and profile photo management ([c22a0d7](https://github.com/mmousawy/cpg-website/commit/c22a0d7daef8600456d7e88bfaccea07fac4774a))
+
+
+### 🐛 Bug Fixes
+
+* enhance E2E tests for visibility toggles and save button interactions ([5e7b64d](https://github.com/mmousawy/cpg-website/commit/5e7b64d82deea996239d3f1a8078eec22e4df1e7))
+* improve dialog cancel handling in E2E tests and components ([50ce506](https://github.com/mmousawy/cpg-website/commit/50ce506a214c9cc572a9ddc444d2907f2aea2f2d))
+* refine modal close handling and E2E test interactions ([ecb9cee](https://github.com/mmousawy/cpg-website/commit/ecb9cee4bc09daa299fd461d6bb8d972b084a458))
+
+
+### ♻️ Refactoring
+
+* streamline E2E tests for tagging functionality ([26603ed](https://github.com/mmousawy/cpg-website/commit/26603edef2ae213158303b731e1c4567ace393e3))
+
 ## [1.48.1](https://github.com/mmousawy/cpg-website/compare/v1.48.0...v1.48.1) (2026-11-13)
 
 

@@ -3,6 +3,7 @@ import type { Interest } from '@/types/interests';
 import type { Photo } from '@/types/photos';
 import { filterMemberNicknames, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
 import { withPublicInterestCounts } from '@/lib/data/publicInterestCounts';
+import { fetchPhotoMemberTags } from '@/lib/data/photoMemberTags';
 import { createPublicClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -560,6 +561,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     { data: albumPhotosData },
     { data: challengeSubmissions },
     ownerProfileResult,
+    memberTags,
   ] = await Promise.all([
     supabase
       .from('album_photos_active')
@@ -585,6 +587,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
         .is('deletion_scheduled_at', null)
         .single()
       : Promise.resolve({ data: null }),
+    fetchPhotoMemberTags(supabase, photo.id),
   ]);
 
   type SiblingPhotoData = {
@@ -694,6 +697,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     albums,
     challenges,
     siblingPhotos,
+    memberTags,
   };
 }
 
@@ -746,8 +750,8 @@ export async function getPhotoByShortId(
     return null;
   }
 
-  // Get albums and challenges in parallel (both depend only on photo.id)
-  const [{ data: albumPhotos }, { data: challengeSubmissions }] = await Promise.all([
+  // Get albums, challenges, and member tags in parallel (all depend only on photo.id)
+  const [{ data: albumPhotos }, { data: challengeSubmissions }, memberTags] = await Promise.all([
     supabase
       .from('album_photos')
       .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug, title, cover_image))')
@@ -757,6 +761,7 @@ export async function getPhotoByShortId(
       .select('challenge_id, challenges(id, title, slug, cover_image_url)')
       .eq('photo_id', photo.id)
       .eq('status', 'accepted'),
+    fetchPhotoMemberTags(supabase, photo.id),
   ]);
 
   type AlbumPhotoWithAlbum = {
@@ -823,5 +828,6 @@ export async function getPhotoByShortId(
     },
     albums,
     challenges,
+    memberTags,
   };
 }

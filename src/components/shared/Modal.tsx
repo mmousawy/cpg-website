@@ -83,6 +83,37 @@ export default function Modal() {
     };
   });
 
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal || !isOpen) return;
+
+    const requestModalClose = () => {
+      if (typeof requestClose === 'function') {
+        void requestClose();
+      } else if (typeof setIsOpen === 'function') {
+        setIsOpen(false);
+      }
+    };
+
+    const handleCancel = (event: Event) => {
+      event.preventDefault();
+      requestModalClose();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      requestModalClose();
+    };
+
+    modal.addEventListener('cancel', handleCancel);
+    modal.addEventListener('keydown', handleKeyDown);
+    return () => {
+      modal.removeEventListener('cancel', handleCancel);
+      modal.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, requestClose, setIsOpen]);
+
   return (
     <dialog
       ref={modalRef}
@@ -100,9 +131,9 @@ export default function Modal() {
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           allowOutsideClick: isPortalOverlayClick,
-          escapeDeactivates: true,
+          // Keep the trap active if unsaved-changes confirm is declined.
+          escapeDeactivates: false,
           preventScroll: true,
-          onDeactivate: closeModal,
           fallbackFocus: () => modalRef.current || document.body,
         }}
       >
