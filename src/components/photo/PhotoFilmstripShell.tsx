@@ -1,7 +1,9 @@
 'use client';
 
 import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
-import PhotoPageBackButton from '@/components/photo/PhotoPageBackButton';
+import { PhotoLightboxOpenProvider } from '@/context/PhotoLightboxOpenContext';
+import PhotoPageFixedStageChrome from '@/components/photo/PhotoPageFixedStageChrome';
+import { PhotoStageChromeSlotProvider } from '@/context/PhotoStageChromeSlotContext';
 import {
   PhotoNavigationProvider,
   usePhotoNavigation,
@@ -9,9 +11,13 @@ import {
 import type { SiblingPhoto } from '@/components/photo/PhotoPageContent';
 import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
 import BlurImage from '@/components/shared/BlurImage';
+import { useHasHover } from '@/hooks/useHasHover';
 import { useHorizontalSwipe } from '@/hooks/useHorizontalSwipe';
+import clsx from 'clsx';
+import { getContainedPhotoSize, measureAlbumPhotoMaxHeightPx } from '@/utils/photoContainSize';
 import { getPhotoCollectionFallbackHref } from '@/utils/photoOverviewNavigation';
 import { prefersReducedMotion } from '@/utils/reduceMotion';
+import { PhotoStageIdleRevealProvider } from '@/context/PhotoStageIdleRevealContext';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
@@ -90,16 +96,19 @@ function PhotoFilmstripShellInner({
 
   // Smoothly resize the photo container between photos on mobile so navigation
   // doesn't snap the layout. Desktop uses a fixed-height column, so it's skipped.
-  // The animation starts as soon as the overlay appears on click (the overlay
-  // renders the target photo at its final aspect ratio, so its height is the
-  // target), and is retargeted to the real content at route commit. While the
-  // container animates, both the overlay image and the content underneath are
-  // scaled to stay fully visible inside it. rAF-driven (not CSS transitions) so
-  // the animation can be interrupted and retargeted smoothly.
+  // Target height comes from the photo's metadata (the same contain math as the
+  // image), never from the decoded image box — that box is still the previous
+  // height, or empty, until the file loads, and measuring it restarts the
+  // animation. The image is fitted inside the frame, so it stays fully visible
+  // while the height eases. rAF-driven so a swipe can retarget mid-way.
   //
-  // Swipe translate lives on a separate layer from height scale so the two
-  // transforms never overwrite each other.
+  // Swipe translate lives on its own layer so it never shares a transform with
+  // the height animation.
   const photoContainerRef = useRef<HTMLDivElement>(null);
+  const photoAreaRef = useRef<HTMLDivElement>(null);
+  const hasHover = useHasHover();
+  /** Includes fixed stage chrome (back / full screen) so control taps do not dismiss the UI. */
+  const idleTargetRef = photoContainerRef;
   const swipeLayerRef = useRef<HTMLDivElement>(null);
   const contentScaleRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -172,53 +181,58 @@ function PhotoFilmstripShellInner({
     };
   }, [applySwipeTransforms, stopSwipeTransition]);
 
+  const layoutShortId = pendingShortId && pendingShortId !== currentPhotoShortId
+    ? pendingShortId
+    : currentPhotoShortId;
+  const layoutPhoto = siblingPhotos.find((photo) => photo.shortId === layoutShortId) ?? null;
+  const layoutWidth = layoutPhoto?.width ?? 0;
+  const layoutHeight = layoutPhoto?.height ?? 0;
+
   useLayoutEffect(() => {
     const container = photoContainerRef.current;
     if (!container) return;
     if (window.matchMedia('(min-width: 768px)').matches) {
-      if (heightAnimationRef.current && Number.isNaN(heightAnimationRef.current.targetHeight)) {
-        heightAnimationRef.current.stop();
-      }
-      return;
-    }
-    // Carousel snap still in progress: keep the current height so the peeking
-    // photo isn't scaled down (that opens a gap of background between slides).
-    if (swipeSettleRef.current) return;
-
-    // What to measure for the target height. After the route commits, the
-    // scale layer holds the new photo and reflects the intrinsic content height.
-    // Before commit (overlay just appeared on click), the scale layer still holds
-    // the old photo, so measure the overlay's image instead. offsetHeight is
-    // transform-free, so mid-animation scale doesn't skew the measurement.
-    const isPreCommit = !!(pendingShortId && pendingShortId !== currentPhotoShortId);
-    const overlayContent = overlayRef.current?.firstElementChild as HTMLElement | null;
-    const wrapper = contentScaleRef.current;
-    const contentEl = (isPreCommit && overlayContent) || wrapper;
-    const targetHeight = contentEl
-      ? contentEl.offsetHeight
-      : container.getBoundingClientRect().height;
-
-    const prevHeight = lastPhotoHeightRef.current;
-    lastPhotoHeightRef.current = targetHeight;
-
-    if (heightAnimationRef.current && Number.isNaN(heightAnimationRef.current.targetHeight)) {
-      heightAnimationRef.current.stop();
-    }
-    const inFlight = heightAnimationRef.current;
-    // The running loop already targets this height (e.g. route committed after
-    // a pre-commit animation): let it finish — it reads the DOM fresh each frame.
-    if (inFlight && Math.abs(targetHeight - inFlight.targetHeight) < 1) return;
-    if (prevHeight == null) return;
-    if (!inFlight && Math.abs(targetHeight - prevHeight) < 1) {
-      // Same height (or swipe lock matching the new photo): drop the inline lock.
+      heightAnimationRef.current?.stop();
       container.style.height = '';
       return;
     }
+    // Carousel snap still in progress: keep the current height so the incoming
+    // slide isn't resized underneath the one moving off.
+    if (swipeSettleRef.current) return;
+    if (layoutWidth <= 0 || layoutHeight <= 0) return;
 
-    const fromHeight = inFlight
-      ? container.getBoundingClientRect().height
-      : prevHeight;
-    inFlight?.stop();
+    const maxH = measureAlbumPhotoMaxHeightPx(container);
+    const targetHeight = getContainedPhotoSize(
+      layoutWidth,
+      layoutHeight,
+      container.clientWidth,
+      maxH,
+    ).height;
+    if (targetHeight <= 0) return;
+
+    const inFlight = heightAnimationRef.current;
+    if (inFlight && Number.isNaN(inFlight.targetHeight)) {
+      inFlight.stop();
+    }
+    const running = heightAnimationRef.current;
+    if (running && Math.abs(running.targetHeight - targetHeight) < 1) return;
+
+    const renderedHeight = container.getBoundingClientRect().height;
+    if (lastPhotoHeightRef.current == null) {
+      lastPhotoHeightRef.current = renderedHeight > 1 ? renderedHeight : targetHeight;
+      container.style.height = `${lastPhotoHeightRef.current}px`;
+      return;
+    }
+    if (!running && Math.abs(lastPhotoHeightRef.current - targetHeight) < 1) {
+      container.style.height = `${targetHeight}px`;
+      lastPhotoHeightRef.current = targetHeight;
+      return;
+    }
+
+    const fromHeight = running
+      ? renderedHeight
+      : lastPhotoHeightRef.current;
+    running?.stop();
 
     const DURATION = 250;
     const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -227,48 +241,25 @@ function PhotoFilmstripShellInner({
 
     const apply = (height: number) => {
       container.style.height = `${height}px`;
-      // Keep the photo fully visible inside the animating container: scale it
-      // down while the container is smaller than the target, never up. Applies
-      // to the overlay image and the content wrapper alike so the overlay lift
-      // is seamless. Translate for swipe lives on a parent layer.
-      const transform =
-        height < targetHeight ? `scale(${height / targetHeight})` : '';
-      const wrapperEl = contentScaleRef.current;
-      if (wrapperEl) wrapperEl.style.transform = transform;
-      const overlayEl = overlayRef.current?.firstElementChild as HTMLElement | null;
-      if (overlayEl) overlayEl.style.transform = transform;
     };
 
     const finish = () => {
       cancelAnimationFrame(raf);
       heightAnimationRef.current = null;
-      const wrapperEl = contentScaleRef.current;
-      if (wrapperEl) wrapperEl.style.transform = '';
-      const overlayEl = overlayRef.current?.firstElementChild as HTMLElement | null;
-      if (overlayEl) overlayEl.style.transform = '';
-      if (wrapperEl && Math.abs(wrapperEl.offsetHeight - targetHeight) < 1) {
-        // Content is at the target — restore natural sizing.
-        container.style.height = '';
-      } else {
-        // Route hasn't committed yet — hold the target height until the
-        // ResizeObserver sees the new content arrive.
-        container.style.height = `${targetHeight}px`;
-      }
+      container.style.height = `${targetHeight}px`;
+      lastPhotoHeightRef.current = targetHeight;
     };
 
     if (prefersReducedMotion()) {
-      apply(targetHeight);
       finish();
       return;
     }
 
-    // Apply the start state synchronously so the first painted frame already
-    // shows the previous height, not the snapped new one.
+    // Lock the previous height before paint. The new aspect-ratio is already
+    // on the element and would otherwise snap before the first animation frame.
     apply(fromHeight);
 
     const step = (now: number) => {
-      // Clamp: the rAF timestamp is the frame's vsync time, which can be
-      // earlier than the `start` captured in this layout effect.
       const t = Math.min(1, Math.max(0, (now - start) / DURATION));
       apply(fromHeight + (targetHeight - fromHeight) * easeOutCubic(t));
       if (t < 1) {
@@ -286,7 +277,7 @@ function PhotoFilmstripShellInner({
         heightAnimationRef.current = null;
       },
     };
-  }, [currentPhotoShortId, pendingShortId, swipeRestTick]);
+  }, [layoutShortId, layoutWidth, layoutHeight, swipeRestTick, showFilmstrip]);
 
   // Cancel in-flight animations on unmount.
   useEffect(() => () => {
@@ -294,33 +285,27 @@ function PhotoFilmstripShellInner({
     swipeSettleRef.current?.();
   }, []);
 
-  // Keep lastPhotoHeightRef in sync with the content's intrinsic height between
-  // navigations (font loads, image decode, filmstrip changes can drift it), so
-  // the animation always starts from the true current height. Also releases a
-  // held pre-commit height once the new content arrives.
+  // Keep the locked height in sync with the viewport. Image decode must not
+  // change it — that was restarting the landscape → portrait transition.
   useEffect(() => {
-    const wrapper = contentScaleRef.current;
-    const container = photoContainerRef.current;
-    if (!container || !wrapper) return;
-
-    const observer = new ResizeObserver(() => {
-      if (heightAnimationRef.current) return; // mid-animation: target already stored
-      if (container.style.height) {
-        // Held pre-commit height: clear once the content catches up. Don't
-        // update the ref from the stale (old) content while held.
-        const held = parseFloat(container.style.height);
-        if (Math.abs(wrapper.getBoundingClientRect().height - held) < 1) {
-          container.style.height = '';
-          wrapper.style.transform = '';
-          lastPhotoHeightRef.current = wrapper.getBoundingClientRect().height;
-        }
-        return;
-      }
-      lastPhotoHeightRef.current = wrapper.getBoundingClientRect().height;
-    });
-    observer.observe(wrapper);
-    return () => observer.disconnect();
-  }, []);
+    const onResize = () => {
+      if (window.matchMedia('(min-width: 768px)').matches) return;
+      if (heightAnimationRef.current) return;
+      const container = photoContainerRef.current;
+      if (!container || layoutWidth <= 0 || layoutHeight <= 0) return;
+      const next = getContainedPhotoSize(
+        layoutWidth,
+        layoutHeight,
+        container.clientWidth,
+        measureAlbumPhotoMaxHeightPx(container),
+      ).height;
+      if (next <= 0) return;
+      container.style.height = `${next}px`;
+      lastPhotoHeightRef.current = next;
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [layoutWidth, layoutHeight, showFilmstrip]);
 
   const lockContainerHeight = useCallback(() => {
     const container = photoContainerRef.current;
@@ -485,11 +470,11 @@ function PhotoFilmstripShellInner({
         frameId = requestAnimationFrame(poll);
         return;
       }
-      const anchor = photoContainerRef.current?.querySelector('#gallery a');
-      const img = anchor?.querySelector('img');
-      // The anchor href identifies the committed photo — guards against the
+      const frame = photoContainerRef.current?.querySelector('#gallery [data-photo-page-image]');
+      const img = frame?.querySelector('img');
+      // data-photo-page-src identifies the committed photo — guards against the
       // pathname committing before the page slot (stale old-photo img).
-      const isTargetImg = anchor?.getAttribute('href') === photo.url;
+      const isTargetImg = frame?.getAttribute('data-photo-page-src') === photo.url;
       // BlurImage sets 'opacity-100' only once the fade-in has completed (or
       // immediately when mounted from the SPA cache).
       if (isTargetImg && img?.complete && img.naturalWidth > 0 && img.classList.contains('opacity-100')) {
@@ -519,76 +504,115 @@ function PhotoFilmstripShellInner({
     <div
       className="w-full px-4 pt-4 max-md:px-3 max-md:pt-3 md:p-4 md:flex md:gap-4 md:items-stretch lg:p-8 lg:gap-8"
     >
-      <div
-        className="md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)] md:flex md:flex-col"
+      <section
+        aria-label="Photo viewer"
+        className={clsx(
+          'md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)] md:flex md:flex-col',
+          !showFilmstrip && 'max-md:mb-3',
+        )}
       >
-        <div
-          ref={photoContainerRef}
-          className="relative flex flex-1 touch-pan-y items-center justify-center overflow-hidden"
-          {...swipeHandlers}
+        <PhotoStageChromeSlotProvider
+          value={{
+            fallbackHref: collectionFallbackHref,
+            fallbackLabel,
+            idleRevealRouteKey: showFilmstrip ? collectionFallbackHref : undefined,
+          }}
         >
-          <PhotoPageBackButton
-            fallbackHref={collectionFallbackHref}
-            fallbackLabel={fallbackLabel}
-            revealTargetRef={photoContainerRef}
-          />
-          <div
-            ref={swipeLayerRef}
-            className="relative flex w-full items-center justify-center"
-          >
+          <PhotoLightboxOpenProvider>
             <div
-              ref={contentScaleRef}
-              className="flex w-full items-center justify-center"
+              ref={photoContainerRef}
+              data-photo-mobile-stage=""
+              className={clsx(
+                'relative flex w-full touch-pan-y items-center justify-center overflow-hidden md:min-h-0 md:flex-1 md:aspect-auto md:max-h-none max-md:[aspect-ratio:var(--photo-ar)]',
+                showFilmstrip
+                  ? 'max-md:max-h-[calc(100vh-162px)] sm:max-md:max-h-[calc(100vh-180px)] max-md:[--photo-max-h:calc(100vh-162px)] sm:max-md:[--photo-max-h:calc(100vh-180px)]'
+                  : 'max-md:max-h-[calc(100vh-98px)] sm:max-md:max-h-[calc(100vh-114px)] max-md:[--photo-max-h:calc(100vh-98px)] sm:max-md:[--photo-max-h:calc(100vh-114px)]',
+              )}
+              style={layoutWidth > 0 ? { ['--photo-ar' as string]: `${layoutWidth} / ${layoutHeight}` } : undefined}
+              {...swipeHandlers}
             >
-              {children}
-            </div>
-            {peekPhoto && (
-              <div
-                ref={overlayCallbackRef}
-                className="absolute inset-0 flex items-center justify-center bg-background"
-                style={{
-                  transform: peekOrigin === 'left'
-                    ? `translateX(calc(-100% - ${SWIPE_GAP_PX}px))`
-                    : `translateX(calc(100% + ${SWIPE_GAP_PX}px))`,
-                }}
+              <PhotoStageIdleRevealProvider
+                targetRef={idleTargetRef}
+                routeKey={pathname}
               >
-                <BlurImage
-                  src={peekPhoto.url}
-                  blurhash={peekPhoto.blurhash}
-                  width={peekPhoto.width}
-                  height={peekPhoto.height}
-                  alt=""
-                  contain
-                  unoptimized
-                  className="max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]"
-                  style={{
-                    aspectRatio: `${peekPhoto.width}/${peekPhoto.height}`,
-                  }}
-                />
-              </div>
-            )}
-          </div>
-          {clickOverlayPhoto && (
-            <div
-              ref={overlayCallbackRef}
-              className="absolute inset-0 z-10 flex items-center justify-center bg-background"
-            >
-              <BlurImage
-                src={clickOverlayPhoto.url}
-                blurhash={clickOverlayPhoto.blurhash}
-                width={clickOverlayPhoto.width}
-                height={clickOverlayPhoto.height}
-                alt=""
-                contain
-                unoptimized
-                className="max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]"
-                style={{
-                  aspectRatio: `${clickOverlayPhoto.width}/${clickOverlayPhoto.height}`,
-                }}
-              />
+                <PhotoPageFixedStageChrome />
+                <div
+                  ref={photoAreaRef}
+                  className={clsx(
+                    'relative flex w-full items-center justify-center max-md:absolute max-md:inset-0 md:h-full',
+                    hasHover && 'md:contents',
+                  )}
+                >
+                  <div
+                    ref={swipeLayerRef}
+                    className="relative h-full w-full max-md:absolute max-md:inset-0"
+                  >
+                    <div
+                      ref={contentScaleRef}
+                      data-photo-stage-slot=""
+                      className="flex h-full w-full items-center justify-center max-md:absolute max-md:inset-0"
+                    >
+                      {children}
+                    </div>
+                    {peekPhoto && (
+                      <div
+                        ref={overlayCallbackRef}
+                        data-photo-stage-slot=""
+                        className="absolute inset-0 z-20 flex items-center justify-center bg-background"
+                        style={{
+                          transform: peekOrigin === 'left'
+                            ? `translateX(calc(-100% - ${SWIPE_GAP_PX}px))`
+                            : `translateX(calc(100% + ${SWIPE_GAP_PX}px))`,
+                        }}
+                      >
+                        <div
+                          data-photo-fit-frame=""
+                          className="relative"
+                          style={{ ['--photo-aspect' as string]: String(peekPhoto.width / peekPhoto.height) }}
+                        >
+                          <BlurImage
+                            src={peekPhoto.url}
+                            blurhash={peekPhoto.blurhash}
+                            width={peekPhoto.width}
+                            height={peekPhoto.height}
+                            alt=""
+                            contain
+                            unoptimized
+                            className="h-full w-full [--photo-max-h:calc(100vh-162px)] sm:[--photo-max-h:calc(100vh-180px)] md:[--photo-max-h:calc(100vh-172px)] lg:[--photo-max-h:calc(100vh-218px)]"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {clickOverlayPhoto && (
+                    <div
+                      ref={overlayCallbackRef}
+                      data-photo-stage-slot=""
+                      className="absolute inset-0 z-10 flex items-center justify-center bg-background"
+                    >
+                      <div
+                        data-photo-fit-frame=""
+                        className="relative"
+                        style={{ ['--photo-aspect' as string]: String(clickOverlayPhoto.width / clickOverlayPhoto.height) }}
+                      >
+                        <BlurImage
+                          src={clickOverlayPhoto.url}
+                          blurhash={clickOverlayPhoto.blurhash}
+                          width={clickOverlayPhoto.width}
+                          height={clickOverlayPhoto.height}
+                          alt=""
+                          contain
+                          unoptimized
+                          className="h-full w-full [--photo-max-h:calc(100vh-162px)] sm:[--photo-max-h:calc(100vh-180px)] md:[--photo-max-h:calc(100vh-172px)] lg:[--photo-max-h:calc(100vh-218px)]"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </PhotoStageIdleRevealProvider>
             </div>
-          )}
-        </div>
+          </PhotoLightboxOpenProvider>
+        </PhotoStageChromeSlotProvider>
         {showFilmstrip && (
           <div
             className="lg:translate-y-4"
@@ -602,7 +626,7 @@ function PhotoFilmstripShellInner({
             />
           </div>
         )}
-      </div>
+      </section>
 
       {sidebar}
     </div>

@@ -10,8 +10,9 @@ import { routes } from '@/config/routes';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
+import AccountAppearancePanel from './AccountAppearancePanel';
 import AccountMenuChevron from './AccountMenuChevron';
-import AccountMenuSlidingTrack from './AccountMenuSlidingTrack';
+import AccountMenuSlidingTrack, { type AccountMenuView } from './AccountMenuSlidingTrack';
 import AccountSiteLinksPanel from './AccountSiteLinksPanel';
 
 type AccountMenuPanelProps = {
@@ -65,7 +66,7 @@ export default function AccountMenuPanel({
   const { resolvedTheme, setTheme } = useAppTheme();
   const mounted = useMounted();
   const pathname = usePathname();
-  const [view, setView] = useState<'root' | 'site'>('root');
+  const [view, setView] = useState<AccountMenuView>('root');
 
   useEffect(() => {
     setView('root');
@@ -96,8 +97,15 @@ export default function AccountMenuPanel({
   const sitePanel = (
     <AccountSiteLinksPanel
       onBack={() => setView('root')}
+      onOpenAppearance={() => setView('appearance')}
       onClose={onClose}
       menuLinkClass={menuLinkClass}
+    />
+  );
+
+  const appearancePanel = (
+    <AccountAppearancePanel
+      onBack={() => setView('site')}
     />
   );
 
@@ -108,6 +116,7 @@ export default function AccountMenuPanel({
         view={view}
         root={rootContent}
         site={sitePanel}
+        appearance={appearancePanel}
       />
     );
   };

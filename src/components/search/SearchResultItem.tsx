@@ -13,6 +13,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import FolderSVG from 'public/icons/folder.svg';
+import QuestionMarkCircleSVG from 'public/icons/question-mark-circle.svg';
 import { useEffect, useRef } from 'react';
 
 interface SearchResultItemProps {
@@ -416,6 +417,47 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
         >
           <p
             className="font-medium text-sm leading-tight line-clamp-1"
+          >
+            {result.title}
+          </p>
+          {result.subtitle && (
+            <p
+              className="mt-0.5 text-xs text-foreground/60 line-clamp-1"
+            >
+              {result.subtitle}
+            </p>
+          )}
+        </div>
+      </Link>
+    );
+  }
+
+  if (result.entity_type === 'help') {
+    return (
+      <Link
+        ref={itemRef}
+        href={result.url || '#'}
+        onClick={handleClick}
+        className={clsx(
+          'group flex items-center gap-3 rounded-lg border p-3 transition-colors',
+          isSelected
+            ? 'border-primary bg-background'
+            : 'border-border-color-strong bg-background-light hover:border-primary hover:bg-background',
+        )}
+      >
+        <div
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+        >
+          <QuestionMarkCircleSVG
+            className="size-5"
+            aria-hidden
+          />
+        </div>
+        <div
+          className="min-w-0 flex-1"
+        >
+          <p
+            className="font-medium text-sm leading-tight line-clamp-2"
           >
             {result.title}
           </p>

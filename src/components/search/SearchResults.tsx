@@ -34,6 +34,7 @@ const typeLabels: Record<SearchResult['entity_type'], string> = {
   albums: 'Albums',
   photos: 'Photos',
   tags: 'Tags',
+  help: 'Help',
 };
 
 export default function SearchResults({

@@ -37,6 +37,7 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   const [flushContentTop, setFlushContentTop] = useState(false);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const beforeCloseCheckRef = useRef<BeforeCloseCheck | null>(null);
+  const closeInFlightRef = useRef(false);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
@@ -71,15 +72,19 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const requestClose = useCallback(async () => {
+    if (closeInFlightRef.current) return;
+    closeInFlightRef.current = true;
     beginOverlayClose();
     const check = beforeCloseCheckRef.current;
     if (check) {
       const ok = await Promise.resolve(check());
       if (!ok) {
+        closeInFlightRef.current = false;
         cancelOverlayClose();
         return;
       }
     }
+    closeInFlightRef.current = false;
     handleSetIsOpen(false);
   }, [handleSetIsOpen]);
 

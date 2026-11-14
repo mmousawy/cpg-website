@@ -18,19 +18,26 @@ function getMaxMenuHeightPx() {
   return Math.min(window.innerHeight * 0.7, 28 * 16);
 }
 
+export type AccountMenuView = 'root' | 'site' | 'appearance';
+
+const MENU_VIEWS: AccountMenuView[] = ['root', 'site', 'appearance'];
+
 type AccountMenuSlidingTrackProps = {
-  view: 'root' | 'site';
+  view: AccountMenuView;
   root: ReactNode;
   site: ReactNode;
+  appearance: ReactNode;
 };
 
 export default function AccountMenuSlidingTrack({
   view,
   root,
   site,
+  appearance,
 }: AccountMenuSlidingTrackProps) {
   const rootInnerRef = useRef<HTMLDivElement>(null);
   const siteInnerRef = useRef<HTMLDivElement>(null);
+  const appearanceInnerRef = useRef<HTMLDivElement>(null);
   const [heightPx, setHeightPx] = useState<number | null>(null);
   const [heightTransitionsEnabled, setHeightTransitionsEnabled] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -47,11 +54,15 @@ export default function AccountMenuSlidingTrack({
     };
   }, []);
 
-  const measureView = useCallback((target: 'root' | 'site') => {
-    const el = target === 'root' ? rootInnerRef.current : siteInnerRef.current;
+  const measureView = useCallback((target: AccountMenuView) => {
+    const el = target === 'root'
+      ? rootInnerRef.current
+      : target === 'site'
+        ? siteInnerRef.current
+        : appearanceInnerRef.current;
     if (!el) return null;
     const natural = el.offsetHeight;
-    if (target === 'site') return natural;
+    if (target !== 'root') return natural;
     return Math.min(natural, getMaxMenuHeightPx());
   }, []);
 
@@ -84,9 +95,11 @@ export default function AccountMenuSlidingTrack({
   }, [view, measureView]);
 
   useLayoutEffect(() => {
-    const nodes = [rootInnerRef.current, siteInnerRef.current].filter(
-      Boolean,
-    ) as HTMLElement[];
+    const nodes = [
+      rootInnerRef.current,
+      siteInnerRef.current,
+      appearanceInnerRef.current,
+    ].filter(Boolean) as HTMLElement[];
     if (nodes.length === 0) return;
 
     const ro = new ResizeObserver(() => {
@@ -97,32 +110,41 @@ export default function AccountMenuSlidingTrack({
     return () => ro.disconnect();
   }, [view, measureView]);
 
+  const panes: { id: AccountMenuView; node: ReactNode; ref: typeof rootInnerRef }[] = [
+    { id: 'root', node: root, ref: rootInnerRef },
+    { id: 'site', node: site, ref: siteInnerRef },
+    { id: 'appearance', node: appearance, ref: appearanceInnerRef },
+  ];
+
   if (reduceMotion) {
+    const active = panes.find((pane) => pane.id === view) ?? panes[0];
     return (
       <div
         className={
-          view === 'site'
-            ? 'overflow-x-hidden'
-            : 'max-h-[min(70vh,28rem)] overflow-x-hidden overflow-y-auto'
+          view === 'root'
+            ? 'max-h-[min(70vh,28rem)] overflow-x-hidden overflow-y-auto'
+            : 'overflow-x-hidden'
         }
       >
-        {view === 'root' ? root : site}
+        {active.node}
       </div>
     );
   }
 
   const viewportHeightStyle = {
     height: heightPx !== null ? `${heightPx}px` : 'auto',
-    maxHeight: view === 'site' ? undefined : 'min(70vh, 28rem)',
+    maxHeight: view === 'root' ? 'min(70vh, 28rem)' : undefined,
     transition: heightTransitionsEnabled
       ? `height ${SLIDE_MS}ms ${SLIDE_EASE}`
       : 'none',
   };
 
-  const paneShellClass = (pane: 'root' | 'site') =>
-    pane === 'site'
-      ? 'w-1/2 shrink-0 self-start overflow-x-hidden'
-      : 'w-1/2 shrink-0 self-start overflow-x-hidden overflow-y-auto';
+  const paneShellClass = (pane: AccountMenuView) =>
+    pane === 'root'
+      ? 'w-1/3 shrink-0 self-start overflow-x-hidden overflow-y-auto'
+      : 'w-1/3 shrink-0 self-start overflow-x-hidden';
+
+  const viewIndex = MENU_VIEWS.indexOf(view);
 
   return (
     <div
@@ -130,39 +152,31 @@ export default function AccountMenuSlidingTrack({
       style={viewportHeightStyle}
     >
       <div
-        className="flex w-[200%] items-start"
+        className="flex w-[300%] items-start"
         style={{
-          transform: view === 'site' ? 'translateX(-50%)' : 'translateX(0)',
+          transform: `translateX(calc(-${viewIndex} * 100% / ${MENU_VIEWS.length}))`,
           transition: `transform ${SLIDE_MS}ms ${SLIDE_EASE}`,
         }}
       >
-        <div
-          className={paneShellClass('root')}
-          style={
-            heightPx !== null && view === 'root'
-              ? { maxHeight: `${heightPx}px` }
-              : undefined
-          }
-          aria-hidden={view !== 'root'}
-          inert={view !== 'root'}
-        >
+        {panes.map((pane) => (
           <div
-            ref={rootInnerRef}
+            key={pane.id}
+            className={paneShellClass(pane.id)}
+            style={
+              heightPx !== null && view === 'root' && pane.id === 'root'
+                ? { maxHeight: `${heightPx}px` }
+                : undefined
+            }
+            aria-hidden={view !== pane.id}
+            inert={view !== pane.id}
           >
-            {root}
+            <div
+              ref={pane.ref}
+            >
+              {pane.node}
+            </div>
           </div>
-        </div>
-        <div
-          className={paneShellClass('site')}
-          aria-hidden={view !== 'site'}
-          inert={view !== 'site'}
-        >
-          <div
-            ref={siteInnerRef}
-          >
-            {site}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

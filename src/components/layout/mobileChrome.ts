@@ -66,6 +66,9 @@ export const nestedModalOverlayZClassName = 'z-70';
 /** Body-portaled pickers (tag search, autocomplete) while the app modal (z-70) is open. */
 export const modalPopoverZClassName = 'z-[71]';
 
+/** Confirm dialogs must stack above the app modal (z-70) and its pickers (z-71). */
+export const confirmOverlayZClassName = 'z-80';
+
 export const mobileTabBarZClassName = 'max-sm:z-35';
 
 export const mobileScrimZClassName = 'max-sm:z-25';

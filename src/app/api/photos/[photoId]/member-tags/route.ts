@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { revalidateProfile } from '@/app/actions/revalidate';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import { fetchPhotoMemberTags } from '@/lib/data/photoMemberTags';
 import { scheduleNotification } from '@/lib/notifications/schedule';
 import { createClient } from '@/utils/supabase/server';
 
@@ -55,16 +56,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: rows, error } = await supabase
-    .from('photo_member_tags')
-    .select('id, profile_id, x, y, profiles!photo_member_tags_profile_id_fkey(nickname, full_name, avatar_url)')
-    .eq('photo_id', photoId);
-
-  if (error) {
-    console.error('Failed to load photo member tags:', error);
-    return NextResponse.json({ message: 'Failed to load tags' }, { status: 500 });
-  }
-
   const { photo, canEdit } = user
     ? await canManagePhotoMemberTags(supabase, photoId, user.id)
     : { photo: null as { id: string; user_id: string | null } | null, canEdit: false };
@@ -73,23 +64,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: 'Photo not found' }, { status: 404 });
   }
 
-  const tags = (rows ?? []).flatMap((row) => {
-    const profile = row.profiles as {
-      nickname: string | null;
-      full_name: string | null;
-      avatar_url: string | null;
-    } | null;
-    if (!profile?.nickname) return [];
-    return [{
-      id: row.id,
-      profileId: row.profile_id,
-      nickname: profile.nickname,
-      fullName: profile.full_name,
-      avatarUrl: profile.avatar_url,
-      x: Number(row.x),
-      y: Number(row.y),
-    }];
-  });
+  const tags = await fetchPhotoMemberTags(supabase, photoId);
 
   return NextResponse.json({
     tags,
@@ -196,6 +171,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
           actorAvatarUrl: actor?.avatar_url ?? null,
           actorProfileLink: actorNickname ? `/@${actorNickname}` : null,
           entityTitle: photo.title || 'Untitled photo',
+          entityThumbnail: photo.url ?? null,
           entityLink: `/@${ownerNickname}/photo/${photo.short_id}`,
           contextLabel: 'a photo',
         },

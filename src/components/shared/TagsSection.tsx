@@ -23,6 +23,11 @@ export default function TagsSection({ tags, className }: TagsSectionProps) {
     <div
       className={clsx(className ?? 'mt-6')}
     >
+      <h2
+        className="mb-2 text-xs font-medium text-foreground/80"
+      >
+        Tags
+      </h2>
       <div
         className="flex flex-wrap gap-2"
       >

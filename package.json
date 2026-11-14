@@ -1,6 +1,6 @@
 {
   "name": "cpg-website",
-  "version": "1.48.1",
+  "version": "1.49.0",
   "private": true,
   "packageManager": "pnpm@11.28.11",
   "engines": {
@@ -20,6 +20,7 @@
     "typecheck:clean": "rm -rf .next/cache/.tsbuildinfo .next/dev/types && next typegen && tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
+    "verify:help-search-index": "vitest run scripts/verify-help-search-index.test.ts",
     "check": "npm run lint && npm run typecheck:clean && npm run test:run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
@@ -33,6 +34,8 @@
     "db:types": "node scripts/postprocess-database-types.mjs",
     "db:report-deletion": "npx tsx scripts/report-account-deletion-status.ts",
     "db:sync": "node scripts/sync-remote-database.mjs",
+    "help:search-index": "vitest run --config vitest.help-search-index.config.ts",
+    "sync:help-search-index": "node scripts/sync-help-search-index-if-needed.mjs --always",
     "prepare": "husky"
   },
   "dependencies": {

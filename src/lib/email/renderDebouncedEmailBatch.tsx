@@ -64,6 +64,7 @@ export async function renderDebouncedEmailBatch(
         actorProfileLink: item.actorProfileLink
           ? toAbsoluteEmailUrl(item.actorProfileLink)
           : null,
+        entityThumbnail: item.entityThumbnail ?? null,
       }));
       return {
         subject: getMentionNotificationSubject(mentionItems),

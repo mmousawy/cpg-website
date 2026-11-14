@@ -2,6 +2,7 @@ import type { Tables } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
 import { filterAlbumProfiles, filterEventAlbumPhotos, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
+import { fetchPhotoMemberTags, type PhotoMemberTag } from '@/lib/data/photoMemberTags';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 import { PHOTO_LIST_COLUMNS } from './columns';
@@ -523,6 +524,7 @@ export type EventPhotoPageResult = {
   albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null; event_title?: string | null }>;
   challenges: Array<{ id: string; title: string; slug: string; cover_image_url: string | null }>;
   siblingPhotos: Array<{ id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
+  memberTags: PhotoMemberTag[];
 };
 
 /**
@@ -786,6 +788,8 @@ export async function getEventPhotoByShortId(
     .map((cs: ChallengeSubmissionWithChallenge) => cs.challenges)
     .filter((c): c is { id: string; title: string; slug: string; cover_image_url: string | null } => !!c);
 
+  const memberTags = await fetchPhotoMemberTags(supabase, photo.id);
+
   return {
     photo: photo as Photo,
     profile,
@@ -797,6 +801,7 @@ export async function getEventPhotoByShortId(
     },
     albums,
     challenges,
+    memberTags,
     siblingPhotos,
   };
 }

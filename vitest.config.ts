@@ -38,6 +38,7 @@ export default defineConfig({
       'e2e/**',
       '**/*.e2e.spec.ts',
       '**/*.e2e.test.ts',
+      'scripts/generate-help-search-index.write.test.ts',
     ],
   },
   resolve: {

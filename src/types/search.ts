@@ -6,7 +6,8 @@ export type SearchEntityType =
   | 'tags'
   | 'scene-events'
   | 'challenges'
-  | 'gear';
+  | 'gear'
+  | 'help';
 
 export type SearchResult = {
   entity_type: SearchEntityType;

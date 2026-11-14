@@ -4,7 +4,11 @@ import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
-import { getOverlayPortalRoot, PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
+import {
+  getOverlayPortalRoot,
+  PORTAL_OVERLAY_ATTR,
+  viewportAnchorToPortalPosition,
+} from '@/lib/focusTrapPortals';
 import Input from './Input';
 
 interface AutocompleteInputProps {
@@ -39,6 +43,7 @@ type DropdownPosition = {
   top: number;
   left: number;
   width: number;
+  position: 'fixed' | 'absolute';
 };
 
 export default function AutocompleteInput({
@@ -76,11 +81,14 @@ export default function AutocompleteInput({
   const updateDropdownPosition = useCallback(() => {
     const input = inputRef.current;
     if (!input) return;
+    const portalRoot = getOverlayPortalRoot(input) ?? document.body;
     const rect = input.getBoundingClientRect();
+    const { top, left, position } = viewportAnchorToPortalPosition(rect.left, rect.bottom + 4, portalRoot);
     setDropdownPosition({
-      top: rect.bottom + 4,
-      left: rect.left,
+      top,
+      left,
       width: rect.width,
+      position,
     });
   }, []);
 
@@ -197,7 +205,9 @@ export default function AutocompleteInput({
       {...{ [PORTAL_OVERLAY_ATTR]: '' }}
       className={clsx(
         'rounded-md border border-border-color-strong bg-background-medium bg-no-noise shadow-lg shadow-black/15 ring-1 ring-black/5 dark:shadow-black/35 dark:ring-white/10',
-        inlineSuggestions ? 'relative mt-1 w-full' : ['fixed', pageFloatingZClassName],
+        inlineSuggestions
+          ? 'relative mt-1 w-full'
+          : [dropdownPosition?.position ?? 'fixed', pageFloatingZClassName],
       )}
       style={dropdownStyle}
     >

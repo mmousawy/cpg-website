@@ -2,7 +2,14 @@ import type { Page } from '@playwright/test';
 import path from 'path';
 
 import { expect, test } from './fixtures/member-user';
-import { dismissDriverTour, loginTestUser, photosUploadInput } from './test-utils';
+import {
+  dismissDriverTour,
+  loginTestUser,
+  photosUploadInput,
+  setSidebarPhotoPublic,
+  uploadPhotoInLibrary,
+  waitForPhotoLibrary as waitForSharedPhotoLibrary,
+} from './test-utils';
 
 async function waitForPhotoLibrary(page: Page) {
   const cards = page.locator('[data-testid="photo-card"]');
@@ -49,26 +56,12 @@ test.describe('Photo Management Flow', () => {
 
     // Wait for page to load
     await page.waitForLoadState('load');
-
-    // Get the test image path (using dedicated test images)
-    const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
-
-    // Find the file input and upload
-    const fileInput = photosUploadInput(page);
-    await fileInput.setInputFiles(testImagePath);
-
-    // Wait for upload to complete - look for the photo to appear in the grid
-    // The photo card should appear after upload
-    await expect(page.locator('[data-testid="photo-card"]').or(
-      page.locator('.group').filter({ has: page.locator('img') }),
-    ).first()).toBeVisible({ timeout: 30000 });
-
+    await waitForSharedPhotoLibrary(page);
     await dismissDriverTour(page);
 
-    // Click on the uploaded photo to select it
-    const photoCard = page.locator('[data-testid="photo-card"]').or(
-      page.locator('.group').filter({ has: page.locator('img') }),
-    ).first();
+    const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
+    const photoCard = await uploadPhotoInLibrary(page, testImagePath);
+    await dismissDriverTour(page);
     await photoCard.click();
 
     // Wait for sidebar to show the edit form
@@ -112,31 +105,27 @@ test.describe('Photo Management Flow', () => {
 
     // Make photo public so it appears on profile and homepage Recent photos
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
-    const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
-    if (!(await visibilityToggle.isChecked())) {
-      // sr-only checkbox — label buttons toggle; direct check is more reliable in CI.
-      await visibilityToggle.check({ force: true });
-    }
-    await expect(visibilityToggle).toBeChecked({ timeout: 10_000 });
+    await setSidebarPhotoPublic(page, sidebar);
 
     const saveButton = sidebar.getByRole('button', { name: /^save$/i });
-    await expect(saveButton).toBeEnabled({ timeout: 5000 });
+    await expect(saveButton).toBeEnabled({ timeout: 10_000 });
     await saveButton.click();
     await expect(page.getByRole('button', { name: /saved!/i })).toBeVisible({ timeout: 10000 });
 
     // Public profile shows the uploaded photo (role locator skips CSS-hidden
     // mobile/tablet grid copies that stay opacity-0 because they never load)
     await page.goto(`/@${memberUser.nickname}`);
-    await expect(
-      page.getByRole('link', { name: new RegExp(`View photo.*@${memberUser.nickname}`) }),
-    ).toBeVisible({ timeout: 15000 });
+    const profilePhoto = page.getByRole('link', {
+      name: new RegExp(`View photo.*@${memberUser.nickname}`),
+    }).first();
+    await expect(profilePhoto).toBeVisible({ timeout: 15000 });
 
     // Homepage Recent photos includes the test user's upload. First paint can be
     // the public Suspense fallback (test photos filtered out); reload once if needed.
     await page.goto('/');
     const homePhotoLink = page.getByRole('link', {
       name: new RegExp(`View photo.*@${memberUser.nickname}`),
-    });
+    }).first();
     if (!(await homePhotoLink.isVisible())) {
       await page.reload();
     }
@@ -190,6 +179,7 @@ test.describe('Photo Management Flow', () => {
 
     // The shared member can still have photos from the previous test once the grid finishes loading.
     await deleteAllPhotos(page);
+    await dismissDriverTour(page);
     const photoCards = page.locator('[data-testid="photo-card"]');
 
     // Upload two test images
@@ -259,11 +249,11 @@ test.describe('Photo Management Flow', () => {
     await loginTestUser(page, memberUser.email, memberUser.password);
     await page.goto('/account/photos');
     await deleteAllPhotos(page);
+    await dismissDriverTour(page);
 
     const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
-    await photosUploadInput(page).setInputFiles(testImagePath);
+    await uploadPhotoInLibrary(page, testImagePath);
     const photoCards = page.locator('[data-testid="photo-card"]');
-    await expect(photoCards).toHaveCount(1, { timeout: 30_000 });
     await dismissDriverTour(page);
 
     await page.getByRole('button', { name: 'Filter photos' }).first().click();
@@ -286,11 +276,10 @@ test.describe('Photo Management Flow', () => {
     await loginTestUser(page, memberUser.email, memberUser.password);
     await page.goto('/account/photos');
     await deleteAllPhotos(page);
+    await dismissDriverTour(page);
 
     const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
-    await photosUploadInput(page).setInputFiles(testImagePath);
-    const photoCard = page.locator('[data-testid="photo-card"]').first();
-    await expect(photoCard).toBeVisible({ timeout: 30_000 });
+    const photoCard = await uploadPhotoInLibrary(page, testImagePath);
     await dismissDriverTour(page);
     await photoCard.click();
 

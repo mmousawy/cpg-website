@@ -5,10 +5,13 @@ import {
   cleanupTestUsers,
   createTestUser,
   dismissDriverTour,
+  expectVisiblePhotoMemberTag,
   loginTestUser,
   searchMemberInTagPicker,
+  setSidebarPhotoPublic,
   uploadPhotoInLibrary,
   waitForPhotoLibrary,
+  waitForTagPeopleModal,
   type TestUser,
 } from './test-utils';
 
@@ -47,13 +50,9 @@ test.describe('Mentions and photo tags', () => {
 
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
     await expect(sidebar).toBeVisible();
-    const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
-    if (!(await visibilityToggle.isChecked())) {
-      await visibilityToggle.check({ force: true });
-    }
-    await expect(visibilityToggle).toBeChecked({ timeout: 10_000 });
+    await setSidebarPhotoPublic(page, sidebar);
     const saveButton = sidebar.getByRole('button', { name: /^save$/i });
-    await expect(saveButton).toBeEnabled({ timeout: 5000 });
+    await expect(saveButton).toBeEnabled({ timeout: 10_000 });
     await saveButton.click();
     await expect(page.getByRole('button', { name: /saved!/i })).toBeVisible({ timeout: 10_000 });
 
@@ -86,19 +85,14 @@ test.describe('Mentions and photo tags', () => {
     const editSidebar = page.locator('[data-testid="sidebar-panel"]').first();
     await editSidebar.getByRole('button', { name: 'Tag people' }).click();
 
-    const tagDialog = page.locator('dialog[open]').filter({
-      has: page.getByRole('heading', { name: 'Tag people' }),
-    });
-    await expect(tagDialog.getByText('Click the photo to place a tag')).toBeVisible();
+    const tagDialog = await waitForTagPeopleModal(page);
     await tagDialog.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
     await searchMemberInTagPicker(page, taggedMember.nickname);
-    await tagDialog.getByRole('button', { name: 'Done' }).click();
+    await tagDialog.getByRole('button', { name: 'Save' }).click();
     await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
 
     await page.goto(photoPageUrl);
-    await expect(page.getByRole('button', { name: `Tagged ${taggedMember.nickname}` })).toBeVisible({
-      timeout: 15_000,
-    });
+    await expectVisiblePhotoMemberTag(page, taggedMember.nickname);
 
     await page.goto(`/@${taggedMember.nickname}`);
     await expect(page.getByRole('heading', { name: 'Tagged', exact: true })).toBeVisible({

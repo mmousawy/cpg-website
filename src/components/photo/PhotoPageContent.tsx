@@ -5,6 +5,7 @@ import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
 import PhotoStageWithBack from '@/components/photo/PhotoStageWithBack';
 import PhotoExifDetails from '@/components/photo/PhotoExifDetails';
 import { PhotoMemberTagList } from '@/components/photo/PhotoMemberTags';
+import type { PhotoMemberTag } from '@/lib/data/photoMemberTags';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
@@ -12,6 +13,7 @@ import DetailSidebar, {
   DetailSidebarAuthor,
   DetailSidebarFooter,
   DetailSidebarMeta,
+  DetailSidebarSectionHeading,
   DetailSidebarTitle,
 } from '@/components/shared/DetailSidebar';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
@@ -85,10 +87,13 @@ export interface PhotoMetadataColumnProps {
   currentEvent?: PhotoPageEvent;
   /** Tighter top margin when viewed from album/challenge context */
   tightTopMargin?: boolean;
+  memberTags?: PhotoMemberTag[];
 }
 
 export interface PhotoLightboxColumnProps {
   photo: Photo;
+  /** Used for untitled photo alt text. */
+  profile?: Pick<PhotoPageProfile, 'full_name' | 'nickname'>;
   isInAlbum?: boolean;
   siblingPhotos?: SiblingPhoto[];
   /** Album context: owner nickname */
@@ -97,6 +102,7 @@ export interface PhotoLightboxColumnProps {
   albumSlug?: string;
   /** Event/challenge context: base path (e.g. /events/my-event) */
   basePath?: string;
+  memberTags?: PhotoMemberTag[];
 }
 
 export interface PhotoPageContentProps extends PhotoMetadataColumnProps {
@@ -108,11 +114,13 @@ export interface PhotoPageContentProps extends PhotoMetadataColumnProps {
 
 export function PhotoLightboxColumn({
   photo,
+  profile,
   isInAlbum = false,
   siblingPhotos,
   nickname,
   albumSlug,
   basePath,
+  memberTags,
 }: PhotoLightboxColumnProps) {
   const galleryPhotos = siblingPhotos?.map((sp) => ({
     id: sp.id,
@@ -122,10 +130,17 @@ export function PhotoLightboxColumn({
     height: sp.height,
   }));
 
+  const ownerName = profile
+    ? formatProfileDisplayName(profile.full_name, profile.nickname)
+    : nickname
+      ? `@${nickname}`
+      : 'the photographer';
+  const imageDescription = photo.title?.trim() || `Photo by ${ownerName}`;
+
   return (
     <PhotoWithLightbox
       url={photo.url}
-      title={photo.title || ''}
+      title={imageDescription}
       width={photo.width || 1200}
       height={photo.height || 800}
       blurhash={photo.blurhash || ''}
@@ -136,6 +151,7 @@ export function PhotoLightboxColumn({
       albumSlug={albumSlug}
       basePath={basePath}
       photoId={photo.id}
+      memberTags={memberTags}
     />
   );
 }
@@ -150,6 +166,7 @@ export function PhotoMetadataColumn({
   currentChallenge,
   currentEvent,
   tightTopMargin = false,
+  memberTags,
 }: PhotoMetadataColumnProps) {
   const exif = getFormattedExif(photo.exif_data as Record<string, unknown> | null);
   const fileSizeLabel = formatFileSize(photo.file_size);
@@ -209,8 +226,12 @@ export function PhotoMetadataColumn({
     image: getSocialImageUrl(photo.url),
   };
 
+  const ownerName = formatProfileDisplayName(profile.full_name, profile.nickname);
+  const photoTitle = photo.title?.trim() || undefined;
+
   return (
     <DetailSidebar
+      ariaLabel="Photo details"
       tightTopMargin={tightTopMargin}
       actions={(
         <PhotoActionsPopover
@@ -228,24 +249,25 @@ export function PhotoMetadataColumn({
       </DetailSidebarAuthor>
 
       <DetailSidebarTitle
-        title={photo.title}
+        title={photoTitle}
+        accessibleTitle={`Photo by ${ownerName}`}
         description={photo.description}
         authorId={photo.user_id}
       />
-      <PhotoMemberTagList
-        photoId={photo.id}
-      />
 
       <DetailSidebarMeta>
+        <PhotoMemberTagList
+          photoId={photo.id}
+          photo={photo}
+          initialMemberTags={memberTags}
+        />
         {challenges.length > 0 && (
           <div
             className="mb-4"
           >
-            <p
-              className="mb-1.5 text-xs font-medium text-foreground/80"
-            >
+            <DetailSidebarSectionHeading>
               Featured in
-            </p>
+            </DetailSidebarSectionHeading>
             <div
               className="flex flex-wrap gap-2"
             >
@@ -267,11 +289,9 @@ export function PhotoMetadataColumn({
           <div
             className="mb-4"
           >
-            <p
-              className="mb-1.5 text-xs font-medium text-foreground/80"
-            >
+            <DetailSidebarSectionHeading>
               Seen in
-            </p>
+            </DetailSidebarSectionHeading>
             <div
               className="flex flex-wrap gap-2"
             >
@@ -428,10 +448,12 @@ export default function PhotoPageContent({
         <PhotoStageWithBack
           fallbackHref={collectionFallbackHref}
           fallbackLabel={fallbackLabel}
+          idleRevealRouteKey={showStrip ? collectionFallbackHref : undefined}
           className="relative flex flex-1 touch-pan-y items-center justify-center overflow-hidden"
         >
           <PhotoLightboxColumn
             photo={photo}
+            profile={profile}
             isInAlbum={isInAlbum}
           />
         </PhotoStageWithBack>

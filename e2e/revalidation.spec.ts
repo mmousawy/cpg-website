@@ -8,7 +8,9 @@ import {
   deleteTestEvent,
   dismissDriverTour,
   loginTestUser,
-  photosUploadInput,
+  setSidebarPhotoPublic,
+  uploadPhotoInLibrary,
+  waitForPhotoLibrary,
   type TestEvent,
   type TestUser,
 } from './test-utils';
@@ -98,6 +100,8 @@ test.describe('Revalidation smoke', () => {
     await loginTestUser(page, memberUser.email, memberUser.password);
     await page.goto('/account/photos');
     await page.waitForLoadState('load');
+    await waitForPhotoLibrary(page);
+    await dismissDriverTour(page);
 
     const testImagePath = path.join(
       process.cwd(),
@@ -106,24 +110,13 @@ test.describe('Revalidation smoke', () => {
       'file_example_JPG_100kB.jpg',
     );
 
-    const fileInput = photosUploadInput(page);
-    await fileInput.setInputFiles(testImagePath);
-
-    const photoCard = page.locator('[data-testid="photo-card"]').or(
-      page.locator('.group').filter({ has: page.locator('img') }),
-    ).first();
-    await expect(photoCard).toBeVisible({ timeout: 30_000 });
+    const photoCard = await uploadPhotoInLibrary(page, testImagePath);
     await dismissDriverTour(page);
     await photoCard.click();
 
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
     await expect(sidebar).toBeVisible({ timeout: 10_000 });
-
-    const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
-    if (!(await visibilityToggle.isChecked())) {
-      await sidebar.getByRole('button', { name: 'Public', exact: true }).click();
-    }
-    await expect(visibilityToggle).toBeChecked();
+    await setSidebarPhotoPublic(page, sidebar);
 
     const saveButton = sidebar.getByRole('button', { name: /^save$/i });
     await expect(saveButton).toBeEnabled({ timeout: 10_000 });

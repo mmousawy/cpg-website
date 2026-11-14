@@ -22,7 +22,7 @@ import { getExifSummary } from '@/utils/exif';
 import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { getAlbumDisplayName } from './AlbumListItem';
@@ -100,6 +100,7 @@ export default function SinglePhotoEditForm({
   const confirm = useConfirm();
   const { profile: currentProfile } = useAuth();
   const formRef = useRef<HTMLFormElement>(null);
+  const formPhotoIdRef = useRef<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState(false);
   const [isSettingCover, setIsSettingCover] = useState(false);
@@ -170,8 +171,13 @@ export default function SinglePhotoEditForm({
     onDirtyChange?.(isDirty);
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
-  // Reset form when selected photo changes
-  useEffect(() => {
+  // Reset only when switching photos. In-place list updates (albums, counts)
+  // must not wipe an in-progress edit — that disables Save after a visibility toggle.
+  // Guard on photo.id inside the effect so React Compiler cannot re-run reset
+  // when the same photo object is replaced after an album add.
+  useLayoutEffect(() => {
+    if (formPhotoIdRef.current === photo.id) return;
+    formPhotoIdRef.current = photo.id;
     reset({
       title: photo.title || null,
       description: photo.description || null,
@@ -477,12 +483,22 @@ export default function SinglePhotoEditForm({
             photo={photo}
           />
 
-          <Toggle
-            id={`is_public-${photo.id}`}
-            leftLabel="Private"
-            rightLabel="Public"
-            {...register('is_public')}
-            label="Visibility"
+          <Controller
+            name="is_public"
+            control={control}
+            render={({ field }) => (
+              <Toggle
+                id={`is_public-${photo.id}`}
+                leftLabel="Private"
+                rightLabel="Public"
+                label="Visibility"
+                name={field.name}
+                ref={field.ref}
+                checked={field.value}
+                onBlur={field.onBlur}
+                onChange={(event) => field.onChange(event.target.checked)}
+              />
+            )}
           />
 
           <div

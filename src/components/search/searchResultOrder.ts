@@ -10,6 +10,7 @@ export const SEARCH_RESULT_TYPE_ORDER: SearchEntityType[] = [
   'albums',
   'photos',
   'tags',
+  'help',
 ];
 
 const typeRank = new Map(SEARCH_RESULT_TYPE_ORDER.map((type, index) => [type, index]));

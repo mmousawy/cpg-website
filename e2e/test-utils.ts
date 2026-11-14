@@ -334,6 +334,25 @@ export async function waitForPhotoLibrary(page: Page) {
   return cards;
 }
 
+/**
+ * Set the manage-photo visibility toggle to Public.
+ * The "Public" label only toggles — so a stale unread can flip it back to private.
+ * Retry until it sticks; the form can reset once when the selected photo hydrates.
+ */
+export async function setSidebarPhotoPublic(
+  page: Page,
+  sidebar = page.locator('[data-testid="sidebar-panel"]').first(),
+): Promise<void> {
+  const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
+  await expect(visibilityToggle).toBeVisible({ timeout: 10_000 });
+  await expect(async () => {
+    if (!(await visibilityToggle.isChecked())) {
+      await sidebar.getByRole('button', { name: 'Public', exact: true }).click();
+    }
+    await expect(visibilityToggle).toBeChecked();
+  }).toPass({ timeout: 10_000 });
+}
+
 /** Upload one file via the library chrome and wait until a new photo card appears. */
 export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
   const cards = page.locator('[data-testid="photo-card"]');
@@ -349,6 +368,17 @@ export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
 
   await expect(cards).toHaveCount(countBefore + 1, { timeout: 30_000 });
   return cards.first();
+}
+
+export async function waitForTagPeopleModal(page: Page) {
+  const tagDialog = page.locator('dialog[open]').filter({
+    has: page.getByRole('heading', { name: 'Tag people' }),
+  });
+  await expect(tagDialog.getByRole('heading', { name: 'Tag people' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(tagDialog.getByRole('button', { name: 'Save' })).toBeVisible();
+  return tagDialog;
 }
 
 /**
@@ -371,6 +401,20 @@ export async function searchMemberInTagPicker(page: Page, nickname: string): Pro
   });
 }
 
+/**
+ * Public tag dots idle-hide with `scale(0)` (empty bounding box).
+ * Wait until the button exists, then hover the photo stage so it scales in.
+ */
+export async function expectVisiblePhotoMemberTag(
+  page: Page,
+  nickname: string,
+): Promise<void> {
+  const tagDot = page.getByRole('button', { name: `Tagged ${nickname}` });
+  await expect(tagDot).toBeAttached({ timeout: 15_000 });
+  await page.locator('#gallery').hover();
+  await expect(tagDot).toBeVisible({ timeout: 5_000 });
+}
+
 /** First-run driver.js overlay blocks clicks on the photo grid until it is closed. */
 export async function dismissDriverTour(page: Page): Promise<void> {
   const close = page.locator('.driver-popover-close-btn');
@@ -389,11 +433,12 @@ export async function dismissDriverTour(page: Page): Promise<void> {
 export async function loginTestUser(page: Page, email: string, password: string): Promise<void> {
   await page.goto('/login');
 
-  // Fill login form
-  const emailInput = page.locator('input[type="email"]').first();
+  const emailInput = page.getByLabel('Email', { exact: true });
+  const passwordInput = page.getByLabel('Password', { exact: true });
+  await expect(emailInput).toBeVisible({ timeout: 15_000 });
   await emailInput.fill(email);
-
-  await page.locator('input[type="password"]').first().fill(password);
+  await passwordInput.fill(password);
+  await expect(emailInput).toHaveValue(email);
 
   // Exact name avoids the mobile tab-bar "Log in or sign up" control.
   await page.getByRole('button', { name: 'Log in', exact: true }).click();

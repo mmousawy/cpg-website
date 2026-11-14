@@ -1,7 +1,15 @@
 'use client';
 
 import Image, { type ImageProps } from 'next/image';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 
 import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
 import { getBlurPlaceholderUrl, getRawObjectUrl, isSupabaseUrl } from '@/utils/supabaseImageLoader';
@@ -368,18 +376,37 @@ export default function BlurImage({
 
   // Merge passed style prop with wrapper styles
   const passedStyle = (props as any).style || {};
+  const { style: _containStyle, ...containImageProps } = props as typeof props & {
+    style?: CSSProperties;
+  };
 
-  // For contain mode: simpler structure where image drives the sizing
+  // For contain mode: size a non-replaced wrapper from known width/height and
+  // `--photo-max-h` so the box is correct before decode. Putting `w-auto` on
+  // the <img> overrides width/height attributes, so the frame used to wait for
+  // natural size (tag points jumped; overflow clipped the decoded photo).
   if (contain) {
+    const photoAr = imgWidth && imgHeight ? imgWidth / imgHeight : undefined;
+    const aspectRatio = photoAr
+      ? `${imgWidth} / ${imgHeight}`
+      : passedStyle.aspectRatio;
+
     return (
       <span
-        className={`block relative overflow-hidden ${className}`}
-        style={passedStyle}
+        className={`relative mx-auto block max-w-full ${className}`}
+        style={{
+          ...passedStyle,
+          aspectRatio,
+          width: photoAr
+            ? `min(100%, calc(var(--photo-max-h, 100svh) * ${photoAr}))`
+            : '100%',
+          maxWidth: '100%',
+          height: 'auto',
+          maxHeight: 'var(--photo-max-h, none)',
+        }}
       >
-        {/* Blurhash placeholder as a separate layer behind the image */}
         {blurhashDataUrl && (
           <span
-            className="absolute inset-0 z-0"
+            className="absolute inset-0 z-0 overflow-hidden"
             style={{
               backgroundImage: `url(${blurhashDataUrl})`,
               backgroundSize: '100% 100%',
@@ -391,14 +418,14 @@ export default function BlurImage({
           ref={imgCallbackRef}
           src={effectiveSrc}
           alt={alt || ''}
-          className={`${opacityClass} relative z-10`}
+          className={`${opacityClass} absolute inset-0 z-10 size-full object-contain`}
           onLoad={handleImageLoad}
           onError={handleImageError}
           onAnimationEnd={handleAnimationEnd}
           preload={preload}
           fetchPriority={fetchPriority}
           loading={loading}
-          {...props}
+          {...containImageProps}
           unoptimized={effectiveUnoptimized}
         />
       </span>
