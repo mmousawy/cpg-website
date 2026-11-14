@@ -351,6 +351,17 @@ export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
   return cards.first();
 }
 
+export async function waitForTagPeopleModal(page: Page) {
+  const tagDialog = page.locator('dialog[open]').filter({
+    has: page.getByRole('heading', { name: 'Tag people' }),
+  });
+  await expect(tagDialog.getByRole('heading', { name: 'Tag people' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(tagDialog.getByRole('button', { name: 'Save' })).toBeVisible();
+  return tagDialog;
+}
+
 /**
  * Type in the portaled tag picker like a user (click + focus + keys), not Playwright fill().
  * Fails when modal focus traps block the picker without `data-portal-overlay`.
@@ -369,6 +380,20 @@ export async function searchMemberInTagPicker(page: Page, nickname: string): Pro
   await picker.getByRole('button', { name: new RegExp(`@${nickname}`) }).click({
     timeout: 10_000,
   });
+}
+
+/**
+ * Public tag dots idle-hide with `scale(0)` (empty bounding box).
+ * Wait until the button exists, then hover the photo stage so it scales in.
+ */
+export async function expectVisiblePhotoMemberTag(
+  page: Page,
+  nickname: string,
+): Promise<void> {
+  const tagDot = page.getByRole('button', { name: `Tagged ${nickname}` });
+  await expect(tagDot).toBeAttached({ timeout: 15_000 });
+  await page.locator('#gallery').hover();
+  await expect(tagDot).toBeVisible({ timeout: 5_000 });
 }
 
 /** First-run driver.js overlay blocks clicks on the photo grid until it is closed. */

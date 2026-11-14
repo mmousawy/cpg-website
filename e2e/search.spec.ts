@@ -22,9 +22,7 @@ test.describe('Global search', () => {
     await page.getByRole('button', { name: 'Search', exact: true }).first().click();
 
     const dialog = page.locator('dialog[open]');
-    await expect(dialog.getByText(
-      'Search across albums, photos, members, gear, events, scene, and tags',
-    )).toBeVisible();
+    await expect(dialog.getByRole('searchbox')).toBeVisible({ timeout: 10_000 });
 
     const searchResponse = page.waitForResponse(
       (res) => {

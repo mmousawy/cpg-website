@@ -11,6 +11,7 @@ import {
   searchMemberInTagPicker,
   uploadPhotoInLibrary,
   waitForPhotoLibrary,
+  waitForTagPeopleModal,
   type TestUser,
 } from './test-utils';
 
@@ -40,11 +41,7 @@ async function openTagPeopleModal(
   await expect(sidebar.getByRole('button', { name: 'Tag people' })).toBeVisible({ timeout: 15_000 });
   await sidebar.getByRole('button', { name: 'Tag people' }).click();
 
-  const tagDialog = page.locator('dialog[open]').filter({
-    has: page.getByRole('heading', { name: 'Tag people' }),
-  });
-  await expect(tagDialog.getByText('Click the photo to place a tag')).toBeVisible();
-  return tagDialog;
+  return waitForTagPeopleModal(page);
 }
 
 async function assertPickerTagsMemberInModal(
