@@ -87,8 +87,7 @@ export default function Modal() {
     const modal = modalRef.current;
     if (!modal || !isOpen) return;
 
-    const handleCancel = (event: Event) => {
-      event.preventDefault();
+    const requestModalClose = () => {
       if (typeof requestClose === 'function') {
         void requestClose();
       } else if (typeof setIsOpen === 'function') {
@@ -96,8 +95,23 @@ export default function Modal() {
       }
     };
 
+    const handleCancel = (event: Event) => {
+      event.preventDefault();
+      requestModalClose();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      requestModalClose();
+    };
+
     modal.addEventListener('cancel', handleCancel);
-    return () => modal.removeEventListener('cancel', handleCancel);
+    modal.addEventListener('keydown', handleKeyDown);
+    return () => {
+      modal.removeEventListener('cancel', handleCancel);
+      modal.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, requestClose, setIsOpen]);
 
   return (

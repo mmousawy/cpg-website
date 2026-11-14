@@ -414,11 +414,12 @@ export async function dismissDriverTour(page: Page): Promise<void> {
 export async function loginTestUser(page: Page, email: string, password: string): Promise<void> {
   await page.goto('/login');
 
-  // Fill login form
-  const emailInput = page.locator('input[type="email"]').first();
+  const emailInput = page.getByLabel('Email', { exact: true });
+  const passwordInput = page.getByLabel('Password', { exact: true });
+  await expect(emailInput).toBeVisible({ timeout: 15_000 });
   await emailInput.fill(email);
-
-  await page.locator('input[type="password"]').first().fill(password);
+  await passwordInput.fill(password);
+  await expect(emailInput).toHaveValue(email);
 
   // Exact name avoids the mobile tab-bar "Log in or sign up" control.
   await page.getByRole('button', { name: 'Log in', exact: true }).click();

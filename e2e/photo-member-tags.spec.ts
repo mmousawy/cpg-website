@@ -112,7 +112,7 @@ memberTest.describe('Photo member tag picker', () => {
       tagDialog.getByRole('button', { name: `Tagged ${taggedMember.nickname}` }),
     ).toBeVisible({ timeout: 15_000 });
 
-    await page.keyboard.press('Escape');
+    await tagDialog.press('Escape');
     const unsavedDialog = page.getByRole('heading', { name: 'Unsaved changes' });
     await expect(unsavedDialog).toBeVisible({ timeout: 10_000 });
 
@@ -123,7 +123,7 @@ memberTest.describe('Photo member tag picker', () => {
       tagDialog.getByRole('button', { name: `Tagged ${taggedMember.nickname}` }),
     ).toBeVisible();
 
-    await page.keyboard.press('Escape');
+    await tagDialog.press('Escape');
     await expect(unsavedDialog).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: 'Leave' }).click();
     await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
