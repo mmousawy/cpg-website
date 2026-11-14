@@ -170,7 +170,8 @@ export default function SinglePhotoEditForm({
     onDirtyChange?.(isDirty);
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
-  // Reset form when selected photo changes
+  // Reset only when switching photos. In-place list updates (albums, counts)
+  // must not wipe an in-progress edit — that disables Save after a visibility toggle.
   useEffect(() => {
     reset({
       title: photo.title || null,
@@ -181,7 +182,8 @@ export default function SinglePhotoEditForm({
     });
     setLocalError(null);
     setLocalSuccess(false);
-  }, [photo, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- photo.id is the switch key
+  }, [photo.id, reset]);
 
   const handleDelete = async () => {
     const confirmed = await confirm(confirmDeletePhoto(photo));

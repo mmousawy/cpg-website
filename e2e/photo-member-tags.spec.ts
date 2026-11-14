@@ -122,8 +122,9 @@ memberTest.describe('Photo member tag picker', () => {
     await expect(
       tagDialog.getByRole('button', { name: `Tagged ${taggedMember.nickname}` }),
     ).toBeVisible();
+    await expect(page.locator('dialog[open]')).toHaveCount(1);
 
-    await tagDialog.press('Escape');
+    await tagDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(unsavedDialog).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: 'Leave' }).click();
     await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });

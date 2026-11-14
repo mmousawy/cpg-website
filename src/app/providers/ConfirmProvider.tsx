@@ -55,6 +55,8 @@ export default function ConfirmProvider({ children }: { children: React.ReactNod
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   const pendingResolveRef = useRef<((value: boolean) => void) | null>(null);
+  const optionsGenerationRef = useRef(0);
+  const clearOptionsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
@@ -62,6 +64,11 @@ export default function ConfirmProvider({ children }: { children: React.ReactNod
         pendingResolveRef.current(false);
         pendingResolveRef.current = null;
       }
+      if (clearOptionsTimeoutRef.current) {
+        clearTimeout(clearOptionsTimeoutRef.current);
+        clearOptionsTimeoutRef.current = null;
+      }
+      optionsGenerationRef.current += 1;
       setIsOpen(false);
       setOptions(null);
     });
@@ -69,6 +76,11 @@ export default function ConfirmProvider({ children }: { children: React.ReactNod
 
   const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
     return new Promise((resolve) => {
+      if (clearOptionsTimeoutRef.current) {
+        clearTimeout(clearOptionsTimeoutRef.current);
+        clearOptionsTimeoutRef.current = null;
+      }
+      optionsGenerationRef.current += 1;
       pendingResolveRef.current = resolve;
       setOptions(opts);
       setIsOpen(true);
@@ -82,9 +94,16 @@ export default function ConfirmProvider({ children }: { children: React.ReactNod
       resolve(value);
     }
     setIsOpen(false);
-    // Clear state after animation
-    setTimeout(() => {
-      setOptions(null);
+    const generation = optionsGenerationRef.current;
+    if (clearOptionsTimeoutRef.current) {
+      clearTimeout(clearOptionsTimeoutRef.current);
+    }
+    // Clear copy after the close animation, but not if another confirm opened.
+    clearOptionsTimeoutRef.current = setTimeout(() => {
+      clearOptionsTimeoutRef.current = null;
+      if (optionsGenerationRef.current === generation) {
+        setOptions(null);
+      }
     }, 300);
   }, []);
 

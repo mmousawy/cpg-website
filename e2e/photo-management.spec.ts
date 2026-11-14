@@ -114,13 +114,12 @@ test.describe('Photo Management Flow', () => {
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
     const visibilityToggle = sidebar.getByLabel('Toggle Private and Public');
     if (!(await visibilityToggle.isChecked())) {
-      // sr-only checkbox — label buttons toggle; direct check is more reliable in CI.
-      await visibilityToggle.check({ force: true });
+      await sidebar.getByRole('button', { name: 'Public', exact: true }).click();
     }
     await expect(visibilityToggle).toBeChecked({ timeout: 10_000 });
 
     const saveButton = sidebar.getByRole('button', { name: /^save$/i });
-    await expect(saveButton).toBeEnabled({ timeout: 5000 });
+    await expect(saveButton).toBeEnabled({ timeout: 10_000 });
     await saveButton.click();
     await expect(page.getByRole('button', { name: /saved!/i })).toBeVisible({ timeout: 10000 });
 

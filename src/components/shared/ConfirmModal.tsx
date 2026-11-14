@@ -75,7 +75,7 @@ export default function ConfirmModal() {
       ])}
     >
       <FocusTrap
-        active={isTrapped}
+        active={isOpen && isTrapped}
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
