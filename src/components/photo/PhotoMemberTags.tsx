@@ -1048,16 +1048,17 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
       const dialog = tagOverlayRef.current?.closest('dialog');
       const onDialogCancel = (event: Event) => {
         event.preventDefault();
+        event.stopImmediatePropagation();
         cancelPlacement();
       };
 
       document.addEventListener('pointerdown', onPointerDown);
       window.addEventListener('keydown', onKeyDown, true);
-      dialog?.addEventListener('cancel', onDialogCancel);
+      dialog?.addEventListener('cancel', onDialogCancel, true);
       return () => {
         document.removeEventListener('pointerdown', onPointerDown);
         window.removeEventListener('keydown', onKeyDown, true);
-        dialog?.removeEventListener('cancel', onDialogCancel);
+        dialog?.removeEventListener('cancel', onDialogCancel, true);
       };
     }, [point, query, cancelPlacement]);
 
@@ -1296,7 +1297,7 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
                 <button
                   type="button"
                   aria-label="Cancel tag"
-                  title="Cancel"
+                  title="Cancel tag"
                   className="shrink-0 rounded p-2 -mr-0.5 text-foreground/70 hover:bg-background-medium hover:text-foreground"
                   onClick={(event) => {
                     event.preventDefault();

@@ -96,7 +96,7 @@ memberTest.describe('Photo member tag picker', () => {
     await tagDialog.locator('.cursor-crosshair').click({ position: { x: 40, y: 40 } });
     await expect(page.locator('[data-tag-picker-input]')).toBeVisible();
 
-    await tagDialog.getByRole('button', { name: 'Cancel' }).click();
+    await tagDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(tagDialog).not.toBeVisible({ timeout: 10_000 });
     await expect(page.locator('[data-tag-picker-input]')).toHaveCount(0, { timeout: 5_000 });
   });
@@ -116,7 +116,7 @@ memberTest.describe('Photo member tag picker', () => {
     const unsavedDialog = page.getByRole('heading', { name: 'Unsaved changes' });
     await expect(unsavedDialog).toBeVisible({ timeout: 10_000 });
 
-    await page.locator('dialog').filter({ has: unsavedDialog }).getByRole('button', { name: 'Cancel' }).click();
+    await page.locator('dialog').filter({ has: unsavedDialog }).getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(unsavedDialog).toHaveCount(0);
     await expect(tagDialog).toBeVisible();
     await expect(
