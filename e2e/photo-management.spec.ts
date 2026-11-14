@@ -115,16 +115,17 @@ test.describe('Photo Management Flow', () => {
     // Public profile shows the uploaded photo (role locator skips CSS-hidden
     // mobile/tablet grid copies that stay opacity-0 because they never load)
     await page.goto(`/@${memberUser.nickname}`);
-    await expect(
-      page.getByRole('link', { name: new RegExp(`View photo.*@${memberUser.nickname}`) }),
-    ).toBeVisible({ timeout: 15000 });
+    const profilePhoto = page.getByRole('link', {
+      name: new RegExp(`View photo.*@${memberUser.nickname}`),
+    }).first();
+    await expect(profilePhoto).toBeVisible({ timeout: 15000 });
 
     // Homepage Recent photos includes the test user's upload. First paint can be
     // the public Suspense fallback (test photos filtered out); reload once if needed.
     await page.goto('/');
     const homePhotoLink = page.getByRole('link', {
       name: new RegExp(`View photo.*@${memberUser.nickname}`),
-    });
+    }).first();
     if (!(await homePhotoLink.isVisible())) {
       await page.reload();
     }
