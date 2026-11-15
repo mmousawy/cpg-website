@@ -5,6 +5,7 @@ import { useRef } from 'react';
 
 import { MANAGE_PAGE_BOOT_SCRIPT } from '@/utils/managePage';
 import { MOBILE_PINNED_SHELL_BOOT_SCRIPT } from '@/utils/mobilePinnedShell';
+import { DEV_WORKBENCH_PAGE_BOOT_SCRIPT } from '@/utils/devWorkbenchPath';
 import { MOBILE_TERMINAL_STICKY_SETTLE_BOOT_SCRIPT } from '@/utils/mobileTerminalStickySettle';
 import { PLATFORM_BOOT_SCRIPT } from '@/utils/platform';
 
@@ -25,7 +26,7 @@ export default function DocumentBootScripts() {
       <script
         suppressHydrationWarning
         dangerouslySetInnerHTML={{
-          __html: `${MANAGE_PAGE_BOOT_SCRIPT}${MOBILE_PINNED_SHELL_BOOT_SCRIPT}${MOBILE_TERMINAL_STICKY_SETTLE_BOOT_SCRIPT}${PLATFORM_BOOT_SCRIPT}`,
+          __html: `${MANAGE_PAGE_BOOT_SCRIPT}${DEV_WORKBENCH_PAGE_BOOT_SCRIPT}${MOBILE_PINNED_SHELL_BOOT_SCRIPT}${MOBILE_TERMINAL_STICKY_SETTLE_BOOT_SCRIPT}${PLATFORM_BOOT_SCRIPT}`,
         }}
       />
     );

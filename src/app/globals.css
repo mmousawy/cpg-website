@@ -830,13 +830,56 @@ html.manage-page .app-footer {
 
 /* Onboarding has its own header. Class is set by an inline script on first paint
    and kept in sync on client navigations (DocumentRouteState). */
-html.onboarding-page .app-site-header {
+html.onboarding-page .app-site-header,
+html.dev-workbench-page .app-site-header {
   display: none;
 }
 
 /* Onboarding uses its own fixed progress footer; do not also reserve tab-bar clearance. */
-html.onboarding-page .mobile-main-bottom-spacer {
+html.onboarding-page .mobile-main-bottom-spacer,
+html.dev-workbench-page .mobile-main-bottom-spacer {
   display: none;
+}
+
+/* Storyboard: header + sidebar stay in the viewport; only the canvas pane scrolls. */
+html.dev-workbench-page,
+html.dev-workbench-page body {
+  overflow: hidden;
+  height: 100%;
+  max-height: 100%;
+}
+
+html.dev-workbench-page .app-shell {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+html.dev-workbench-page .app-shell-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Storyboard has its own inner scroll pane; never use the app `#main-content` scroller. */
+@media (max-width: 639px) {
+  html.dev-workbench-page .app-shell-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0%;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+    overflow-y: hidden;
+    padding-bottom: 0;
+  }
+
+  html.dev-workbench-page .mobile-main-bottom-spacer {
+    display: none;
+  }
 }
 
 html.network-blocked-page .app-site-header {

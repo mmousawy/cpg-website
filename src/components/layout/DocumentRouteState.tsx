@@ -11,6 +11,10 @@ import { isMobilePinnedShellPath } from '@/utils/mobilePinnedShell';
 import { isMobileTerminalStickySettlePath } from '@/utils/mobileTerminalStickySettle';
 import { isNetworkBlockedPath } from '@/utils/networkBlockedPath';
 import { isOnboardingPath } from '@/utils/onboardingPath';
+import {
+  DEV_WORKBENCH_PAGE_CLASS,
+  isDevWorkbenchPath,
+} from '@/utils/devWorkbenchPath';
 import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 import {
   getRoutePathWithSearch,
@@ -22,6 +26,7 @@ import {
   ensureRouteScrollNavigationTracking,
   restoreCachedRouteScrollPosition,
 } from '@/utils/routeScrollNavigation';
+import { resetStoryboardShellScroll } from '@/dev/ui/scrollStoryboardTarget';
 import { refreshScrollContainerBinding, resetScrollContainer, resetWindowScroll } from '@/utils/scrollContainer';
 
 ensureRouteScrollNavigationTracking();
@@ -47,6 +52,8 @@ export default function DocumentRouteState() {
     document.documentElement.classList.toggle('manage-page', isManage);
     document.documentElement.classList.toggle('onboarding-page', isOnboardingPath(pathname));
     document.documentElement.classList.toggle('network-blocked-page', isNetworkBlockedPath(pathname));
+    const isDevWorkbench = isDevWorkbenchPath(pathname);
+    document.documentElement.classList.toggle(DEV_WORKBENCH_PAGE_CLASS, isDevWorkbench);
     document.documentElement.classList.toggle('mobile-pinned-shell', pinnedMobileShell);
     document.documentElement.classList.toggle(
       'mobile-terminal-sticky-settle',
@@ -78,7 +85,12 @@ export default function DocumentRouteState() {
       dispatchRouteChange();
       resetMobileStickyChromeDocumentState();
     }
-    if (!window.location.hash) {
+    if (isDevWorkbench) {
+      if (history.scrollRestoration) {
+        history.scrollRestoration = 'manual';
+      }
+      resetStoryboardShellScroll();
+    } else if (!window.location.hash) {
       if (shouldRestoreScroll) {
         const restore = () => {
           const restored = restoreCachedRouteScrollPosition();
