@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 
 import { isNetworkBlockedPath } from '@/utils/networkBlockedPath';
 import { isOnboardingPath } from '@/utils/onboardingPath';
+import { isDevWorkbenchPath } from '@/utils/devWorkbenchPath';
 
 type HideOnOnboardingProps = {
   children: ReactNode;
@@ -13,7 +14,7 @@ type HideOnOnboardingProps = {
 /** Hides site footer on routes that use their own full-screen layout. */
 export function HideOnOnboarding({ children }: HideOnOnboardingProps) {
   const pathname = usePathname();
-  if (isOnboardingPath(pathname) || isNetworkBlockedPath(pathname)) {
+  if (isOnboardingPath(pathname) || isNetworkBlockedPath(pathname) || isDevWorkbenchPath(pathname)) {
     return null;
   }
   return children;

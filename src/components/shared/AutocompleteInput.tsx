@@ -3,12 +3,8 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
-import {
-  getOverlayPortalRoot,
-  PORTAL_OVERLAY_ATTR,
-  viewportAnchorToPortalPosition,
-} from '@/lib/focusTrapPortals';
+import { modalPopoverZClassName, pageFloatingZClassName } from '@/components/layout/mobileChrome';
+import { PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
 import Input from './Input';
 
 interface AutocompleteInputProps {
@@ -69,6 +65,7 @@ export default function AutocompleteInput({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition | null>(null);
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
+  const [aboveModal, setAboveModal] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -81,14 +78,12 @@ export default function AutocompleteInput({
   const updateDropdownPosition = useCallback(() => {
     const input = inputRef.current;
     if (!input) return;
-    const portalRoot = getOverlayPortalRoot(input) ?? document.body;
     const rect = input.getBoundingClientRect();
-    const { top, left, position } = viewportAnchorToPortalPosition(rect.left, rect.bottom + 4, portalRoot);
     setDropdownPosition({
-      top,
-      left,
+      top: rect.bottom + 4,
+      left: rect.left,
       width: rect.width,
-      position,
+      position: 'fixed',
     });
   }, []);
 
@@ -97,7 +92,8 @@ export default function AutocompleteInput({
       setPortalRoot(null);
       return;
     }
-    setPortalRoot(getOverlayPortalRoot(inputRef.current) ?? document.body);
+    setAboveModal(Boolean(inputRef.current?.closest('dialog')));
+    setPortalRoot(document.body);
     updateDropdownPosition();
     const onLayoutChange = () => updateDropdownPosition();
     window.addEventListener('resize', onLayoutChange);
@@ -207,7 +203,10 @@ export default function AutocompleteInput({
         'rounded-md border border-border-color-strong bg-background-medium bg-no-noise shadow-lg shadow-black/15 ring-1 ring-black/5 dark:shadow-black/35 dark:ring-white/10',
         inlineSuggestions
           ? 'relative mt-1 w-full'
-          : [dropdownPosition?.position ?? 'fixed', pageFloatingZClassName],
+          : [
+            dropdownPosition?.position ?? 'fixed',
+            aboveModal ? modalPopoverZClassName : pageFloatingZClassName,
+          ],
       )}
       style={dropdownStyle}
     >

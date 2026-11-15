@@ -8,9 +8,12 @@ import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import NotificationCommentSVG from 'public/icons/notification-comment.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
+import EmailForwardSVG from 'public/icons/email-forward.svg';
 
 // Auth-gated admin UI — opt out of instant-navigation validation
 export const instant = false;
+
+const isDevPreviewEnvironment = process.env.NODE_ENV === 'development';
 
 type AdminCard = {
   title: string
@@ -150,6 +153,43 @@ export default function AdminDashboardPage() {
       href: '/admin/tools',
       enabled: true,
     },
+    ...(isDevPreviewEnvironment
+      ? ([
+        {
+          title: 'Email previews',
+          description: 'Browse and preview email templates (development only)',
+          icon: (
+            <EmailForwardSVG
+              className="h-8 w-8"
+            />
+          ),
+          href: '/email',
+          enabled: true,
+        },
+        {
+          title: 'Component storyboard',
+          description: 'UI component catalog and live design-system frames (development only)',
+          icon: (
+            <svg
+              className="h-8 w-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
+              />
+            </svg>
+          ),
+          href: '/dev/ui',
+          enabled: true,
+        },
+      ] satisfies AdminCard[])
+      : []),
   ];
 
   return (

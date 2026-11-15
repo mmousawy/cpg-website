@@ -9,6 +9,7 @@ const MOBILE_PINNED_SHELL_MEDIA = '(max-width: 639px)';
 export function isMobilePinnedShell(): boolean {
   if (typeof document === 'undefined') return false;
   if (!window.matchMedia(MOBILE_PINNED_SHELL_MEDIA).matches) return false;
+  if (document.documentElement.classList.contains('dev-workbench-page')) return false;
   return document.documentElement.classList.contains('mobile-pinned-shell');
 }
 

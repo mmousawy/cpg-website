@@ -370,6 +370,60 @@ export async function uploadPhotoInLibrary(page: Page, imagePath: string) {
   return cards.first();
 }
 
+/** Grid shows no photo cards and the empty-library copy. */
+export async function expectPhotoLibraryEmpty(page: Page, timeout = 20_000) {
+  const cards = page.locator('[data-testid="photo-card"]');
+  const empty = page.getByText(/don't have any photos yet/i);
+  await expect.poll(async () => cards.count(), { timeout }).toBe(0);
+  await expect(empty).toBeVisible({ timeout: 10_000 });
+}
+
+/**
+ * Delete the photo(s) referenced by an open manage sidebar (confirm dialog included).
+ * Waits for the Supabase RPC to finish before asserting the library is empty.
+ */
+export async function deletePhotosFromOpenSidebar(page: Page) {
+  const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
+  await expect(sidebar).toBeVisible({ timeout: 10_000 });
+
+  const deleteRpc = page.waitForResponse(
+    (res) =>
+      res.request().method() === 'POST'
+      && res.url().includes('bulk_delete_photos')
+      && res.ok(),
+    { timeout: 45_000 },
+  );
+
+  await sidebar.getByRole('button', { name: /delete/i }).click();
+  const confirmDialog = page.locator('dialog[open]');
+  await expect(confirmDialog).toBeVisible({ timeout: 10_000 });
+  await confirmDialog.getByRole('button', { name: /delete/i }).click();
+
+  await deleteRpc;
+  await expect(confirmDialog).not.toBeVisible({ timeout: 10_000 });
+  await expectPhotoLibraryEmpty(page);
+}
+
+/** Remove every photo in the library via the manage sidebar (multi-select when needed). */
+export async function deleteAllPhotos(page: Page) {
+  const photoCards = await waitForPhotoLibrary(page);
+  if (await photoCards.count() === 0) return;
+
+  await dismissDriverTour(page);
+  await photoCards.first().click();
+  await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
+
+  const count = await photoCards.count();
+  if (count > 1) {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    for (let i = 1; i < count; i++) {
+      await photoCards.nth(i).click({ modifiers: [modifier] });
+    }
+  }
+
+  await deletePhotosFromOpenSidebar(page);
+}
+
 export async function waitForTagPeopleModal(page: Page) {
   const tagDialog = page.locator('dialog[open]').filter({
     has: page.getByRole('heading', { name: 'Tag people' }),
