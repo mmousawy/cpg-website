@@ -1,47 +1,16 @@
-import type { Page } from '@playwright/test';
 import path from 'path';
 
 import { expect, test } from './fixtures/member-user';
 import {
+  deleteAllPhotos,
+  deletePhotosFromOpenSidebar,
   dismissDriverTour,
   loginTestUser,
   photosUploadInput,
   setSidebarPhotoPublic,
   uploadPhotoInLibrary,
-  waitForPhotoLibrary as waitForSharedPhotoLibrary,
+  waitForPhotoLibrary,
 } from './test-utils';
-
-async function waitForPhotoLibrary(page: Page) {
-  const cards = page.locator('[data-testid="photo-card"]');
-  // EmptyState renders the title in a paragraph, not a heading.
-  const empty = page.getByText(/don't have any photos yet/i);
-  await expect(page.getByLabel('Loading photos')).toHaveCount(0, { timeout: 20000 });
-  await expect(empty.or(cards.first())).toBeVisible({ timeout: 20000 });
-  return cards;
-}
-
-async function deleteAllPhotos(page: Page) {
-  const photoCards = await waitForPhotoLibrary(page);
-  if (await photoCards.count() === 0) return;
-
-  await dismissDriverTour(page);
-  await photoCards.first().click();
-  await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
-
-  const count = await photoCards.count();
-  if (count > 1) {
-    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
-    for (let i = 1; i < count; i++) {
-      await photoCards.nth(i).click({ modifiers: [modifier] });
-    }
-  }
-
-  await page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i }).click();
-  const confirmDialog = page.locator('dialog[open]');
-  await expect(confirmDialog).toBeVisible({ timeout: 5000 });
-  await confirmDialog.getByRole('button', { name: /delete/i }).click();
-  await expect(photoCards).toHaveCount(0, { timeout: 15000 });
-}
 
 test.describe('Photo Management Flow', () => {
   test('should upload a photo and add it to an album', async ({ page, memberUser }) => {
@@ -56,7 +25,7 @@ test.describe('Photo Management Flow', () => {
 
     // Wait for page to load
     await page.waitForLoadState('load');
-    await waitForSharedPhotoLibrary(page);
+    await waitForPhotoLibrary(page);
     await dismissDriverTour(page);
 
     const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
@@ -131,35 +100,13 @@ test.describe('Photo Management Flow', () => {
     }
     await expect(homePhotoLink).toBeVisible({ timeout: 15000 });
 
-    // Return to account photos to clean up
+    // Return to account photos to clean up (re-resolve the card — locators from before navigation can go stale).
     await page.goto('/account/photos');
     await page.waitForLoadState('load');
+    const photoCards = await waitForPhotoLibrary(page);
     await dismissDriverTour(page);
-    await photoCard.click();
-    await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
-
-    // Clean up: Delete the photo
-    const deleteButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i });
-    await deleteButton.click();
-
-    // Native <dialog> only — avoids matching Next.js error overlay [role=dialog]
-    const confirmDialog = page.locator('dialog[open]');
-    await expect(confirmDialog).toBeVisible({ timeout: 5000 });
-    const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });
-    await confirmButton.click();
-
-    // Wait for photo to be deleted and ensure deletion is complete
-    const photoCardsAfterDelete = page.locator('[data-testid="photo-card"]');
-    await expect(photoCardsAfterDelete).toHaveCount(0, { timeout: 10000 });
-
-    // Wait for network to be idle to ensure all deletion requests have completed
-    await page.waitForLoadState('load');
-
-    // Verify count is still 0 (double-check after network settles)
-    const finalCount = await photoCardsAfterDelete.count();
-    if (finalCount > 0) {
-      throw new Error(`Expected 0 photos after deletion, but found ${finalCount}`);
-    }
+    await photoCards.first().click();
+    await deletePhotosFromOpenSidebar(page);
 
     // Note: Album cleanup is handled automatically when the test user is deleted
     // since albums cascade delete with the user
@@ -228,18 +175,7 @@ test.describe('Photo Management Flow', () => {
     // First ensure we're back to the main view by waiting for sidebar
     await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
 
-    const deleteButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i });
-    await deleteButton.click();
-
-    // Wait for confirm dialog to appear and click the confirm button inside it
-    const confirmDialog = page.locator('dialog[open]');
-    await expect(confirmDialog).toBeVisible({ timeout: 5000 });
-
-    const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });
-    await confirmButton.click();
-
-    // Wait for deletion to complete
-    await expect(photoCards).toHaveCount(0, { timeout: 10000 });
+    await deletePhotosFromOpenSidebar(page);
 
     console.log('✅ Bulk photo selection test completed successfully');
   });
