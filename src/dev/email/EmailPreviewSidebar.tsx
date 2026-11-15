@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
 import DevWorkbenchChevron from '@/dev/workbench/DevWorkbenchChevron';
 import DevWorkbenchDisclosure from '@/dev/workbench/DevWorkbenchDisclosure';
@@ -23,7 +23,18 @@ function matchesQuery(text: string, query: string) {
   return text.toLowerCase().includes(query);
 }
 
-export default function EmailPreviewSidebar() {
+function EmailPreviewSidebarFallback() {
+  return (
+    <DevWorkbenchSidebar
+      ariaLabel="Email templates"
+    >
+      {null}
+    </DevWorkbenchSidebar>
+  );
+}
+
+/** `usePathname()` blocks prerender unless this stays under `<Suspense>`. */
+function EmailPreviewSidebarInner() {
   const pathname = usePathname();
   const activeSlug = parseActiveTemplateSlug(pathname);
   const activeGroupId = getActiveEmailPreviewGroupId(activeSlug);
@@ -132,5 +143,15 @@ export default function EmailPreviewSidebar() {
         );
       })}
     </DevWorkbenchSidebar>
+  );
+}
+
+export default function EmailPreviewSidebar() {
+  return (
+    <Suspense
+      fallback={<EmailPreviewSidebarFallback />}
+    >
+      <EmailPreviewSidebarInner />
+    </Suspense>
   );
 }

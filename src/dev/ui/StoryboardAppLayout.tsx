@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 
 import ThemeSwitch from '@/components/layout/ThemeSwitch';
 import DevWorkbenchHeader from '@/dev/workbench/DevWorkbenchHeader';
 import DevWorkbenchShell from '@/dev/workbench/DevWorkbenchShell';
+import DevWorkbenchSidebar from '@/dev/workbench/DevWorkbenchSidebar';
 
 import { getUiComponentGroups } from './registry';
 import StoryboardSidebar from './StoryboardSidebar';
@@ -24,9 +25,31 @@ function parseStoryboardRoute(pathname: string): { groupId: string; slug: string
   return { groupId: match[1], slug: match[2] };
 }
 
-export default function StoryboardAppLayout({ children }: StoryboardAppLayoutProps) {
+function StoryboardSidebarFallback() {
+  return (
+    <DevWorkbenchSidebar
+      ariaLabel="Components"
+    >
+      {null}
+    </DevWorkbenchSidebar>
+  );
+}
+
+/** `usePathname()` in this tree blocks prerender unless it stays under `<Suspense>`. */
+function StoryboardSidebarRoute() {
   const pathname = usePathname();
   const route = parseStoryboardRoute(pathname);
+
+  return (
+    <StoryboardSidebar
+      groups={groups}
+      activeGroupId={route?.groupId ?? ''}
+      activeSlug={route?.slug ?? ''}
+    />
+  );
+}
+
+export default function StoryboardAppLayout({ children }: StoryboardAppLayoutProps) {
   const storyCount = countStoriesInRegistry();
 
   return (
@@ -54,11 +77,11 @@ export default function StoryboardAppLayout({ children }: StoryboardAppLayoutPro
         />
       )}
       sidebar={(
-        <StoryboardSidebar
-          groups={groups}
-          activeGroupId={route?.groupId ?? ''}
-          activeSlug={route?.slug ?? ''}
-        />
+        <Suspense
+          fallback={<StoryboardSidebarFallback />}
+        >
+          <StoryboardSidebarRoute />
+        </Suspense>
       )}
     >
       {children}
