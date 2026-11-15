@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.49.1](https://github.com/mmousawy/cpg-website/compare/v1.49.0...v1.49.1) (2026-11-15)
+
+
+### 🐛 Bug Fixes
+
+* enhance EmailPreviewSidebar and StoryboardAppLayout with Suspense ([6dc6158](https://github.com/mmousawy/cpg-website/commit/6dc61587f04c5aba6b2b1958cbb765fecc37a0d3))
+* improve dropdown positioning and modal handling in AutocompleteInput and Select components ([b9c9760](https://github.com/mmousawy/cpg-website/commit/b9c976001acd09b587e802dd9ac09015750d6325))
+* streamline photo management E2E tests and utilities ([7b58b8b](https://github.com/mmousawy/cpg-website/commit/7b58b8b6c714c49e4a76e691dcd121a43ddc8c43))
+
+
+### 🔧 Maintenance
+
+* introduce development workbench features and enhance onboarding styles ([8c0da8d](https://github.com/mmousawy/cpg-website/commit/8c0da8d01e77d27db3912fabf408a81a01bbd6d2))
+
 ## [1.49.0](https://github.com/mmousawy/cpg-website/compare/v1.48.1...v1.49.0) (2026-11-14)
 
 
