@@ -1,7 +1,7 @@
 'use client';
 
-import { pageFloatingZClassName } from '@/components/layout/mobileChrome';
-import { getOverlayPortalRoot, PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
+import { modalPopoverZClassName, pageFloatingZClassName } from '@/components/layout/mobileChrome';
+import { PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
 import clsx from 'clsx';
 import {
   forwardRef,
@@ -43,9 +43,11 @@ export interface SelectProps {
 }
 
 type MenuPosition = {
-  top: number;
+  top: number | null;
+  bottom: number | null;
   left: number;
   width: number;
+  maxHeight: number;
 };
 
 function scrollChildIntoContainer(container: HTMLElement, child: HTMLElement) {
@@ -86,6 +88,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
     const [highlightedIndex, setHighlightedIndex] = useState(0);
     const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
     const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
+    const [aboveModal, setAboveModal] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
@@ -112,10 +115,18 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
       const trigger = triggerRef.current;
       if (!trigger) return;
       const rect = trigger.getBoundingClientRect();
+      const gap = 4;
+      const margin = 8;
+      const spaceBelow = window.innerHeight - rect.bottom - margin;
+      const spaceAbove = rect.top - margin;
+      const openUp = spaceBelow < 200 && spaceAbove > spaceBelow;
+      const maxHeight = Math.max(96, Math.min(240, openUp ? spaceAbove - gap : spaceBelow));
       setMenuPosition({
-        top: rect.bottom + 4,
+        top: openUp ? null : rect.bottom + gap,
+        bottom: openUp ? window.innerHeight - rect.top + gap : null,
         left: rect.left,
         width: rect.width,
+        maxHeight,
       });
     }, []);
 
@@ -135,7 +146,8 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
               ? options.length - 1
               : selectedIndex;
         setHighlightedIndex(nextIndex);
-        setPortalRoot(getOverlayPortalRoot(triggerRef.current) ?? document.body);
+        setAboveModal(Boolean(triggerRef.current?.closest('dialog')));
+        setPortalRoot(document.body);
         setOpen(true);
       },
       [disabled, options, value],
@@ -149,6 +161,16 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
       },
       [closeMenu, onValueChange],
     );
+
+    useEffect(() => {
+      if (!open) return;
+      const dialog = triggerRef.current?.closest('dialog');
+      if (!(dialog instanceof HTMLDialogElement)) return;
+
+      const dismiss = () => closeMenu();
+      dialog.addEventListener('close', dismiss);
+      return () => dialog.removeEventListener('close', dismiss);
+    }, [closeMenu, open]);
 
     useLayoutEffect(() => {
       if (!open) {
@@ -260,11 +282,12 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
         {...{ [PORTAL_OVERLAY_ATTR]: '' }}
         className={clsx(
           'fixed overflow-hidden rounded-md border border-border-color-strong',
-          pageFloatingZClassName,
+          aboveModal ? modalPopoverZClassName : pageFloatingZClassName,
           'bg-background-medium bg-no-noise font-sans shadow-lg shadow-black/15 ring-1 ring-black/5 dark:shadow-black/35 dark:ring-white/10',
         )}
         style={{
-          top: menuPosition.top,
+          top: menuPosition.top ?? 'auto',
+          bottom: menuPosition.bottom ?? 'auto',
           left: menuPosition.left,
           width: menuPosition.width,
         }}
@@ -273,7 +296,8 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
           ref={listRef}
           id={listboxId}
           role="listbox"
-          className="max-h-60 overflow-y-auto p-1"
+          className="overflow-y-auto p-1"
+          style={{ maxHeight: menuPosition.maxHeight }}
         >
           {options.map((option, index) => {
             const isSelected = option.value === value;
