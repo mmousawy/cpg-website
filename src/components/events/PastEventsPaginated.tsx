@@ -41,22 +41,24 @@ export default function PastEventsPaginated({
 
   // Restore extra loaded pages from sessionStorage after mount
   useEffect(() => {
-    try {
-      const cached = sessionStorage.getItem(STORAGE_KEY);
-      if (!cached) return;
+    void (async () => {
+      try {
+        const cached = sessionStorage.getItem(STORAGE_KEY);
+        if (!cached) return;
 
-      const parsed: CachedState = JSON.parse(cached);
-      if (Date.now() - parsed.timestamp >= CACHE_EXPIRY_MS) return;
-      if (parsed.events.length <= initialEvents.length) return;
+        const parsed: CachedState = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp >= CACHE_EXPIRY_MS) return;
+        if (parsed.events.length <= initialEvents.length) return;
 
-      setEvents(parsed.events);
-      setAttendeesByEvent(parsed.attendeesByEvent);
-      if (parsed.photoCountsByEvent) {
-        setPhotoCountsByEvent(parsed.photoCountsByEvent);
+        setEvents(parsed.events);
+        setAttendeesByEvent(parsed.attendeesByEvent);
+        if (parsed.photoCountsByEvent) {
+          setPhotoCountsByEvent(parsed.photoCountsByEvent);
+        }
+      } catch {
+        // Ignore storage errors
       }
-    } catch {
-      // Ignore storage errors
-    }
+    })();
   }, [initialEvents.length]);
 
   // Persist state to sessionStorage when events change

@@ -75,10 +75,7 @@ type StatsDonutChartProps = {
 export default function StatsDonutChart({ title, items, className }: StatsDonutChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [, rerender] = useReducer((count: number) => count + 1, 0);
-  const activeIndexRef = useRef(activeIndex);
   const sectorVisualsRef = useRef<Map<number, SectorVisual>>(new Map());
-
-  activeIndexRef.current = activeIndex;
 
   const clearHighlight = useCallback(() => setActiveIndex(null), []);
 
@@ -138,7 +135,7 @@ export default function StatsDonutChart({ title, items, className }: StatsDonutC
     let visual = sectorVisualsRef.current.get(index);
 
     if (!visual) {
-      const target = sectorTarget(activeIndexRef.current, index, baseOuterRadius);
+      const target = sectorTarget(activeIndex, index, baseOuterRadius);
       visual = { ...target, baseOuterRadius };
       sectorVisualsRef.current.set(index, visual);
     } else if (visual.baseOuterRadius !== baseOuterRadius) {
@@ -161,7 +158,7 @@ export default function StatsDonutChart({ title, items, className }: StatsDonutC
         strokeWidth={2}
       />
     );
-  }, []);
+  }, [activeIndex]);
 
   if (!items.length) {
     return (

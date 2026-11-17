@@ -1,6 +1,6 @@
 'use client';
 
-import { cloneElement, useCallback, useEffect, useRef, type ReactElement, type Ref } from 'react';
+import { cloneElement, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type Ref } from 'react';
 
 function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
   if (typeof ref === 'function') {
@@ -8,6 +8,16 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
   } else if (ref != null) {
     ref.current = value;
   }
+}
+
+const mergedNodes = new WeakMap<object, HTMLElement | null>();
+
+function rememberMergedNode(key: object, node: HTMLElement | null) {
+  mergedNodes.set(key, node);
+}
+
+function readMergedNode(key: object) {
+  return mergedNodes.get(key) ?? null;
 }
 
 export function ProbeJsxRefObject() {
@@ -31,10 +41,20 @@ export function ProbeJsxCallback() {
 export function ProbeCloneCallback({ children }: { children: ReactElement<{ ref?: Ref<HTMLElement> }> }) {
   const triggerRef = useRef<HTMLElement | null>(null);
   const childRef = children.props.ref;
+  const [slotKey] = useState(() => ({}));
+  useLayoutEffect(() => {
+    const node = readMergedNode(slotKey);
+    triggerRef.current = node;
+    assignRef(childRef, node);
+    return () => {
+      const latest = readMergedNode(slotKey);
+      triggerRef.current = latest;
+      assignRef(childRef, latest);
+    };
+  });
   return cloneElement(children, {
     ref: (node: HTMLElement | null) => {
-      triggerRef.current = node;
-      assignRef(childRef, node);
+      rememberMergedNode(slotKey, node);
     },
   });
 }
@@ -42,10 +62,20 @@ export function ProbeCloneCallback({ children }: { children: ReactElement<{ ref?
 export function ProbeCloneUseCallback({ children }: { children: ReactElement<{ ref?: Ref<HTMLElement> }> }) {
   const triggerRef = useRef<HTMLElement | null>(null);
   const childRef = children.props.ref;
+  const [slotKey] = useState(() => ({}));
   const setNode = useCallback((node: HTMLElement | null) => {
+    rememberMergedNode(slotKey, node);
+  }, [slotKey]);
+  useLayoutEffect(() => {
+    const node = readMergedNode(slotKey);
     triggerRef.current = node;
     assignRef(childRef, node);
-  }, [childRef]);
+    return () => {
+      const latest = readMergedNode(slotKey);
+      triggerRef.current = latest;
+      assignRef(childRef, latest);
+    };
+  });
   return cloneElement(children, { ref: setNode });
 }
 

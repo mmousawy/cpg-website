@@ -61,16 +61,20 @@ export default function StoryboardSidebar({
   const normalizedQuery = query.trim().toLowerCase();
 
   useEffect(() => {
-    if (activeGroupId) {
-      setOpenGroups((prev) => (prev[activeGroupId] ? prev : { ...prev, [activeGroupId]: true }));
-    }
+    void (async () => {
+      if (activeGroupId) {
+        setOpenGroups((prev) => (prev[activeGroupId] ? prev : { ...prev, [activeGroupId]: true }));
+      }
+    })();
   }, [activeGroupId]);
 
   useEffect(() => {
-    if (activeGroupId && activeSlug) {
-      const key = `${activeGroupId}/${activeSlug}`;
-      setOpenSubcategories((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
-    }
+    void (async () => {
+      if (activeGroupId && activeSlug) {
+        const key = `${activeGroupId}/${activeSlug}`;
+        setOpenSubcategories((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+      }
+    })();
   }, [activeGroupId, activeSlug]);
 
   const filteredGroups = useMemo(() => {

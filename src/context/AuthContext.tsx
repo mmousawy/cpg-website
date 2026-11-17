@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, useMemo, useSyncExternalStore } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import type { Database } from '@/database.types';
@@ -29,6 +29,18 @@ export type AuthState = {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+function subscribeBrowserSupabaseGate() {
+  return () => {};
+}
+
+function getBrowserSupabaseGate() {
+  return shouldLoadBrowserSupabase();
+}
+
+function getServerBrowserSupabaseGate() {
+  return true;
+}
+
 export function AuthProvider({
   children,
   initialAuth,
@@ -43,7 +55,15 @@ export function AuthProvider({
   const [profile, setProfile] = useState<Profile | null>(
     (initialAuth?.profile as Profile | null) ?? null,
   );
-  const [isLoading, setIsLoading] = useState(!initialAuth?.user);
+  const [sessionLoading, setIsLoading] = useState(!initialAuth?.user);
+  // Server snapshot stays "may load" so hydration matches the initial loading flag.
+  // The client snapshot then drops loading when the browser client is not needed.
+  const loadBrowserSupabase = useSyncExternalStore(
+    subscribeBrowserSupabaseGate,
+    getBrowserSupabaseGate,
+    getServerBrowserSupabaseGate,
+  );
+  const isLoading = loadBrowserSupabase ? sessionLoading : false;
 
   const currentUserIdRef = useRef<string | null>(initialAuth?.user?.id ?? null);
   const fetchingProfileRef = useRef<string | null>(null);
@@ -54,13 +74,11 @@ export function AuthProvider({
 
   useEffect(() => {
     if (!shouldLoadBrowserSupabase()) {
-      setIsLoading(false);
       markSessionReady();
       return;
     }
 
     if (hasInitialAuth) {
-      setIsLoading(false);
       markSessionReady();
     }
 
@@ -92,7 +110,7 @@ export function AuthProvider({
       cancelled = true;
       unbind?.();
     };
-  }, [clearSession, hasInitialAuth, initialAuth?.profile, markSessionReady, router, setSession]);
+  }, [clearSession, hasInitialAuth, initialAuth, markSessionReady, router, setSession]);
 
   const refreshProfile = useCallback(async () => {
     if (!currentUserIdRef.current) return;

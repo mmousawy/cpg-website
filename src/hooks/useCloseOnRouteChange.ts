@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { subscribeRouteChange } from '@/lib/routeChange';
 
@@ -12,8 +12,11 @@ import { subscribeRouteChange } from '@/lib/routeChange';
 export function useCloseOnRouteChange(open: boolean, onClose: () => void) {
   const onCloseRef = useRef(onClose);
   const openRef = useRef(open);
-  onCloseRef.current = onClose;
-  openRef.current = open;
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    openRef.current = open;
+  }, [onClose, open]);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {

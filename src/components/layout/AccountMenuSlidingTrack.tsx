@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 const SLIDE_MS = 300;
 const SLIDE_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
@@ -69,16 +70,25 @@ export default function AccountMenuSlidingTrack({
   const prevViewRef = useRef(view);
 
   // Initial height: root panel, no height transition when the popover first opens.
+  // Measure before paint, but not as a synchronous setState in the layout effect.
   useLayoutEffect(() => {
-    setHeightTransitionsEnabled(false);
-    const next = measureView('root');
-    if (next !== null) setHeightPx(next);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const next = measureView('root');
+      if (next === null) return;
+      flushSync(() => {
+        setHeightPx(next);
+      });
+    });
     const id = requestAnimationFrame(() => {
       setHeightTransitionsEnabled(true);
     });
-    return () => cancelAnimationFrame(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only sizing
-  }, []);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
+  }, [measureView]);
 
   // Animate viewport height from A → B when drilling in or back.
   useLayoutEffect(() => {
@@ -110,14 +120,13 @@ export default function AccountMenuSlidingTrack({
     return () => ro.disconnect();
   }, [view, measureView]);
 
-  const panes: { id: AccountMenuView; node: ReactNode; ref: typeof rootInnerRef }[] = [
-    { id: 'root', node: root, ref: rootInnerRef },
-    { id: 'site', node: site, ref: siteInnerRef },
-    { id: 'appearance', node: appearance, ref: appearanceInnerRef },
-  ];
+  const paneContent: Record<AccountMenuView, ReactNode> = {
+    root,
+    site,
+    appearance,
+  };
 
   if (reduceMotion) {
-    const active = panes.find((pane) => pane.id === view) ?? panes[0];
     return (
       <div
         className={
@@ -126,7 +135,7 @@ export default function AccountMenuSlidingTrack({
             : 'overflow-x-hidden'
         }
       >
-        {active.node}
+        {paneContent[view] ?? paneContent.root}
       </div>
     );
   }
@@ -158,22 +167,22 @@ export default function AccountMenuSlidingTrack({
           transition: `transform ${SLIDE_MS}ms ${SLIDE_EASE}`,
         }}
       >
-        {panes.map((pane) => (
+        {MENU_VIEWS.map((id) => (
           <div
-            key={pane.id}
-            className={paneShellClass(pane.id)}
+            key={id}
+            className={paneShellClass(id)}
             style={
-              heightPx !== null && view === 'root' && pane.id === 'root'
+              heightPx !== null && view === 'root' && id === 'root'
                 ? { maxHeight: `${heightPx}px` }
                 : undefined
             }
-            aria-hidden={view !== pane.id}
-            inert={view !== pane.id}
+            aria-hidden={view !== id}
+            inert={view !== id}
           >
             <div
-              ref={pane.ref}
+              ref={id === 'root' ? rootInnerRef : id === 'site' ? siteInnerRef : appearanceInnerRef}
             >
-              {pane.node}
+              {paneContent[id]}
             </div>
           </div>
         ))}

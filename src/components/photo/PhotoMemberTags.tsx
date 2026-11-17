@@ -30,9 +30,11 @@ import {
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
+  type SetStateAction,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -63,6 +65,61 @@ function createDraftPhotoMemberTag(
     avatarUrl: profile.avatar_url,
     x,
     y,
+  };
+}
+
+const EMPTY_MEMBER_TAGS: PhotoMemberTag[] = [];
+
+type MemberTagDraftModel = {
+  photoId: string;
+  initialized: boolean;
+  tags: PhotoMemberTag[] | null;
+  baseline: PhotoMemberTag[] | null;
+};
+
+function nextMemberTagDraftModel(
+  prev: MemberTagDraftModel,
+  input: {
+    photoId: string;
+    saveOnDone: boolean;
+    isActive: boolean;
+    loaded: boolean;
+    serverTags: PhotoMemberTag[];
+  },
+): MemberTagDraftModel {
+  let next = prev;
+  if (prev.photoId !== input.photoId) {
+    next = {
+      photoId: input.photoId,
+      initialized: false,
+      tags: prev.tags,
+      baseline: null,
+    };
+  }
+
+  if (!input.saveOnDone) return next;
+
+  if (!input.isActive) {
+    if (!input.loaded) {
+      return next.initialized ? { ...next, initialized: false } : next;
+    }
+    const snapshot = input.serverTags.map((tag) => ({ ...tag }));
+    return {
+      photoId: input.photoId,
+      initialized: false,
+      tags: snapshot,
+      baseline: snapshot,
+    };
+  }
+
+  if (!input.loaded || next.initialized) return next;
+
+  const snapshot = input.serverTags.map((tag) => ({ ...tag }));
+  return {
+    photoId: input.photoId,
+    initialized: true,
+    tags: snapshot,
+    baseline: snapshot,
   };
 }
 
@@ -233,7 +290,7 @@ function useTagImageFrame(overlayRef: React.RefObject<HTMLDivElement | null>) {
       window.removeEventListener('resize', onLayout);
       window.visualViewport?.removeEventListener('resize', onLayout);
     };
-  }, [updateFrame]);
+  }, [overlayRef, updateFrame]);
 
   return frame;
 }
@@ -291,18 +348,21 @@ function usePhotoMemberTags(
   photoId: string | undefined,
   initialMemberTags?: PhotoMemberTag[],
 ) {
-  const serverSnapshot = useRef({
-    tags: initialMemberTags ?? [],
-    canEdit: false,
-    viewerId: null as string | null,
-    loaded: false,
-  });
-  serverSnapshot.current.tags = initialMemberTags ?? [];
+  const snapshotTags = initialMemberTags ?? EMPTY_MEMBER_TAGS;
+  const serverSnapshot = useMemo(
+    () => ({
+      tags: snapshotTags,
+      canEdit: false,
+      viewerId: null as string | null,
+      loaded: false,
+    }),
+    [snapshotTags],
+  );
 
   const clientState = useSyncExternalStore(
     (listener) => subscribePhotoMemberTags(photoId, listener),
     () => getPhotoMemberTagsClientState(photoId),
-    () => serverSnapshot.current,
+    () => serverSnapshot,
   );
 
   const load = useCallback(async () => {
@@ -401,15 +461,17 @@ function TagDot({
     dragCleanupRef.current = null;
   }, []);
 
+  if (
+    dragPoint
+    && Math.abs(tag.x - dragPoint.x) < 1e-5
+    && Math.abs(tag.y - dragPoint.y) < 1e-5
+  ) {
+    setDragPoint(null);
+  }
+
   useEffect(() => {
-    if (!dragPoint) return;
-    const dx = Math.abs(tag.x - dragPoint.x);
-    const dy = Math.abs(tag.y - dragPoint.y);
-    if (dx < 1e-5 && dy < 1e-5) {
-      dragPointRef.current = null;
-      setDragPoint(null);
-    }
-  }, [tag.x, tag.y, dragPoint]);
+    if (!dragPoint) dragPointRef.current = null;
+  }, [dragPoint]);
 
   const displayName = `@${tag.nickname}`;
   const anchorX = dragPoint?.x ?? tag.x;
@@ -599,11 +661,14 @@ function PendingPlacementPoint({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dragCleanupRef = useRef<(() => void) | null>(null);
   const pointRef = useRef(point);
-  pointRef.current = point;
   const onMoveRef = useRef(onMove);
-  onMoveRef.current = onMove;
   const onReleaseRef = useRef(onRelease);
-  onReleaseRef.current = onRelease;
+
+  useEffect(() => {
+    pointRef.current = point;
+    onMoveRef.current = onMove;
+    onReleaseRef.current = onRelease;
+  });
 
   useEffect(() => () => {
     dragCleanupRef.current?.();
@@ -726,37 +791,53 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
     const tagIdleReveal = usePhotoTagIdleReveal();
     const { tags: serverTags, canEdit, loaded } = usePhotoMemberTags(photoId, initialMemberTags);
     const baselineRef = useRef<PhotoMemberTag[] | null>(null);
-    const [draftTags, setDraftTags] = useState<PhotoMemberTag[] | null>(null);
-    const draftInitializedRef = useRef(false);
-    const draftPhotoIdRef = useRef(photoId);
+    const [draftModel, setDraftModel] = useState<MemberTagDraftModel>(() => ({
+      photoId,
+      initialized: false,
+      tags: null,
+      baseline: null,
+    }));
+    const [seenDraftInputs, setSeenDraftInputs] = useState<{
+      photoId: string;
+      saveOnDone: boolean;
+      isActive: boolean;
+      loaded: boolean;
+      serverTags: PhotoMemberTag[];
+    } | null>(null);
+    const draftInputsChanged = !seenDraftInputs
+      || seenDraftInputs.photoId !== photoId
+      || seenDraftInputs.saveOnDone !== saveOnDone
+      || seenDraftInputs.isActive !== isActive
+      || seenDraftInputs.loaded !== loaded
+      || seenDraftInputs.serverTags !== serverTags;
+    if (draftInputsChanged) {
+      setSeenDraftInputs({ photoId, saveOnDone, isActive, loaded, serverTags });
+      setDraftModel((prev) => nextMemberTagDraftModel(prev, {
+        photoId,
+        saveOnDone,
+        isActive,
+        loaded,
+        serverTags,
+      }));
+    }
+    const draftTags = draftModel.tags;
+    const setDraftTags = useCallback((update: SetStateAction<PhotoMemberTag[] | null>) => {
+      setDraftModel((prev) => {
+        const tags = typeof update === 'function' ? update(prev.tags) : update;
+        if (tags === prev.tags) return prev;
+        return { ...prev, tags };
+      });
+    }, []);
     const suppressOverlayClickRef = useRef(false);
     const serverTagsRef = useRef(serverTags);
-    serverTagsRef.current = serverTags;
 
-    useLayoutEffect(() => {
-      if (draftPhotoIdRef.current !== photoId) {
-        draftPhotoIdRef.current = photoId;
-        draftInitializedRef.current = false;
-        baselineRef.current = null;
-      }
+    useEffect(() => {
+      baselineRef.current = draftModel.baseline;
+    }, [draftModel.baseline]);
 
-      if (!saveOnDone) return;
-
-      if (!isActive) {
-        draftInitializedRef.current = false;
-        if (!loaded) return;
-        const snapshot = serverTags.map((tag) => ({ ...tag }));
-        baselineRef.current = snapshot;
-        setDraftTags(snapshot);
-        return;
-      }
-
-      if (!loaded || draftInitializedRef.current) return;
-      const snapshot = serverTags.map((tag) => ({ ...tag }));
-      baselineRef.current = snapshot;
-      setDraftTags(snapshot);
-      draftInitializedRef.current = true;
-    }, [saveOnDone, loaded, serverTags, photoId, isActive]);
+    useEffect(() => {
+      serverTagsRef.current = serverTags;
+    }, [serverTags]);
 
     useEffect(() => {
       if (!saveOnDone) {
@@ -781,15 +862,19 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
     const [editingTagId, setEditingTagId] = useState<string | null>(null);
     const [tagActionMenuTagId, setTagActionMenuTagId] = useState<string | null>(null);
 
-    useLayoutEffect(() => {
-      if (!saveOnDone || isActive) return;
-      setPoint(null);
-      setQuery('');
-      setHighlightedIndex(0);
-      setError(null);
-      setEditingTagId(null);
-      setTagActionMenuTagId(null);
-    }, [saveOnDone, isActive]);
+    const placementSuspended = saveOnDone && !isActive;
+    const [wasPlacementSuspended, setWasPlacementSuspended] = useState(placementSuspended);
+    if (placementSuspended !== wasPlacementSuspended) {
+      setWasPlacementSuspended(placementSuspended);
+      if (placementSuspended) {
+        setPoint(null);
+        setQuery('');
+        setHighlightedIndex(0);
+        setError(null);
+        setEditingTagId(null);
+        setTagActionMenuTagId(null);
+      }
+    }
 
     const tagActionMenuRef = useRef<HTMLDivElement>(null);
     const [tagMenuLayout, setTagMenuLayout] = useState<{
@@ -803,7 +888,12 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
       maxListHeight: number;
       position: 'fixed' | 'absolute';
     } | null>(null);
-    const tagOverlayRef = useRef<HTMLDivElement>(null);
+    const tagOverlayRef = useRef<HTMLDivElement | null>(null);
+    const [tagOverlayEl, setTagOverlayEl] = useState<HTMLDivElement | null>(null);
+    const setTagOverlayNode = useCallback((node: HTMLDivElement | null) => {
+      tagOverlayRef.current = node;
+      setTagOverlayEl(node);
+    }, []);
     const tagImageFrame = useTagImageFrame(tagOverlayRef);
     const tagPickerRef = useRef<HTMLDivElement>(null);
     const tagSearchInputRef = useRef<HTMLInputElement>(null);
@@ -837,11 +927,14 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
         if (refresh.ok) {
           const data = await refresh.json();
           const snapshot = (data.tags ?? []) as PhotoMemberTag[];
-          baselineRef.current = snapshot.map((tag) => ({ ...tag }));
-          setDraftTags(snapshot.map((tag) => ({ ...tag })));
+          const baseline = snapshot.map((tag) => ({ ...tag }));
+          const tags = snapshot.map((tag) => ({ ...tag }));
+          baselineRef.current = baseline;
+          setDraftModel((prev) => ({ ...prev, baseline, tags }));
         } else {
           const snapshot = draftTags.map((tag) => ({ ...tag }));
           baselineRef.current = snapshot;
+          setDraftModel((prev) => ({ ...prev, baseline: snapshot }));
         }
         return { ok: true as const };
       },
@@ -867,12 +960,12 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
           tag.id === tagId ? { ...tag, x: position.x, y: position.y } : tag
         ));
       });
-    }, [saveOnDone]);
+    }, [saveOnDone, setDraftTags]);
 
     const removeDraftTag = useCallback((tagId: string) => {
       if (!saveOnDone) return;
       setDraftTags((current) => (current ?? []).filter((tag) => tag.id !== tagId));
-    }, [saveOnDone]);
+    }, [saveOnDone, setDraftTags]);
 
     const openTagActionMenu = useCallback((tag: PhotoMemberTag) => {
       setTagActionMenuTagId(tag.id);
@@ -906,12 +999,16 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
       );
     }, [tagActionMenuTagId, tags]);
 
-    useLayoutEffect(() => {
-      if (!tagActionMenuTagId) {
-        setTagMenuLayout(null);
-        return;
-      }
+    const setTagActionMenuNode = useCallback((node: HTMLDivElement | null) => {
+      tagActionMenuRef.current = node;
+      if (!node) return;
       updateTagMenuLayout();
+    }, [updateTagMenuLayout]);
+
+    const visibleTagMenuLayout = tagActionMenuTagId ? tagMenuLayout : null;
+
+    useLayoutEffect(() => {
+      if (!tagActionMenuTagId) return;
       const onViewportChange = () => {
         requestAnimationFrame(() => updateTagMenuLayout());
       };
@@ -963,11 +1060,10 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
       );
     }, [point]);
 
+    const visiblePickerLayout = point ? pickerLayout : null;
+
     useLayoutEffect(() => {
-      if (!point) {
-        setPickerLayout(null);
-        return;
-      }
+      if (!point) return;
       updatePickerLayout();
       const onViewportChange = () => {
         requestAnimationFrame(() => updatePickerLayout());
@@ -1128,7 +1224,7 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
     return (
       <>
         <div
-          ref={tagOverlayRef}
+          ref={setTagOverlayNode}
           data-photo-member-tag-overlay=""
           className={clsx(
             'absolute inset-0 overflow-visible',
@@ -1244,20 +1340,20 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
         ) : null}
         {point
           && typeof document !== 'undefined'
-          && shouldShowPortalOverlay(tagOverlayRef.current)
+          && shouldShowPortalOverlay(tagOverlayEl)
           ? createPortal(
             <div
               ref={tagPickerRef}
               {...{ [PORTAL_OVERLAY_ATTR]: '' }}
               className={clsx(
-                pickerLayout?.position ?? 'fixed',
+                visiblePickerLayout?.position ?? 'fixed',
                 'w-56 rounded-md border border-border-color bg-background p-2 shadow-lg',
                 modalPopoverZClassName,
-                !pickerLayout && 'invisible',
+                !visiblePickerLayout && 'invisible',
               )}
               style={{
-                top: pickerLayout?.top ?? 0,
-                left: pickerLayout?.left ?? 0,
+                top: visiblePickerLayout?.top ?? 0,
+                left: visiblePickerLayout?.left ?? 0,
               }}
               onClick={(event) => event.stopPropagation()}
               onPointerDown={(event) => event.stopPropagation()}
@@ -1324,7 +1420,7 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
                 <div
                   data-tag-picker-results
                   className="mt-1 overflow-y-auto overscroll-contain"
-                  style={{ maxHeight: pickerLayout?.maxListHeight ?? TAG_PICKER_DEFAULT_LIST_MAX_PX }}
+                  style={{ maxHeight: visiblePickerLayout?.maxListHeight ?? TAG_PICKER_DEFAULT_LIST_MAX_PX }}
                 >
                   {loading ? <p
                     className="px-1 py-1 text-xs text-foreground/60"
@@ -1367,24 +1463,24 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
                 </div>
               ) : null}
             </div>,
-            getOverlayPortalRoot(tagOverlayRef.current) ?? document.body,
+            getOverlayPortalRoot(tagOverlayEl) ?? document.body,
           ) : null}
         {tagActionMenuTagId
           && typeof document !== 'undefined'
-          && shouldShowPortalOverlay(tagOverlayRef.current)
+          && shouldShowPortalOverlay(tagOverlayEl)
           ? createPortal(
             <div
-              ref={tagActionMenuRef}
+              ref={setTagActionMenuNode}
               {...{ [PORTAL_OVERLAY_ATTR]: '' }}
               className={clsx(
-                tagMenuLayout?.position ?? 'fixed',
+                visibleTagMenuLayout?.position ?? 'fixed',
                 'w-56 min-w-40 rounded-md border border-border-color bg-background py-1 shadow-lg',
                 modalPopoverZClassName,
-                !tagMenuLayout && 'invisible',
+                !visibleTagMenuLayout && 'invisible',
               )}
               style={{
-                top: tagMenuLayout?.top ?? 0,
-                left: tagMenuLayout?.left ?? 0,
+                top: visibleTagMenuLayout?.top ?? 0,
+                left: visibleTagMenuLayout?.left ?? 0,
               }}
               onClick={(event) => event.stopPropagation()}
               onMouseDown={(event) => event.stopPropagation()}
@@ -1416,7 +1512,7 @@ export const PhotoMemberTagLayer = forwardRef<PhotoMemberTagLayerHandle, PhotoMe
                 Remove tag
               </button>
             </div>,
-            getOverlayPortalRoot(tagOverlayRef.current) ?? document.body,
+            getOverlayPortalRoot(tagOverlayEl) ?? document.body,
           ) : null}
       </>
     );

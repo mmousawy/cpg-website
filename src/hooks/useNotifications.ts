@@ -61,16 +61,18 @@ export function useNotifications(userId: string | null, options?: UseNotificatio
   const [totalCount, setTotalCount] = useState(cachedData?.totalCount ?? 0);
   const [hasMore, setHasMore] = useState(cachedData?.hasMore ?? false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const serverData = query.data;
+  const [syncedData, setSyncedData] = useState(serverData);
 
-  // Sync local state from query data
-  useEffect(() => {
-    if (query.data) {
-      setNotifications(query.data.notifications);
-      setUnseenCount(query.data.unseenCount);
-      setTotalCount(query.data.totalCount);
-      setHasMore(query.data.hasMore);
+  if (serverData !== syncedData) {
+    setSyncedData(serverData);
+    if (serverData) {
+      setNotifications(serverData.notifications);
+      setUnseenCount(serverData.unseenCount);
+      setTotalCount(serverData.totalCount);
+      setHasMore(serverData.hasMore);
     }
-  }, [query.data]);
+  }
 
   // Load more notifications (pagination)
   const loadMore = useCallback(async () => {

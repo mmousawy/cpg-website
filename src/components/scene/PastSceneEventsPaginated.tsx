@@ -46,9 +46,11 @@ export default function PastSceneEventsPaginated({
   const bootstrappedCategoryFetchRef = useRef(false);
 
   useEffect(() => {
-    setAllEvents(filteredInitial);
-    setExhausted(false);
-    bootstrappedCategoryFetchRef.current = false;
+    void (async () => {
+      setAllEvents(filteredInitial);
+      setExhausted(false);
+      bootstrappedCategoryFetchRef.current = false;
+    })();
   }, [category, filteredInitial]);
 
   const cpgInAllEvents = allEvents.filter((e) => e.id.startsWith('cpg-')).length;

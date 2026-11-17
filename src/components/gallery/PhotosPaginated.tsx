@@ -171,21 +171,23 @@ function PhotosPaginatedInner({
 
   // Restore state from sessionStorage on mount (client-side only)
   useEffect(() => {
-    const { batches: cachedBatches, hasMore: cachedHasMore } = getInitialState();
-    // Only restore if we have more than initial batch
-    if (cachedBatches.length > 1) {
-      setBatches(cachedBatches);
-      setHasMore(cachedHasMore);
-      return;
-    }
+    void (async () => {
+      const { batches: cachedBatches, hasMore: cachedHasMore } = getInitialState();
+      // Only restore if we have more than initial batch
+      if (cachedBatches.length > 1) {
+        setBatches(cachedBatches);
+        setHasMore(cachedHasMore);
+        return;
+      }
 
-    const expanded = photoPool.slice(0, perPage);
-    setBatches([{ id: 'initial', photos: expanded }]);
-    setHasMore(
-      initialHasMore !== undefined
-        ? initialHasMore || photoPool.length > perPage
-        : photoPool.length > perPage,
-    );
+      const expanded = photoPool.slice(0, perPage);
+      setBatches([{ id: 'initial', photos: expanded }]);
+      setHasMore(
+        initialHasMore !== undefined
+          ? initialHasMore || photoPool.length > perPage
+          : photoPool.length > perPage,
+      );
+    })();
   }, [getInitialState, initialHasMore, perPage, photoPool]);
 
   // Persist state to sessionStorage when batches change

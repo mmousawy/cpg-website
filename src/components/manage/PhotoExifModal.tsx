@@ -193,7 +193,7 @@ function PhotoExifModalEditable({
     () => (isBatch
       ? getCommonExifFormValues(photos)
       : exifToFormValues(photo.exif_data as Record<string, unknown> | null | undefined)),
-    [isBatch, photo.exif_data, photo.id, photos],
+    [isBatch, photo.exif_data, photos],
   );
 
   const updateExifMutation = useUpdatePhotoExif(user?.id, photoFilter, profile?.nickname, albumId);
@@ -220,6 +220,7 @@ function PhotoExifModalEditable({
     reset(savedValues);
   }, [photoIdsKey, reset, savedValues]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form watch() cannot be memoized safely
   const formValues = watch();
   const cameraQuery = formValues.camera;
   const lensQuery = formValues.lensModel;

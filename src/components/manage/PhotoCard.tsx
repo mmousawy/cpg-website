@@ -14,7 +14,7 @@ import ClockMiniSVG from 'public/icons/clock-mini.svg';
 import FolderInAlbumSVG from 'public/icons/folder-in-album.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import WallArtSVG from 'public/icons/wall-art.svg';
-import { memo, useMemo, useRef } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 interface PhotoCardProps {
   photo: (Photo | PhotoWithAlbums) & { isExiting?: boolean };
@@ -65,9 +65,10 @@ function PhotoCard({
   const thumbnailUrl = getSquareThumbnailUrl(photo.url, 256, 85) || photo.url;
   // Keep the remote image on the no-placeholder path after the local file is
   // removed, so the loaded thumbnail is not remounted behind a blurhash.
-  const crossfadingRef = useRef(Boolean(localPreviewUrl));
-  if (localPreviewUrl) crossfadingRef.current = true;
-  const crossfading = crossfadingRef.current;
+  const [crossfading, setCrossfading] = useState(() => Boolean(localPreviewUrl));
+  if (localPreviewUrl && !crossfading) {
+    setCrossfading(true);
+  }
   const isAlbumCover = albumCoverUrl === photo.url;
 
   const photoWithAlbums = photo as PhotoWithAlbums;

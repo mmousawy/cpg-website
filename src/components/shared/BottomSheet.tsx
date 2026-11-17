@@ -33,6 +33,9 @@ export default function BottomSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   const suppressBackdropDismissRef = useRef(false);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
   const [isTrapped, setIsTrapped] = useState(false);
   const [startY, setStartY] = useState<number | null>(null);
   const [currentY, setCurrentY] = useState<number | null>(null);
@@ -42,18 +45,19 @@ export default function BottomSheet({
   // Track if animation should show open state (delayed to allow mount animation)
   const [isAnimatedOpen, setIsAnimatedOpen] = useState(false);
   const mounted = useMounted();
-  const baseHeightRef = useRef(0);
+  const [baseHeight, setBaseHeight] = useState(0);
   const [viewportTick, setViewportTick] = useState(0);
+  const [dragOverlayHeight, setDragOverlayHeight] = useState(0);
+  if (!shouldRender && baseHeight !== 0) {
+    setBaseHeight(0);
+  }
 
   useLayoutEffect(() => {
-    if (!shouldRender) {
-      baseHeightRef.current = 0;
-      return;
-    }
+    if (!shouldRender) return;
 
     const sync = () => {
       const layoutHeight = window.innerHeight;
-      if (layoutHeight > baseHeightRef.current) baseHeightRef.current = layoutHeight;
+      setBaseHeight((prev) => (layoutHeight > prev ? layoutHeight : prev));
       setViewportTick((tick) => tick + 1);
     };
 
@@ -67,8 +71,6 @@ export default function BottomSheet({
       window.visualViewport?.removeEventListener('scroll', sync);
     };
   }, [shouldRender]);
-
-  onCloseRef.current = onClose;
 
   // Ignore backdrop dismissals right after open — the opening tap can land on the backdrop.
   useEffect(() => {
@@ -151,13 +153,15 @@ export default function BottomSheet({
     return () => clearTimeout(timerId);
   }, [isOpen, isAnimatedOpen]);
 
-  useEffect(() => {
+  const [dragSessionOpen, setDragSessionOpen] = useState(isOpen);
+  if (isOpen !== dragSessionOpen) {
+    setDragSessionOpen(isOpen);
     if (!isOpen) {
       setStartY(null);
       setCurrentY(null);
       setIsDragging(false);
     }
-  }, [isOpen]);
+  }
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!sheetRef.current) return;
@@ -175,6 +179,7 @@ export default function BottomSheet({
       setStartY(touch.clientY);
       setCurrentY(touch.clientY);
       setIsDragging(true);
+      setDragOverlayHeight(overlayRef.current?.clientHeight ?? window.innerHeight);
     }
   };
 
@@ -184,6 +189,8 @@ export default function BottomSheet({
     e.preventDefault();
     const touch = e.touches[0];
     setCurrentY(touch.clientY);
+    const overlayHeight = overlayRef.current?.clientHeight;
+    if (overlayHeight) setDragOverlayHeight(overlayHeight);
   };
 
   const handleTouchEnd = () => {
@@ -206,13 +213,10 @@ export default function BottomSheet({
   };
 
   const layoutHeight = mounted ? window.innerHeight : 0;
-  if (shouldRender && layoutHeight > baseHeightRef.current) {
-    baseHeightRef.current = layoutHeight;
-  }
   const visibleBottom = mounted && window.visualViewport
     ? window.visualViewport.offsetTop + window.visualViewport.height
     : layoutHeight;
-  const sheetTop = baseHeightRef.current * (1 - maxHeight / 100);
+  const sheetTop = baseHeight * (1 - maxHeight / 100);
   const sheetHeight = Math.max(0, Math.min(visibleBottom, layoutHeight) - sheetTop);
   void viewportTick;
 
@@ -220,13 +224,14 @@ export default function BottomSheet({
     ? Math.max(0, currentY - startY)
     : 0;
 
-  const getBackdropOpacity = () => {
-    if (!isOpen || !isAnimatedOpen) return 0;
-    if (dragDeltaY <= 0) return 1;
-    const overlayHeight = overlayRef.current?.clientHeight ?? window.innerHeight;
-    const sheetHeightPx = (maxHeight / 100) * overlayHeight;
-    return Math.max(0, 1 - dragDeltaY / sheetHeightPx);
-  };
+  const backdropOpacity = !isOpen || !isAnimatedOpen
+    ? 0
+    : dragDeltaY <= 0
+      ? 1
+      : Math.max(
+        0,
+        1 - dragDeltaY / ((maxHeight / 100) * (dragOverlayHeight || layoutHeight)),
+      );
 
   // Don't render anything if not needed (prevents fixed overlay from affecting page)
   if (!mounted || !shouldRender) {
@@ -248,7 +253,7 @@ export default function BottomSheet({
           'absolute inset-0 bg-black/40',
           !isDragging && 'transition-opacity duration-200 ease-out',
         )}
-        style={{ opacity: getBackdropOpacity() }}
+        style={{ opacity: backdropOpacity }}
         onPointerUp={handleBackdropDismiss}
       />
 

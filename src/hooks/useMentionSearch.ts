@@ -4,11 +4,18 @@ import { useEffect, useState } from 'react';
 export function useMentionSearch(query: string | null) {
   const [results, setResults] = useState<MentionProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [prevQuery, setPrevQuery] = useState(query);
 
-  useEffect(() => {
+  if (query !== prevQuery) {
+    setPrevQuery(query);
     if (!query) {
       setResults([]);
       setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!query) {
       return;
     }
 

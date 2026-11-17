@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
@@ -38,19 +38,19 @@ function MobileAccountMenuContent({
   const isControlled = openControlled !== undefined;
   const accountOpen = isControlled ? openControlled : accountOpenUncontrolled;
 
-  const setOpen = (open: boolean) => {
+  const setOpen = useCallback((open: boolean) => {
     if (!isControlled) {
       setAccountOpenUncontrolled(open);
     }
     onOpenChange?.(open);
-  };
+  }, [isControlled, onOpenChange]);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
       setOpen(false);
       setNotificationsOpen(false);
     });
-  }, [onOpenChange]);
+  }, [setOpen]);
 
   useEffect(() => {
     if (!accountOpen) return;
@@ -70,7 +70,7 @@ function MobileAccountMenuContent({
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [accountOpen, onOpenChange]);
+  }, [accountOpen, setOpen]);
 
   const openNotifications = () => {
     setNotificationsOpen(true);

@@ -13,7 +13,7 @@ import {
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useMounted } from '@/hooks/useMounted';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 export { fetchPhotosPage } from '@/hooks/managePhotosFetch';
 
@@ -32,13 +32,15 @@ export function usePhotos(
 ) {
   const mounted = useMounted();
   const isMobile = useIsMobile();
-  const pageSizeRef = useRef<number | null>(null);
-  if (mounted && pageSizeRef.current == null) {
-    pageSizeRef.current = isMobile
-      ? MANAGE_PHOTOS_PAGE_SIZE_MOBILE
-      : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP;
+  const viewportPageSize = isMobile
+    ? MANAGE_PHOTOS_PAGE_SIZE_MOBILE
+    : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP;
+  // Lock the first client page size so a later viewport change does not swap query keys.
+  const [lockedPageSize, setLockedPageSize] = useState<number | null>(null);
+  if (mounted && lockedPageSize == null) {
+    setLockedPageSize(viewportPageSize);
   }
-  const pageSize = pageSizeRef.current ?? MANAGE_PHOTOS_PAGE_SIZE_DESKTOP;
+  const pageSize = lockedPageSize ?? (mounted ? viewportPageSize : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP);
 
   const query = useInfiniteQuery({
     queryKey: photosQueryKey(userId!, pageSize, libraryFilters),

@@ -1,10 +1,11 @@
 'use client';
 
 import clsx from 'clsx';
-import { useEffect, useState, type ComponentType } from 'react';
+import { type ComponentType } from 'react';
 
 import type { AppThemeSelection } from '@/hooks/useAppTheme';
 import { useAppTheme } from '@/hooks/useAppTheme';
+import { useMounted } from '@/hooks/useMounted';
 
 function ThemeOptionIcon({
   className = 'size-4',
@@ -91,11 +92,7 @@ export default function ThemePreferencePicker({
   selectionReady = true,
 }: ThemePreferencePickerProps) {
   const { resolvedTheme, setTheme } = useAppTheme();
-  const [themeMounted, setThemeMounted] = useState(false);
-
-  useEffect(() => {
-    setThemeMounted(true);
-  }, []);
+  const themeMounted = useMounted();
 
   const handleSelect = (theme: AppThemeSelection) => {
     onChange(theme);

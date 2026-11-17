@@ -52,6 +52,16 @@ export default function AddPhotosToAlbumModal({
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newAlbumTitle, setNewAlbumTitle] = useState('');
+  const [albumQueryKey, setAlbumQueryKey] = useState({ photos, user, supabase });
+  if (
+    albumQueryKey.photos !== photos
+    || albumQueryKey.user !== user
+    || albumQueryKey.supabase !== supabase
+  ) {
+    setAlbumQueryKey({ photos, user, supabase });
+    setSelectedAlbumIds(new Set());
+    setError(null);
+  }
 
   // Calculate which albums already contain ALL selected photos
   const albumsWithAllPhotos = useMemo(() => {
@@ -84,10 +94,8 @@ export default function AddPhotosToAlbumModal({
     [sharedWithMeAlbums],
   );
 
-  // Reset selection and refetch albums when modal opens with new photos
+  // Refetch albums when the modal opens with new photos.
   useEffect(() => {
-    setSelectedAlbumIds(new Set());
-    setError(null);
     if (!user) return;
 
     const fetchAlbums = async () => {

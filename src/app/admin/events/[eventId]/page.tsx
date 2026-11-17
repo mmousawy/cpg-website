@@ -206,7 +206,7 @@ function AdminEventForm() {
 
   useEffect(() => {
     void (async () => {
-    // Admin access is guaranteed by ProtectedRoute layout
+      // Admin access is guaranteed by ProtectedRoute layout
       if (isNewEvent) {
         setIsLoading(false);
         return;
@@ -215,7 +215,7 @@ function AdminEventForm() {
       const fetchEvent = async () => {
         setIsLoading(true);
         try {
-        // Check if eventSlug is a numeric ID or an actual slug
+          // Check if eventSlug is a numeric ID or an actual slug
           const isNumericId = /^\d+$/.test(eventSlug);
 
           let query = supabase.from('events').select('*');

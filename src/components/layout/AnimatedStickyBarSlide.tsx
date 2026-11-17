@@ -37,7 +37,9 @@ export default function AnimatedStickyBarSlide({
   const [isVisible, setIsVisible] = useState(false);
   const renderedRef = useRef(false);
   const onExitedRef = useRef(onExited);
-  onExitedRef.current = onExited;
+  useEffect(() => {
+    onExitedRef.current = onExited;
+  }, [onExited]);
 
   if (canReveal && !shouldRender) {
     setShouldRender(true);
@@ -47,6 +49,7 @@ export default function AnimatedStickyBarSlide({
     let animFrame1: number | undefined;
     let animFrame2: number | undefined;
     let unmountTimer: ReturnType<typeof setTimeout> | undefined;
+    let revealImmediate = false;
 
     if (canReveal) {
       renderedRef.current = true;
@@ -58,7 +61,10 @@ export default function AnimatedStickyBarSlide({
       }
 
       if (skipAppear) {
-        setIsVisible(true);
+        revealImmediate = true;
+        queueMicrotask(() => {
+          if (revealImmediate) setIsVisible(true);
+        });
       } else {
         animFrame1 = requestAnimationFrame(() => {
           animFrame2 = requestAnimationFrame(() => setIsVisible(true));
@@ -76,11 +82,12 @@ export default function AnimatedStickyBarSlide({
     }
 
     return () => {
+      revealImmediate = false;
       if (animFrame1) cancelAnimationFrame(animFrame1);
       if (animFrame2) cancelAnimationFrame(animFrame2);
       if (unmountTimer) clearTimeout(unmountTimer);
     };
-  }, [canReveal, open, pathname]);
+  }, [alwaysAnimate, canReveal, open, pathname]);
 
   if (!shouldRender) return null;
 

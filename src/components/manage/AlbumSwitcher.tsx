@@ -75,6 +75,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
 
+  const userId = user?.id;
   const handleNavigate = useCallback((album: SwitcherAlbum) => {
     if (album.slug === slug) {
       setIsOpen(false);
@@ -85,11 +86,11 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
     const href = ownerNickname
       ? `/account/albums/${album.slug}?owner=${encodeURIComponent(ownerNickname)}`
       : `/account/albums/${album.slug}`;
-    if (user?.id) {
+    if (userId) {
       if (ownerNickname) {
-        void prefetchSharedAlbum(queryClient, user.id, ownerNickname, album.slug);
+        void prefetchSharedAlbum(queryClient, userId, ownerNickname, album.slug);
       } else {
-        void prefetchOwnedAlbum(queryClient, user.id, album.slug);
+        void prefetchOwnedAlbum(queryClient, userId, album.slug);
       }
       void prefetchAlbumPhotos(queryClient, album.id);
     }
@@ -97,7 +98,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
     startTransition(() => {
       router.push(href);
     });
-  }, [slug, router, user?.id, queryClient]);
+  }, [slug, router, userId, queryClient]);
 
   const handleBackToAlbums = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -162,16 +163,20 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
 
   const currentAlbumRef = useRef<HTMLButtonElement>(null);
 
-  // Keep the section that contains the current album expanded (and load its albums)
-  useLayoutEffect(() => {
-    if (currentSectionKey !== 'sharedWithMe' && currentSectionKey !== 'event') return;
-    setCollapsedSections((prev) => (
-      prev[currentSectionKey] ? { ...prev, [currentSectionKey]: false } : prev
-    ));
-    setExpandedOnce((prev) => (
-      prev[currentSectionKey] ? prev : { ...prev, [currentSectionKey]: true }
-    ));
-  }, [currentSectionKey]);
+  // Keep the section that contains the current album expanded (and load its albums).
+  const [syncedSectionKey, setSyncedSectionKey] = useState<string | null | undefined>(undefined);
+  if (syncedSectionKey !== currentSectionKey) {
+    setSyncedSectionKey(currentSectionKey);
+    if (currentSectionKey === 'sharedWithMe' || currentSectionKey === 'event') {
+      const sectionKey = currentSectionKey;
+      setCollapsedSections((prev) => (
+        prev[sectionKey] ? { ...prev, [sectionKey]: false } : prev
+      ));
+      setExpandedOnce((prev) => (
+        prev[sectionKey] ? prev : { ...prev, [sectionKey]: true }
+      ));
+    }
+  }
 
   useLayoutEffect(() => {
     if (!isOpen) return;

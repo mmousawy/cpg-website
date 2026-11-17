@@ -44,9 +44,11 @@ function EmailPreviewSidebarInner() {
   const normalizedQuery = query.trim().toLowerCase();
 
   useEffect(() => {
-    if (activeGroupId) {
-      setOpenGroups((prev) => (prev[activeGroupId] ? prev : { ...prev, [activeGroupId]: true }));
-    }
+    void (async () => {
+      if (activeGroupId) {
+        setOpenGroups((prev) => (prev[activeGroupId] ? prev : { ...prev, [activeGroupId]: true }));
+      }
+    })();
   }, [activeGroupId]);
 
   const filteredGroups = useMemo(() => {

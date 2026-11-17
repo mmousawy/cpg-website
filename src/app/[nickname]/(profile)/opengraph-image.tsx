@@ -121,6 +121,7 @@ export default async function Image({ params }: { params: Promise<{ nickname: st
         }}
       >
         {bannerUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- next/og ImageResponse only supports img
           <img
             alt=""
             src={bannerUrl}

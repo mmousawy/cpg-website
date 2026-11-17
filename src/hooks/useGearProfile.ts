@@ -25,23 +25,36 @@ export function useGearProfile(nickname: string, options?: UseGearProfileOptions
   );
   const [hydrated, setHydrated] = useState(skipFetch && options?.initialProfile !== undefined);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [prevNickname, setPrevNickname] = useState(nickname);
+  const [prevAuthNickname, setPrevAuthNickname] = useState(authProfile?.nickname);
+  const [prevEnabled, setPrevEnabled] = useState(enabled);
+  const [prevSkipFetch, setPrevSkipFetch] = useState(skipFetch);
+
+  if (
+    nickname !== prevNickname
+    || authProfile?.nickname !== prevAuthNickname
+    || enabled !== prevEnabled
+    || skipFetch !== prevSkipFetch
+  ) {
+    setPrevNickname(nickname);
+    setPrevAuthNickname(authProfile?.nickname);
+    setPrevEnabled(enabled);
+    setPrevSkipFetch(skipFetch);
+    if (!enabled && !skipFetch) {
+      setProfile(null);
+      setHydrated(false);
+      setLoadError(null);
+    } else if (enabled && !skipFetch) {
+      setLoadError(null);
+    }
+  }
 
   useEffect(() => {
-    if (!enabled) {
-      if (!skipFetch) {
-        setProfile(null);
-        setHydrated(false);
-        setLoadError(null);
-      }
-      return;
-    }
-
-    if (skipFetch) {
+    if (!enabled || skipFetch) {
       return;
     }
 
     let cancelled = false;
-    setLoadError(null);
 
     const isOwner = authProfile?.nickname === nickname;
 

@@ -154,6 +154,7 @@ export default function PhotoListItem({
   const isOpeningRef = useRef(false);
   const [showExif, setShowExif] = useState(false);
   const [showPrivateTooltip, setShowPrivateTooltip] = useState(false);
+  const [privateTooltipPosition, setPrivateTooltipPosition] = useState<{ top: number; right: number } | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; right: number } | null>(null);
   const privateLinkRef = useRef<HTMLButtonElement>(null);
   const exifData = photo.exif_data as Record<string, unknown> | null | undefined;
@@ -219,13 +220,6 @@ export default function PhotoListItem({
       document.removeEventListener('click', handleClickOutside, true);
     };
   }, [showExif, popoverPosition]);
-
-  // Reset position when popover is closed
-  useEffect(() => {
-    if (!showExif) {
-      setPopoverPosition(null);
-    }
-  }, [showExif]);
 
   // Close private tooltip on click outside
   useEffect(() => {
@@ -372,7 +366,18 @@ export default function PhotoListItem({
                 aria-label="Photo is private — no public page"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowPrivateTooltip((v) => !v);
+                  if (showPrivateTooltip) {
+                    setShowPrivateTooltip(false);
+                    return;
+                  }
+                  const button = privateLinkRef.current;
+                  if (!button || typeof window === 'undefined') return;
+                  const rect = button.getBoundingClientRect();
+                  setPrivateTooltipPosition({
+                    top: rect.bottom + 4,
+                    right: window.innerWidth - rect.right,
+                  });
+                  setShowPrivateTooltip(true);
                 }}
               >
                 <LinkSVG
@@ -381,7 +386,7 @@ export default function PhotoListItem({
               </button>
             )
           )}
-          {showPrivateTooltip && privateLinkRef.current && typeof window !== 'undefined' &&
+          {showPrivateTooltip && privateTooltipPosition && typeof window !== 'undefined' &&
             createPortal(
               <div
                 className={clsx(
@@ -389,8 +394,8 @@ export default function PhotoListItem({
                   pageFloatingZClassName,
                 )}
                 style={{
-                  top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
-                  right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,
+                  top: `${privateTooltipPosition.top}px`,
+                  right: `${privateTooltipPosition.right}px`,
                 }}
                 onClick={(e) => e.stopPropagation()}
               >

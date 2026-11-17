@@ -149,9 +149,9 @@ export function useDialogVisualViewport(
   const isMobile = useIsMobile();
   const isOpenRef = useRef(isOpen);
   const closingRef = useRef(false);
-  isOpenRef.current = isOpen;
 
   useLayoutEffect(() => {
+    isOpenRef.current = isOpen;
     if (!isMobile || !reposition) return;
 
     const overlay = overlayRef.current;

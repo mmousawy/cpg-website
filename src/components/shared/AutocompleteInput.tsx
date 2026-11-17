@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { modalPopoverZClassName, pageFloatingZClassName } from '@/components/layout/mobileChrome';
+import { useMounted } from '@/hooks/useMounted';
 import { PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
 import Input from './Input';
 
@@ -64,8 +65,8 @@ export default function AutocompleteInput({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition | null>(null);
-  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
   const [aboveModal, setAboveModal] = useState(false);
+  const mounted = useMounted();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -87,13 +88,13 @@ export default function AutocompleteInput({
     });
   }, []);
 
+  const portalRoot = showSuggestions && !inlineSuggestions && mounted ? document.body : null;
+
   useLayoutEffect(() => {
     if (!showSuggestions || inlineSuggestions) {
-      setPortalRoot(null);
       return;
     }
     setAboveModal(Boolean(inputRef.current?.closest('dialog')));
-    setPortalRoot(document.body);
     updateDropdownPosition();
     const onLayoutChange = () => updateDropdownPosition();
     window.addEventListener('resize', onLayoutChange);

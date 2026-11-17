@@ -1,6 +1,7 @@
 'use client';
 
 import { useHasHover } from '@/hooks/useHasHover';
+import { useMounted } from '@/hooks/useMounted';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
 const DEFAULT_PROMINENT_MS = 2000;
@@ -22,11 +23,39 @@ export function useIdleReveal(
   options: IdleRevealOptions = {},
 ) {
   const hasHover = useHasHover();
+  const mounted = useMounted();
   const prominentMs = options.prominentMs ?? DEFAULT_PROMINENT_MS;
   const touchRoutePhase = options.touchRoutePhase ?? 'hidden';
   const [phase, setPhase] = useState<'prominent' | 'hidden'>('prominent');
   const [pillHover, setPillHover] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [prevRouteKey, setPrevRouteKey] = useState(routeKey);
+  const [prevHasHover, setPrevHasHover] = useState(hasHover);
+  const [prevTouchRoutePhase, setPrevTouchRoutePhase] = useState(touchRoutePhase);
+  const [prevProminentMs, setPrevProminentMs] = useState(prominentMs);
+  const [didApplyClientPhase, setDidApplyClientPhase] = useState(false);
+
+  if (
+    mounted && (
+      !didApplyClientPhase
+      || routeKey !== prevRouteKey
+      || hasHover !== prevHasHover
+      || touchRoutePhase !== prevTouchRoutePhase
+      || prominentMs !== prevProminentMs
+    )
+  ) {
+    setDidApplyClientPhase(true);
+    setPrevRouteKey(routeKey);
+    setPrevHasHover(hasHover);
+    setPrevTouchRoutePhase(touchRoutePhase);
+    setPrevProminentMs(prominentMs);
+    if (hasHover) {
+      setPhase('prominent');
+    } else {
+      setPillHover(false);
+      setPhase(touchRoutePhase === 'prominent' ? 'prominent' : 'hidden');
+    }
+  }
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -48,26 +77,15 @@ export function useIdleReveal(
     }, prominentMs);
   }, [clearTimer, prominentMs]);
 
-  const revealProminent = useCallback(() => {
-    setPhase('prominent');
-    scheduleHide();
-  }, [scheduleHide]);
-
   useEffect(() => {
-    if (hasHover) {
-      revealProminent();
+    if (!mounted) return;
+    if (hasHover || touchRoutePhase === 'prominent') {
+      scheduleHide();
     } else {
       clearTimer();
-      setPillHover(false);
-      if (touchRoutePhase === 'prominent') {
-        setPhase('prominent');
-        scheduleHide();
-      } else {
-        setPhase('hidden');
-      }
     }
     return clearTimer;
-  }, [routeKey, hasHover, touchRoutePhase, revealProminent, scheduleHide, clearTimer]);
+  }, [mounted, routeKey, hasHover, touchRoutePhase, scheduleHide, clearTimer]);
 
   useEffect(() => {
     let lastPulse = 0;

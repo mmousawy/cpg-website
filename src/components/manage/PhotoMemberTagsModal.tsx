@@ -33,7 +33,6 @@ export default function PhotoMemberTagsModal({
   const [hasChanges, setHasChanges] = useState(false);
   const hasChangesRef = useRef(false);
   const savingRef = useRef(false);
-  savingRef.current = saving;
 
   const setGlobalUnsavedChanges = useCallback((dirty: boolean) => {
     window.__unsavedChangesContext?.setHasUnsavedChanges(dirty);
@@ -66,13 +65,17 @@ export default function PhotoMemberTagsModal({
   }, [modalContext, onClose, setGlobalUnsavedChanges]);
 
   const handleSaveRef = useRef(handleSave);
-  handleSaveRef.current = handleSave;
   const handleCancelRef = useRef(() => {
     void modalContext.requestClose();
   });
-  handleCancelRef.current = () => {
-    void modalContext.requestClose();
-  };
+
+  useEffect(() => {
+    savingRef.current = saving;
+    handleSaveRef.current = handleSave;
+    handleCancelRef.current = () => {
+      void modalContext.requestClose();
+    };
+  });
 
   const width = photo.width || 1200;
   const height = photo.height || 800;
