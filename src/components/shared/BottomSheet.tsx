@@ -5,6 +5,7 @@ import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useMounted } from '@/hooks/useMounted';
+import { subscribeSheetModalSuspension, sheetModalReturnRootAttr } from '@/lib/sheetModalReturn';
 import { motionDuration } from '@/utils/reduceMotion';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
@@ -45,6 +46,7 @@ export default function BottomSheet({
   // Track if animation should show open state (delayed to allow mount animation)
   const [isAnimatedOpen, setIsAnimatedOpen] = useState(false);
   const mounted = useMounted();
+  const [suspendedForModal, setSuspendedForModal] = useState(false);
   const [baseHeight, setBaseHeight] = useState(0);
   const [viewportTick, setViewportTick] = useState(0);
   const [dragOverlayHeight, setDragOverlayHeight] = useState(0);
@@ -124,13 +126,27 @@ export default function BottomSheet({
     };
   }, [isOpen]);
 
-  // Handle body scroll lock
-  useBodyScrollLock(isOpen);
-  useDialogVisualViewport(overlayRef, isOpen && shouldRender, { reposition: false });
+  const presented = isOpen && !suspendedForModal;
+
+  // Handle body scroll lock. While a modal opened from this sheet is up, the
+  // sheet stays mounted but steps out of the way so closing the modal can
+  // bring it back.
+  useBodyScrollLock(presented);
+  useDialogVisualViewport(overlayRef, presented && shouldRender, { reposition: false });
   useCloseOnRouteChange(isOpen, onClose);
 
   useEffect(() => {
     if (!isOpen) return;
+    return subscribeSheetModalSuspension(setSuspendedForModal);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) return;
+    setSuspendedForModal(false);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!presented) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
@@ -140,18 +156,18 @@ export default function BottomSheet({
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isOpen]);
+  }, [presented]);
 
   // Activate the trap only after the sheet is visible — avoids spurious deactivation on reopen.
   useEffect(() => {
-    if (!isOpen || !isAnimatedOpen) {
+    if (!presented || !isAnimatedOpen) {
       const timerId = setTimeout(() => setIsTrapped(false), 0);
       return () => clearTimeout(timerId);
     }
 
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
-  }, [isOpen, isAnimatedOpen]);
+  }, [presented, isAnimatedOpen]);
 
   const [dragSessionOpen, setDragSessionOpen] = useState(isOpen);
   if (isOpen !== dragSessionOpen) {
@@ -242,10 +258,14 @@ export default function BottomSheet({
   return createPortal(
     <div
       ref={overlayRef}
+      {...{ [sheetModalReturnRootAttr()]: '' }}
+      aria-hidden={suspendedForModal || undefined}
+      inert={suspendedForModal || undefined}
       className={clsx(
         'overlay-keyboard-root fixed inset-0',
         modalOverlayZClassName,
-        isAnimatedOpen ? 'pointer-events-auto' : 'pointer-events-none',
+        isAnimatedOpen && !suspendedForModal ? 'pointer-events-auto' : 'pointer-events-none',
+        suspendedForModal && 'invisible',
       )}
     >
       <div

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 
 import {
   revalidateAlbum,
@@ -7,6 +7,7 @@ import {
   revalidateProfile,
   revalidateTagPhotos,
 } from '@/app/actions/revalidate';
+import { expireTag } from '@/lib/cache/expireTag';
 import { ingestGearFromPhotoId } from '@/lib/gear/ingestFromExif';
 import {
   batchUpdatePhotoDetails,
@@ -74,25 +75,33 @@ export async function PATCH(request: NextRequest) {
 
     const nickname = profile?.nickname ?? null;
 
-    if (nickname) {
-      await revalidateProfile(nickname);
-      if (result.affectedAlbumSlugs.length > 0) {
-        await Promise.all(result.affectedAlbumSlugs.map((slug) => revalidateAlbum(nickname, slug)));
-      }
-    }
+    if (nickname) expireTag(`profile-${nickname}`);
 
-    if (result.affectedTags.length > 0) {
-      await Promise.all(result.affectedTags.map((tag) => revalidateTagPhotos(tag)));
-    }
+    after(() => {
+      void (async () => {
+        if (nickname) {
+          await revalidateProfile(nickname);
+          if (result.affectedAlbumSlugs.length > 0) {
+            await Promise.all(result.affectedAlbumSlugs.map((slug) => revalidateAlbum(nickname, slug)));
+          }
+        }
 
-    if (result.visibilityChanged) {
-      await revalidateGalleryData(nickname);
-    }
+        if (result.affectedTags.length > 0) {
+          await Promise.all(result.affectedTags.map((tag) => revalidateTagPhotos(tag)));
+        }
 
-    if (result.exif?.results.length) {
-      const shortIds = [...new Set(result.exif.results.map((row) => row.shortId).filter(Boolean))] as string[];
-      await Promise.all(shortIds.map((shortId) => revalidatePhoto(shortId, nickname)));
-    }
+        if (result.visibilityChanged) {
+          await revalidateGalleryData(nickname);
+        }
+
+        if (result.exif?.results.length) {
+          const shortIds = [...new Set(result.exif.results.map((row) => row.shortId).filter(Boolean))] as string[];
+          await Promise.all(shortIds.map((shortId) => revalidatePhoto(shortId, nickname)));
+        }
+      })().catch((revalidateError) => {
+        console.error('batch photo revalidate failed:', revalidateError);
+      });
+    });
 
     return NextResponse.json({
       ok: true,

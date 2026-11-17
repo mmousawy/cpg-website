@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.49.4](https://github.com/mmousawy/cpg-website/compare/v1.49.3...v1.49.4) (2026-11-17)
+
+
+### ♻️ Refactoring
+
+* enhance modal and photo member tag handling ([c085143](https://github.com/mmousawy/cpg-website/commit/c085143f3d51ef58d0169d699d00206fb40b4c82))
+* enhance photo member tag caching and revalidation ([2a8fde8](https://github.com/mmousawy/cpg-website/commit/2a8fde825105b56f8cd2ba6525c0c652e7334693))
+
 ## [1.49.3](https://github.com/mmousawy/cpg-website/compare/v1.49.2...v1.49.3) (2026-11-17)
 
 

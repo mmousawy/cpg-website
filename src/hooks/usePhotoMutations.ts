@@ -212,9 +212,9 @@ export function useUpdatePhoto(
         restorePhotosQueriesSnapshot(queryClient, context?.photosQueriesSnapshot);
       }
     },
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       if (data.batchResult.newlyPublicPhotoIds.length > 0) {
-        await notifyFollowersOfUpload(data.batchResult.newlyPublicPhotoIds);
+        void notifyFollowersOfUpload(data.batchResult.newlyPublicPhotoIds);
       }
     },
   });
@@ -317,9 +317,9 @@ export function useBulkUpdatePhotos(
         restorePhotosQueriesSnapshot(queryClient, context?.photosQueriesSnapshot);
       }
     },
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       if (data.batchResult.newlyPublicPhotoIds.length > 0) {
-        await notifyFollowersOfUpload(data.batchResult.newlyPublicPhotoIds);
+        void notifyFollowersOfUpload(data.batchResult.newlyPublicPhotoIds);
       }
     },
   });

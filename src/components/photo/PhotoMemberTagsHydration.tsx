@@ -9,6 +9,8 @@ type PhotoMemberTagsHydrationProps = {
   memberTags: PhotoMemberTag[];
   canEdit: boolean;
   viewerId: string | null;
+  /** When true, the client fetches edit rights so a stale session can refresh in a route handler. */
+  deferAuth?: boolean;
   children: ReactNode;
 };
 
@@ -20,6 +22,7 @@ export default function PhotoMemberTagsHydration({
   memberTags,
   canEdit,
   viewerId,
+  deferAuth = false,
   children,
 }: PhotoMemberTagsHydrationProps) {
   useLayoutEffect(() => {
@@ -27,9 +30,9 @@ export default function PhotoMemberTagsHydration({
       tags: memberTags,
       canEdit,
       viewerId,
-      loaded: true,
+      loaded: !deferAuth,
     });
-  }, [photoId, memberTags, canEdit, viewerId]);
+  }, [photoId, memberTags, canEdit, viewerId, deferAuth]);
 
   return children;
 }

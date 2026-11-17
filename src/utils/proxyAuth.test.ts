@@ -9,7 +9,10 @@ import {
   expireLegacyHostedSupabaseAuthCookies,
   hasSupabaseAuthCookies,
   isLegacyHostedSupabaseAuthCookieName,
+  isStoredAuthSessionFresh,
   isSupabaseAuthCookieName,
+  readStoredAuthSession,
+  STORED_SESSION_REFRESH_MARGIN_MS,
 } from '@/utils/supabase/authCookie';
 
 describe('matchesPath', () => {
@@ -90,5 +93,29 @@ describe('supabase auth cookies', () => {
     expect(setCalls).toEqual([
       { name: 'sb-lpdjlhlslqtdswhnchmv-auth-token.0', value: '', options: { path: '/', maxAge: 0 } },
     ]);
+  });
+
+  it('reads a chunked auth session without treating it as a refresh', () => {
+    const expiresAt = 1_800_000_000;
+    const payload = Buffer.from(JSON.stringify({ sub: 'from-jwt' })).toString('base64url');
+    const encoded = `base64-${Buffer.from(JSON.stringify({
+      access_token: `aa.${payload}.sig`,
+      refresh_token: 'refresh',
+      expires_at: expiresAt,
+      user: { id: 'user-1' },
+    })).toString('base64url')}`;
+    const midpoint = Math.floor(encoded.length / 2);
+
+    expect(readStoredAuthSession([
+      { name: 'sb-db-auth-token.0', value: encoded.slice(0, midpoint) },
+      { name: 'sb-db-auth-token.1', value: encoded.slice(midpoint) },
+      { name: 'sb-lpdjlhlslqtdswhnchmv-auth-token', value: 'stale' },
+    ])).toEqual({ userId: 'user-1', expiresAt });
+  });
+
+  it('treats a session inside the refresh margin as not fresh', () => {
+    const now = 1_700_000_000_000;
+    expect(isStoredAuthSessionFresh((now + STORED_SESSION_REFRESH_MARGIN_MS) / 1000, now)).toBe(false);
+    expect(isStoredAuthSessionFresh((now + STORED_SESSION_REFRESH_MARGIN_MS + 1000) / 1000, now)).toBe(true);
   });
 });

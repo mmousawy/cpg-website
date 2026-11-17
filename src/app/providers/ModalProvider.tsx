@@ -4,6 +4,11 @@ import { createContext, useCallback, useLayoutEffect, useRef, useState } from 'r
 
 import { beginOverlayClose, cancelOverlayClose } from '@/hooks/useDialogVisualViewport';
 import { subscribeRouteChange } from '@/lib/routeChange';
+import {
+  noteSheetPointerDown,
+  resumeSheetAfterModal,
+  suspendSheetForModalIfOpenedFromSheet,
+} from '@/lib/sheetModalReturn';
 
 export type ModalSize = 'small' | 'default' | 'medium' | 'large' | 'fullscreen';
 
@@ -46,16 +51,29 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
     });
   }, []);
 
+  useLayoutEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      noteSheetPointerDown(event.target);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, []);
+
   const setBeforeCloseCheck = useCallback((fn: BeforeCloseCheck | null) => {
     beforeCloseCheckRef.current = fn;
   }, []);
 
   const handleSetIsOpen = useCallback((open: boolean) => {
-    if (!open) {
+    if (open) {
+      suspendSheetForModalIfOpenedFromSheet();
+    } else {
       beginOverlayClose();
       beforeCloseCheckRef.current = null;
     }
     setIsOpen(open);
+    if (!open) {
+      resumeSheetAfterModal();
+    }
     if (open) {
       if (resetTimeoutRef.current) {
         clearTimeout(resetTimeoutRef.current);
