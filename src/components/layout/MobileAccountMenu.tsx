@@ -88,8 +88,8 @@ function MobileAccountMenuContent({
 
   const ariaLabel = user
     ? (unseenCount > 0
-        ? `Open account menu, ${unseenCount > 99 ? '99+' : unseenCount} unread notification${unseenCount === 1 ? '' : 's'}`
-        : 'Open account menu')
+      ? `Open account menu, ${unseenCount > 99 ? '99+' : unseenCount} unread notification${unseenCount === 1 ? '' : 's'}`
+      : 'Open account menu')
     : 'Log in or sign up';
 
   return (
@@ -113,7 +113,7 @@ function MobileAccountMenuContent({
           <span
             className={clsx(
               'relative rounded-full',
-              active && 'outline outline-2 outline-primary outline-offset-2',
+              active && 'outline-2 outline-primary outline-offset-2',
             )}
           >
             <Avatar
