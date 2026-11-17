@@ -9,7 +9,7 @@ export async function withPhotoMemberTagsHydration(
   memberTags: PhotoMemberTag[],
   children: ReactNode,
 ) {
-  const { canEdit, viewerId } = await getPhotoMemberTagsPageAuth(photoUserId);
+  const { canEdit, viewerId, deferAuth } = await getPhotoMemberTagsPageAuth(photoUserId);
 
   return (
     <PhotoMemberTagsHydration
@@ -17,6 +17,7 @@ export async function withPhotoMemberTagsHydration(
       memberTags={memberTags}
       canEdit={canEdit}
       viewerId={viewerId}
+      deferAuth={deferAuth}
     >
       {children}
     </PhotoMemberTagsHydration>

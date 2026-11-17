@@ -1,6 +1,11 @@
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import {
+  isStoredAuthSessionFresh,
+  readStoredAuthSession,
+} from '@/utils/supabase/authCookie';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 import { cache } from 'react';
 
 export type PhotoMemberTag = {
@@ -59,16 +64,27 @@ export async function fetchPhotoMemberTags(
 }
 
 export const getPhotoMemberTagsPageAuth = cache(async (photoUserId: string | null) => {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const viewerId = user?.id ?? null;
-  let canEdit = false;
-  if (user && photoUserId) {
-    if (photoUserId === user.id) {
-      canEdit = true;
-    } else {
-      canEdit = await checkIsAdmin(supabase);
-    }
+  const cookieStore = await cookies();
+  const session = readStoredAuthSession(cookieStore.getAll());
+  if (!session) {
+    return { canEdit: false, viewerId: null, deferAuth: false };
   }
-  return { canEdit, viewerId };
+
+  // getUser() refreshes an expired access token and rotates the refresh token.
+  // This runs in a Server Component, which cannot write the new cookies back,
+  // so the browser keeps the old refresh token and the session dies within
+  // the 10s reuse window. Read the cookie instead, and only touch Auth when
+  // the access token is still comfortably valid.
+  if (!isStoredAuthSessionFresh(session.expiresAt)) {
+    return { canEdit: false, viewerId: null, deferAuth: true };
+  }
+
+  const viewerId = session.userId;
+  if (photoUserId && photoUserId === viewerId) {
+    return { canEdit: true, viewerId, deferAuth: false };
+  }
+
+  const supabase = await createClient();
+  const canEdit = photoUserId ? await checkIsAdmin(supabase) : false;
+  return { canEdit, viewerId, deferAuth: false };
 });

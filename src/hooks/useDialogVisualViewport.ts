@@ -75,6 +75,11 @@ function clearOverlayInset(overlay: HTMLElement) {
 /** Lock the box currently on screen so a growing viewport cannot stretch the close animation. */
 function freezeOverlayBox(overlay: HTMLElement) {
   if (overlay.hasAttribute('data-close-frozen')) return;
+  // Measure before touching `bottom`. An `inset-0` overlay's height comes from
+  // top + bottom; setting `bottom: auto` first collapses it to 0.
+  const rect = overlay.getBoundingClientRect();
+  if (rect.height <= 0) return;
+
   overlay.setAttribute('data-close-frozen', '');
   overlay.setAttribute('data-keyboard-inset', '');
   overlay.style.bottom = 'auto';
@@ -84,8 +89,6 @@ function freezeOverlayBox(overlay: HTMLElement) {
     return;
   }
 
-  const rect = overlay.getBoundingClientRect();
-  if (rect.height <= 0) return;
   overlay.style.top = `${rect.top}px`;
   overlay.style.height = `${rect.height}px`;
   overlay.style.maxHeight = `${rect.height}px`;
@@ -265,6 +268,9 @@ export function useDialogVisualViewport(
     };
 
     const onCloseStart = () => {
+      // Sheets size themselves and stay open under a modal. A foreign close
+      // must not pin them — `bottom: auto` collapses their inset box.
+      if (!reposition) return;
       closingRef.current = true;
       freezeOverlayBox(overlay);
     };
