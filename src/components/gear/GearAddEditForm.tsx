@@ -24,6 +24,10 @@ import {
 
 export const GEAR_ADD_EDIT_FORM_ID = 'gear-add-edit-form';
 
+function addedAtForGearItem(existing: number | undefined): number {
+  return existing ?? Date.now();
+}
+
 type GearAddEditFormProps = {
   initial?: UserGearItem | null;
   defaultCategory?: GearCategory;
@@ -39,11 +43,6 @@ export default function GearAddEditForm({
 }: GearAddEditFormProps) {
   const modalContext = useContext(ModalContext);
   const isEditing = Boolean(initial);
-  const onSaveRef = useRef(onSave);
-
-  useEffect(() => {
-    onSaveRef.current = onSave;
-  }, [onSave]);
 
   const {
     control,
@@ -80,9 +79,9 @@ export default function GearAddEditForm({
       name: data.name,
       category: data.category,
       note: data.note.trim(),
-      addedAt: initial?.addedAt ?? Date.now(),
+      addedAt: addedAtForGearItem(initial?.addedAt),
     };
-    onSaveRef.current(
+    onSave(
       prepareGearItemForInventory(draft, existingItems, match?.name),
     );
   });

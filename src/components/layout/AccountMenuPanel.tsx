@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState } from 'react';
 
 import { routes } from '@/config/routes';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -67,10 +67,11 @@ export default function AccountMenuPanel({
   const mounted = useMounted();
   const pathname = usePathname();
   const [view, setView] = useState<AccountMenuView>('root');
-
-  useEffect(() => {
+  const [viewPathname, setViewPathname] = useState(pathname);
+  if (pathname !== viewPathname) {
+    setViewPathname(pathname);
     setView('root');
-  }, [pathname]);
+  }
 
   const isActive = (href: string, exact = false) =>
     exact ? pathname === href : pathname.startsWith(href);

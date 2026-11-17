@@ -1,19 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import {
   hasReviewPreviewCookie,
 } from '@/lib/memberReview/blockPreview';
 import { useSession } from '@/hooks/useSession';
 
+function subscribePreviewReview() {
+  return () => {};
+}
+
+function getPreviewReviewSnapshot() {
+  return hasReviewPreviewCookie(document.cookie);
+}
+
+function getServerPreviewReviewSnapshot() {
+  return false;
+}
+
 export function useCanInteract() {
   const { isLoggedIn, profile } = useSession();
-  const [previewReview, setPreviewReview] = useState(false);
-
-  useEffect(() => {
-    setPreviewReview(hasReviewPreviewCookie(document.cookie));
-  }, []);
+  const previewReview = useSyncExternalStore(
+    subscribePreviewReview,
+    getPreviewReviewSnapshot,
+    getServerPreviewReviewSnapshot,
+  );
 
   const isUnderReview = Boolean(profile?.under_review_at) || previewReview;
   return {

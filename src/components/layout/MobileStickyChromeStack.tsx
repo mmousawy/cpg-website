@@ -36,8 +36,10 @@ export default function MobileStickyChromeStack({
   const pendingRef = useRef<'nav' | 'action'>(showAction ? 'action' : 'nav');
   const navOpenRef = useRef(navOpen);
   const actionOpenRef = useRef(actionOpen);
-  navOpenRef.current = navOpen;
-  actionOpenRef.current = actionOpen;
+  useEffect(() => {
+    navOpenRef.current = navOpen;
+    actionOpenRef.current = actionOpen;
+  }, [navOpen, actionOpen]);
 
   const lastGridHeightRef = useRef(0);
   const [handoffMinHeight, setHandoffMinHeight] = useState<number | undefined>();

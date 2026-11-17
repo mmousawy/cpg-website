@@ -107,7 +107,9 @@ export default function SubmitToSharedAlbumContent({
   }, [user, supabase]);
 
   useEffect(() => {
-    fetchPhotos();
+    void (async () => {
+      await fetchPhotos();
+    })();
   }, [fetchPhotos]);
 
   const privatePhotoIds = useMemo(

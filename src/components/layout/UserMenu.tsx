@@ -18,6 +18,11 @@ export default function UserMenu() {
   const rootRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPathname, setMenuPathname] = useState(pathname);
+  if (pathname !== menuPathname) {
+    setMenuPathname(pathname);
+    setMenuOpen(false);
+  }
 
   const closeMenu = () => {
     setMenuOpen(false);
@@ -43,10 +48,6 @@ export default function UserMenu() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [menuOpen]);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   return (
     <div

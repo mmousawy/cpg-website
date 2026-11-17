@@ -55,7 +55,9 @@ export default function SignupBypassGenerator() {
   }, []);
 
   useEffect(() => {
-    loadTokens();
+    void (async () => {
+      await loadTokens();
+    })();
   }, [loadTokens]);
 
   const handleGenerate = async () => {

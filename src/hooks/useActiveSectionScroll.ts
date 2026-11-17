@@ -41,8 +41,11 @@ function isNearScrollEnd(): boolean {
 export function useActiveSectionScroll(sectionIds: string[]) {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const sectionIdsRef = useRef(sectionIds);
-  sectionIdsRef.current = sectionIds;
   const sectionKey = sectionIds.join(',');
+
+  useEffect(() => {
+    sectionIdsRef.current = sectionIds;
+  }, [sectionIds]);
 
   useEffect(() => {
     if (sectionIdsRef.current.length === 0) return;

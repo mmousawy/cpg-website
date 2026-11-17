@@ -60,6 +60,29 @@ export function useFollowList({ profileId, type, enabled }: UseFollowListOptions
   const offsetRef = useRef(0);
   const debouncedQuery = useDebounce(query, 300);
   const fetchIdRef = useRef(0);
+  const [prevEnabled, setPrevEnabled] = useState(enabled);
+  const [prevDebouncedQuery, setPrevDebouncedQuery] = useState(debouncedQuery);
+  const [prevProfileId, setPrevProfileId] = useState(profileId);
+  const [prevType, setPrevType] = useState(type);
+
+  if (
+    enabled !== prevEnabled
+    || debouncedQuery !== prevDebouncedQuery
+    || profileId !== prevProfileId
+    || type !== prevType
+  ) {
+    setPrevEnabled(enabled);
+    setPrevDebouncedQuery(debouncedQuery);
+    setPrevProfileId(profileId);
+    setPrevType(type);
+    if (!enabled) {
+      setQuery('');
+      setMembers([]);
+      setTotalCount(0);
+      setHasMore(false);
+      setError(null);
+    }
+  }
 
   const resetAndFetch = useCallback(async (searchQuery: string) => {
     if (!enabled) return;
@@ -134,16 +157,13 @@ export function useFollowList({ profileId, type, enabled }: UseFollowListOptions
 
   useEffect(() => {
     if (!enabled) {
-      setQuery('');
-      setMembers([]);
-      setTotalCount(0);
-      setHasMore(false);
-      setError(null);
       offsetRef.current = 0;
       return;
     }
 
-    resetAndFetch(debouncedQuery);
+    void (async () => {
+      await resetAndFetch(debouncedQuery);
+    })();
   }, [debouncedQuery, enabled, resetAndFetch]);
 
   const reset = useCallback(() => {

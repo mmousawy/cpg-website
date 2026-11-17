@@ -93,7 +93,9 @@ export default function Popover({
   const [autoResolvedAlign, setAutoResolvedAlign] = useState<ResolvedPopoverAlign>('left');
   const [autoResolvedSide, setAutoResolvedSide] = useState<ResolvedPopoverSide>('bottom');
   const onOpenChangeRef = useRef(onOpenChange);
-  onOpenChangeRef.current = onOpenChange;
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
 
   const isOpen = open ?? internalOpen;
   const resolvedAlign: ResolvedPopoverAlign = align === 'auto' ? autoResolvedAlign : align;

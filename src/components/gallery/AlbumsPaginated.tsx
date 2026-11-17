@@ -67,12 +67,14 @@ export default function AlbumsPaginated({
 
   // Restore extra pages after hydration so the first paint matches the server.
   useEffect(() => {
-    const cached = readCachedAlbums(pathname, initialSort);
-    if (!cached || cached.albums.length <= initialAlbums.length) return;
+    void (async () => {
+      const cached = readCachedAlbums(pathname, initialSort);
+      if (!cached || cached.albums.length <= initialAlbums.length) return;
 
-    const initialById = new Map(initialAlbums.map((album) => [album.id, album]));
-    setAlbums(cached.albums.map((album) => initialById.get(album.id) ?? album));
-    setHasMore(cached.hasMore);
+      const initialById = new Map(initialAlbums.map((album) => [album.id, album]));
+      setAlbums(cached.albums.map((album) => initialById.get(album.id) ?? album));
+      setHasMore(cached.hasMore);
+    })();
   }, [pathname, initialSort, initialAlbums]);
 
   // Persist state to sessionStorage when albums change

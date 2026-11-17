@@ -56,7 +56,9 @@ export default function AdminStatsClient() {
   }, [range]);
 
   useEffect(() => {
-    load();
+    void (async () => {
+      await load();
+    })();
   }, [load]);
 
   if (isLoading && !overview) {

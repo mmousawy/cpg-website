@@ -37,12 +37,14 @@ export function useMentionDirectory(texts: string[]) {
   }, [texts]);
   const key = nicknames.join(',');
   const [profiles, setProfiles] = useState<Map<string, MentionProfile>>(new Map());
+  const [profilesKey, setProfilesKey] = useState(key);
+  if (profilesKey !== key) {
+    setProfilesKey(key);
+    if (!key) setProfiles(new Map());
+  }
 
   useEffect(() => {
-    if (!key) {
-      setProfiles(new Map());
-      return;
-    }
+    if (!key) return;
     let cancelled = false;
     fetch(`/api/members/mention-directory?nicknames=${encodeURIComponent(key)}`)
       .then(async (response) => {

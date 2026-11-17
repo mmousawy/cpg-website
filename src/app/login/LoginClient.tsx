@@ -34,9 +34,11 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (queryError === 'staging_no_signup') {
-      setError('Sign-up is invite-only on staging. Use a bypass link to create an account.');
-    }
+    void (async () => {
+      if (queryError === 'staging_no_signup') {
+        setError('Sign-up is invite-only on staging. Use a bypass link to create an account.');
+      }
+    })();
   }, [queryError]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {

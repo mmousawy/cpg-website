@@ -57,9 +57,11 @@ export function ManageProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      refreshCounts();
-    }
+    if (!user) return;
+    // Nested async so count updates stay off the synchronous effect body.
+    void (async () => {
+      await refreshCounts();
+    })();
   }, [user, refreshCounts]);
 
   return (

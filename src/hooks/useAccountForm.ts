@@ -238,6 +238,7 @@ export function useAccountForm() {
   });
 
   // Watch all form values for custom dirty tracking
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() cannot be memoized safely
   const currentValues = watch();
 
   // Check if avatar has pending changes

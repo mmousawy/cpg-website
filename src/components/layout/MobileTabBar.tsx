@@ -122,6 +122,11 @@ export default function MobileTabBar() {
   const tabListRef = useRef<HTMLDivElement>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [pendingTab, setPendingTab] = useState<TabId | null>(null);
+  const [pendingPathname, setPendingPathname] = useState(pathname);
+  if (pathname !== pendingPathname) {
+    setPendingPathname(pathname);
+    setPendingTab(null);
+  }
   const [indicator, setIndicator] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [indicatorReady, setIndicatorReady] = useState(false);
 
@@ -172,10 +177,6 @@ export default function MobileTabBar() {
       setAccountOpen(false);
     });
   }, []);
-
-  useEffect(() => {
-    setPendingTab(null);
-  }, [pathname]);
 
   useEffect(() => {
     if (!accountOpen) return;

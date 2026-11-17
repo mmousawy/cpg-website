@@ -90,8 +90,13 @@ export function useFormChanges<T extends Record<string, unknown>>(
       if (!eq) changeCount++;
     }
 
-    // Add extra change flags
-    const extraChangeCount = extraChanges.filter(Boolean).length;
+    // extraChangesKey is the stable stand-in for the rest array.
+    let extraChangeCount = 0;
+    if (extraChangesKey) {
+      for (const flag of extraChangesKey.split(',')) {
+        if (flag === 'true') extraChangeCount++;
+      }
+    }
     changeCount += extraChangeCount;
 
     return { hasChanges: changeCount > 0, changeCount };

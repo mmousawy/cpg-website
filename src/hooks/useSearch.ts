@@ -26,18 +26,27 @@ export function useSearch(options: UseSearchOptions = {}) {
   const [lastSearchedQuery, setLastSearchedQuery] = useState('');
 
   const debouncedQuery = useDebounce(query, debounceMs);
+  const searchKey = `${debouncedQuery}\0${minQueryLength}`;
+  const [trackedSearchKey, setTrackedSearchKey] = useState(searchKey);
+  const searchReady = !!debouncedQuery && debouncedQuery.trim().length >= minQueryLength;
 
-  useEffect(() => {
-    // Early exit for short queries
-    if (!debouncedQuery || debouncedQuery.trim().length < minQueryLength) {
+  if (searchKey !== trackedSearchKey) {
+    setTrackedSearchKey(searchKey);
+    if (!searchReady) {
       setResults([]);
       setLastSearchedQuery('');
+    }
+  }
+
+  useEffect(() => {
+    if (!debouncedQuery || debouncedQuery.trim().length < minQueryLength) {
       return;
     }
 
     const controller = new AbortController();
 
     const performSearch = async () => {
+      setError(null);
       try {
         const params = new URLSearchParams({
           q: debouncedQuery.trim(),
@@ -71,8 +80,7 @@ export function useSearch(options: UseSearchOptions = {}) {
       }
     };
 
-    setError(null);
-    performSearch();
+    void performSearch();
 
     // Cleanup: abort pending requests when query changes
     return () => {

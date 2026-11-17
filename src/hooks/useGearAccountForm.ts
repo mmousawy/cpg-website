@@ -37,6 +37,7 @@ export function useGearAccountForm({
   });
 
   const { reset, watch, handleSubmit } = form;
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() cannot be memoized safely
   const values = watch();
 
   useEffect(() => {

@@ -242,9 +242,11 @@ export function RichTextEditor({
   const [sourceView, setSourceView] = useState(false);
 
   const onImageUploadRef = useRef(onImageUpload);
-  onImageUploadRef.current = onImageUpload;
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    onImageUploadRef.current = onImageUpload;
+    onChangeRef.current = onChange;
+  }, [onChange, onImageUpload]);
   const uploadingRef = useRef(new Set<string>());
 
   const uploadBase64Images = useCallback(() => {

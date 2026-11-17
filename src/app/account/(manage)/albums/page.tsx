@@ -87,6 +87,7 @@ export default function AlbumsPage() {
   const { data: sectionCounts } = useAlbumSectionCounts(user?.id);
 
   const queryClient = useQueryClient();
+  const userId = user?.id;
 
   const navigateToAlbum = useCallback(
     (
@@ -95,11 +96,11 @@ export default function AlbumsPage() {
       ownerNickname?: string | null,
     ) => {
       setOpeningAlbumId(album.id);
-      if (user?.id) {
+      if (userId) {
         if (ownerNickname) {
-          void prefetchSharedAlbum(queryClient, user.id, ownerNickname, album.slug);
+          void prefetchSharedAlbum(queryClient, userId, ownerNickname, album.slug);
         } else {
-          void prefetchOwnedAlbum(queryClient, user.id, album.slug);
+          void prefetchOwnedAlbum(queryClient, userId, album.slug);
         }
         void prefetchAlbumPhotos(queryClient, album.id);
       }
@@ -108,14 +109,16 @@ export default function AlbumsPage() {
         router.push(href);
       });
     },
-    [user?.id, queryClient, router],
+    [userId, queryClient, router],
   );
 
   // Clear opening state when returning to the list (browser back can restore stale state)
   useEffect(() => {
-    if (pathname === '/account/albums') {
-      setOpeningAlbumId(null);
-    }
+    void (async () => {
+      if (pathname === '/account/albums') {
+        setOpeningAlbumId(null);
+      }
+    })();
   }, [pathname]);
 
   // React Query hooks — each section loads lazily when expanded

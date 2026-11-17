@@ -37,8 +37,10 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(GUEST_NICKNAME_KEY(challengeId));
-    if (stored) setGuestNickname(stored);
+    void (async () => {
+      const stored = localStorage.getItem(GUEST_NICKNAME_KEY(challengeId));
+      if (stored) setGuestNickname(stored);
+    })();
   }, [challengeId]);
 
   const myDraw = draws.find(

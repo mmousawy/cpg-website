@@ -104,32 +104,34 @@ function AdminChallengeForm() {
 
   // Load existing challenge data
   useEffect(() => {
-    if (isNewChallenge || !existingChallenge) return;
+    void (async () => {
+      if (isNewChallenge || !existingChallenge) return;
 
-    setTitle(existingChallenge.title || '');
-    setSlug(existingChallenge.slug || '');
-    setPrompt(existingChallenge.prompt || '');
-    setStartsAt(existingChallenge.starts_at?.split('T')[0] || '');
-    setEndsAt(existingChallenge.ends_at?.split('T')[0] || '');
-    setIsActive(existingChallenge.is_active);
-    setHasColorDraw(existingChallenge.has_color_draw ?? false);
-    setColorDrawGuestKey(existingChallenge.color_draw_guest_key ?? '');
-    setMaxPhotosPerUser(existingChallenge.max_photos_per_user?.toString() || '');
-    setCoverImage(existingChallenge.cover_image_url || '');
-    setCoverImagePreview(existingChallenge.cover_image_url || null);
+      setTitle(existingChallenge.title || '');
+      setSlug(existingChallenge.slug || '');
+      setPrompt(existingChallenge.prompt || '');
+      setStartsAt(existingChallenge.starts_at?.split('T')[0] || '');
+      setEndsAt(existingChallenge.ends_at?.split('T')[0] || '');
+      setIsActive(existingChallenge.is_active);
+      setHasColorDraw(existingChallenge.has_color_draw ?? false);
+      setColorDrawGuestKey(existingChallenge.color_draw_guest_key ?? '');
+      setMaxPhotosPerUser(existingChallenge.max_photos_per_user?.toString() || '');
+      setCoverImage(existingChallenge.cover_image_url || '');
+      setCoverImagePreview(existingChallenge.cover_image_url || null);
 
-    setSavedFormValues({
-      title: existingChallenge.title || '',
-      slug: existingChallenge.slug || '',
-      prompt: existingChallenge.prompt || '',
-      startsAt: existingChallenge.starts_at?.split('T')[0] || '',
-      endsAt: existingChallenge.ends_at?.split('T')[0] || '',
-      isActive: existingChallenge.is_active,
-      hasColorDraw: existingChallenge.has_color_draw ?? false,
-      colorDrawGuestKey: existingChallenge.color_draw_guest_key ?? '',
-      maxPhotosPerUser: existingChallenge.max_photos_per_user?.toString() || '',
-      coverImage: existingChallenge.cover_image_url || '',
-    });
+      setSavedFormValues({
+        title: existingChallenge.title || '',
+        slug: existingChallenge.slug || '',
+        prompt: existingChallenge.prompt || '',
+        startsAt: existingChallenge.starts_at?.split('T')[0] || '',
+        endsAt: existingChallenge.ends_at?.split('T')[0] || '',
+        isActive: existingChallenge.is_active,
+        hasColorDraw: existingChallenge.has_color_draw ?? false,
+        colorDrawGuestKey: existingChallenge.color_draw_guest_key ?? '',
+        maxPhotosPerUser: existingChallenge.max_photos_per_user?.toString() || '',
+        coverImage: existingChallenge.cover_image_url || '',
+      });
+    })();
   }, [existingChallenge, isNewChallenge]);
 
   // Auto-generate slug from title

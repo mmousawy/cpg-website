@@ -24,6 +24,7 @@ export default function ScrappyCameraIllustration({
   }
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element -- decorative illustration with an onError fallback
     <img
       key={src}
       src={src}

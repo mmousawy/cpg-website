@@ -37,31 +37,33 @@ export default function AddRsvpModal({ eventId, onAdded, onClose }: AddRsvpModal
 
   // Debounced member search
   useEffect(() => {
-    if (selectedMember) return;
+    void (async () => {
+      if (selectedMember) return;
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (!query.trim()) {
-      setMembers([]);
-      return;
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setIsSearching(true);
-
-      try {
-        const res = await fetch(
-          `/api/admin/search-members?q=${encodeURIComponent(query)}&event_id=${eventId}`,
-        );
-        const data = await res.json() as { members: MemberResult[] };
-
-        setMembers(data.members ?? []);
-      } catch {
+      if (!query.trim()) {
         setMembers([]);
-      } finally {
-        setIsSearching(false);
+        return;
       }
-    }, 300);
+
+      debounceRef.current = setTimeout(async () => {
+        setIsSearching(true);
+
+        try {
+          const res = await fetch(
+            `/api/admin/search-members?q=${encodeURIComponent(query)}&event_id=${eventId}`,
+          );
+          const data = await res.json() as { members: MemberResult[] };
+
+          setMembers(data.members ?? []);
+        } catch {
+          setMembers([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 300);
+    })();
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);

@@ -92,7 +92,9 @@ export default function MemberStatsExplorer({ preferenceCharts }: MemberStatsExp
   }, [search, filter, sortBy, sortOrder, page]);
 
   useEffect(() => {
-    fetchMembers();
+    void (async () => {
+      await fetchMembers();
+    })();
   }, [fetchMembers]);
 
   useEffect(() => {

@@ -106,8 +106,8 @@ export default function ProfileBannerCropper({
   const [containerWidth, setContainerWidth] = useState(0);
   const [isApplying, setIsApplying] = useState(false);
   const [isCropperReady, setIsCropperReady] = useState(false);
-  const hasInitializedZoom = useRef(false);
-  const prevCropWidthRef = useRef(0);
+  const [prevImageSrc, setPrevImageSrc] = useState(imageSrc);
+  const [appliedCropWidth, setAppliedCropWidth] = useState(0);
   const cropperAreaRef = useRef<HTMLDivElement>(null);
 
   const cropSize = useMemo(
@@ -131,16 +131,35 @@ export default function ProfileBannerCropper({
   const handleCancelRef = useRef(onCancel);
   const handleDismissRef = useRef(onDismiss);
 
-  useEffect(() => {
-    hasInitializedZoom.current = false;
-    prevCropWidthRef.current = 0;
+  if (imageSrc !== prevImageSrc) {
+    setPrevImageSrc(imageSrc);
     setMediaSize(null);
     setContainerWidth(0);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setMinZoom(1);
     setIsCropperReady(false);
-  }, [imageSrc]);
+    setAppliedCropWidth(0);
+  } else if (mediaSize && cropSize) {
+    const effectiveMedia = getEffectiveMediaSize(mediaSize, cropSize.width);
+    const widthFitZoom = getWidthFitZoom(effectiveMedia, cropSize);
+    const widthChanged = appliedCropWidth !== cropSize.width;
+    const minZoomChanged = Math.abs(minZoom - widthFitZoom) > CROPPER_ZOOM_EPSILON;
+
+    if (!isCropperReady) {
+      setAppliedCropWidth(cropSize.width);
+      if (minZoomChanged) setMinZoom(widthFitZoom);
+      setZoom(widthFitZoom);
+      setCrop({ x: 0, y: 0 });
+      setIsCropperReady(true);
+    } else if (widthChanged || minZoomChanged) {
+      if (minZoomChanged) setMinZoom(widthFitZoom);
+      if (widthChanged) {
+        setAppliedCropWidth(cropSize.width);
+        if (zoom < widthFitZoom) setZoom(widthFitZoom);
+      }
+    }
+  }
 
   const croppedAreaPixels = useMemo(() => {
     if (!mediaSize || !cropSize) {
@@ -177,33 +196,6 @@ export default function ProfileBannerCropper({
 
     return () => observer.disconnect();
   }, [imageSrc]);
-
-  useLayoutEffect(() => {
-    if (!mediaSize || !cropSize) {
-      return;
-    }
-
-    const effectiveMedia = getEffectiveMediaSize(mediaSize, cropSize.width);
-    const widthFitZoom = getWidthFitZoom(effectiveMedia, cropSize);
-
-    setMinZoom((currentMinZoom) => (
-      Math.abs(currentMinZoom - widthFitZoom) <= CROPPER_ZOOM_EPSILON ? currentMinZoom : widthFitZoom
-    ));
-
-    if (!hasInitializedZoom.current) {
-      hasInitializedZoom.current = true;
-      prevCropWidthRef.current = cropSize.width;
-      setZoom(widthFitZoom);
-      setCrop({ x: 0, y: 0 });
-      setIsCropperReady(true);
-      return;
-    }
-
-    if (prevCropWidthRef.current !== cropSize.width) {
-      prevCropWidthRef.current = cropSize.width;
-      setZoom((currentZoom) => Math.max(currentZoom, widthFitZoom));
-    }
-  }, [mediaSize, cropSize]);
 
   const handleCropChange = useCallback((position: Point) => {
     if (!mediaSize || !cropSize) {

@@ -155,27 +155,31 @@ function PhotosPageContent() {
     });
   }, []);
 
+  const userId = user?.id;
+
   const applyLibraryFilters = useCallback(
     (filters: PhotoLibraryFilters) => {
       setLibraryFilters(filters);
-      if (user?.id) {
-        persistPhotoLibraryFilters(user.id, filters);
+      if (userId) {
+        persistPhotoLibraryFilters(userId, filters);
       }
     },
-    [user?.id],
+    [userId],
   );
 
   const clearLibraryFilters = useCallback(() => {
     setLibraryFilters(EMPTY_PHOTO_LIBRARY_FILTERS);
-    if (user?.id) {
-      clearPersistedPhotoLibraryFilters(user.id);
+    if (userId) {
+      clearPersistedPhotoLibraryFilters(userId);
     }
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!user?.id) return;
-    setLibraryFilters(loadPersistedPhotoLibraryFilters(user.id));
-  }, [user?.id]);
+    void (async () => {
+      if (!userId) return;
+      setLibraryFilters(loadPersistedPhotoLibraryFilters(userId));
+    })();
+  }, [userId]);
 
   const ensureDeepLinkSelection = useCallback((photoId: string) => {
     setSelectedPhotoIds(new Set([photoId]));

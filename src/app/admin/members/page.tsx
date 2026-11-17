@@ -62,7 +62,9 @@ export default function AdminMembersPage() {
   }, []);
 
   useEffect(() => {
-    void fetchMembers();
+    void (async () => {
+      await fetchMembers();
+    })();
   }, [fetchMembers]);
 
   const handleAction = async (action: 'suspend' | 'unsuspend' | 'delete' | 'cancel-deletion', member: AdminMember) => {

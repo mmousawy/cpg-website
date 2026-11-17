@@ -54,5 +54,5 @@ export function useStoryboardCanvasHashScroll(
     return () => {
       document.removeEventListener('storyboard-scroll-to', onJump);
     };
-  }, [hash, scopeKey]);
+  }, [hash, scopeKey, scrollRef]);
 }

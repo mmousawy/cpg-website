@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.49.3](https://github.com/mmousawy/cpg-website/compare/v1.49.2...v1.49.3) (2026-11-17)
+
+
+### ♻️ Refactoring
+
+* improve accessibility and styling in MobileAccountMenu ([ff5a5db](https://github.com/mmousawy/cpg-website/commit/ff5a5dbfad5051029e8ff6b2993d58ad2680f194))
+
 ## [1.49.2](https://github.com/mmousawy/cpg-website/compare/v1.49.1...v1.49.2) (2026-11-17)
 
 

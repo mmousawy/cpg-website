@@ -92,13 +92,19 @@ export default function StatsTimeSeriesChart({
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const [isZoomLoading, setIsZoomLoading] = useState(false);
   const dragRef = useRef<{ start: number } | null>(null);
-
-  useEffect(() => {
+  const [trackedRange, setTrackedRange] = useState(range);
+  const [trackedBucket, setTrackedBucket] = useState(baseBucket);
+  if (range !== trackedRange || baseBucket !== trackedBucket) {
+    setTrackedRange(range);
+    setTrackedBucket(baseBucket);
     setZoomPoints(null);
     setDisplayBucket(baseBucket);
     setIndexZoom(null);
     setZoomHistory([]);
     setSelection(null);
+  }
+
+  useEffect(() => {
     dragRef.current = null;
   }, [range, baseBucket]);
 
