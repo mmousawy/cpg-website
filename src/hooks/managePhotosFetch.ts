@@ -201,6 +201,21 @@ async function collectExcludePhotoIdSets(
   userId: string,
   meta: PhotoLibraryMetaFilters,
 ): Promise<string[][]> {
+  const key = `${userId}:${meta.albumId ?? ''}:${meta.tag ?? ''}:${meta.challengeId ?? ''}`;
+  const cached = excludePhotoIdSetsCache.get(key);
+  if (cached) return cached;
+
+  const pending = collectExcludePhotoIdSetsUncached(userId, meta);
+  excludePhotoIdSetsCache.set(key, pending);
+  return pending;
+}
+
+const excludePhotoIdSetsCache = new Map<string, Promise<string[][]>>();
+
+async function collectExcludePhotoIdSetsUncached(
+  userId: string,
+  meta: PhotoLibraryMetaFilters,
+): Promise<string[][]> {
   const sets: string[][] = [];
 
   if (meta.albumId === NOT_IN_ANY_ALBUM) {

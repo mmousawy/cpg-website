@@ -81,7 +81,7 @@ function RsvpConfirmedContent({ email }: { email: string | undefined }) {
           size="sm"
           iconRight={(
             <ArrowOutwardSVG
-              className="size-[18px] fill-current"
+              className="size-4.5 fill-current"
               aria-hidden
             />
           )}

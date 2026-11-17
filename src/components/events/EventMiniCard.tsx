@@ -6,6 +6,10 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LinkSVG from 'public/icons/link.svg';
 import BlurImage from '../shared/BlurImage';
 
+function eventCardNow(): number {
+  return Date.now();
+}
+
 interface EventMiniCardProps {
   title: string;
   coverImageUrl?: string | null;
@@ -29,7 +33,7 @@ export default function EventMiniCard({
   publicUrl,
   className = '',
 }: EventMiniCardProps) {
-  const formattedDate = date ? formatEventDate(date, { includeYear: true, now: Date.now() }) : null;
+  const formattedDate = date ? formatEventDate(date, { includeYear: true, now: eventCardNow() }) : null;
 
   return (
     <div

@@ -62,7 +62,7 @@ export default function PhotoPageSkeleton({ variant = 'page' }: { variant?: 'pag
 
   const photoColumnClass = isOverlay
     ? 'md:flex-1 md:sticky md:self-start md:top-4 md:flex md:h-[calc(100vh-4.5rem)] md:flex-col'
-    : 'md:flex-1 md:sticky md:self-start md:top-[90px] md:flex md:h-[calc(100vh-106px)] md:flex-col lg:top-[106px] lg:h-[calc(100vh-138px)]';
+    : 'md:flex-1 md:sticky md:self-start md:top-22.5 md:flex md:h-[calc(100vh-106px)] md:flex-col lg:top-26.5 lg:h-[calc(100vh-138px)]';
 
   const sidebarClass = isOverlay
     ? 'md:h-[calc(100vh-4.5rem)]'

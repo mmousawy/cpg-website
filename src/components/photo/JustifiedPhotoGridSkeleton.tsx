@@ -14,7 +14,7 @@ const ROW_PATTERNS: number[][] = [
 function SkeletonCell({ flexGrow }: { flexGrow: number }) {
   return (
     <div
-      className="h-[140px] animate-pulse rounded-sm bg-background-medium sm:h-[180px] md:h-[220px]"
+      className="h-35 animate-pulse rounded-sm bg-background-medium sm:h-45 md:h-55"
       style={{ flexGrow, flexBasis: 0 }}
     />
   );

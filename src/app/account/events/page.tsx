@@ -1,9 +1,7 @@
-'use client';
-
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import Link from 'next/link';
-import { startTransition, useEffect, useState } from 'react';
+import { redirect } from 'next/navigation';
 
 import EventsSectionHeading from '@/components/events/EventsSectionHeading';
 import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
@@ -15,11 +13,11 @@ import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import { routes } from '@/config/routes';
 import type { Tables } from '@/database.types';
-import { useAuth } from '@/hooks/useAuth';
-import { useSupabase } from '@/hooks/useSupabase';
 import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { isEventPast } from '@/lib/events/status';
 import { formatEventLocation, getGoogleMapsSearchUrl } from '@/utils/formatLocation';
+import { getUserFromClaims } from '@/utils/supabase/claimsUser';
+import { createClient } from '@/utils/supabase/server';
 import { THUMBNAIL_IMAGE_QUALITY, getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -30,84 +28,92 @@ import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 
+/** Auth + cookie RSVP load; same as other dynamic account pages. */
+export const instant = false;
+
+type EventFields = Pick<Tables<'events'>, 'id' | 'title' | 'slug' | 'date' | 'time' | 'location' | 'cover_image' | 'description'>;
+
 // RSVP with joined event data - use non-null date since we filter for valid events
 type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'> & {
-  events: Omit<Pick<Tables<'events'>, 'id' | 'title' | 'slug' | 'date' | 'time' | 'location' | 'cover_image' | 'description'>, 'date'> & {
-    date: string  // Non-null since we only show events with valid dates
+  events: Omit<EventFields, 'date'> & {
+    date: string
   }
 }
 
-export default function MyEventsPage() {
-  // User is guaranteed by ProtectedRoute layout
-  const { user } = useAuth();
-  const supabase = useSupabase();
+function readServerNow(): number {
+  return Date.now();
+}
 
-  const [rsvps, setRsvps] = useState<RSVP[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [now, setNow] = useState<number | null>(null);
+function toRsvp(row: {
+  id: number
+  uuid: string | null
+  confirmed_at: string | null
+  canceled_at: string | null
+  attended_at: string | null
+  created_at: string | null
+  events: EventFields | EventFields[] | null
+}): RSVP | null {
+  const event = Array.isArray(row.events) ? row.events[0] : row.events;
+  if (!event?.date) return null;
+  return {
+    id: row.id,
+    uuid: row.uuid,
+    confirmed_at: row.confirmed_at,
+    canceled_at: row.canceled_at,
+    attended_at: row.attended_at,
+    created_at: row.created_at,
+    events: { ...event, date: event.date },
+  };
+}
 
-  useEffect(() => {
-    startTransition(() => {
-      setNow(Date.now());
-    });
-  }, []);
+export default async function MyEventsPage() {
+  const supabase = await createClient();
+  const user = await getUserFromClaims(supabase);
 
-  const sevenDaysAgo = now != null ? now - 7 * 24 * 60 * 60 * 1000 : undefined;
+  if (!user) {
+    redirect('/login?redirectTo=/account/events');
+  }
 
-  useEffect(() => {
-    // User is guaranteed by ProtectedRoute layout
-    if (!user) return;
+  const serverNow = readServerNow();
+  const { data, error } = await supabase
+    .from('events_rsvps')
+    .select(`
+      id,
+      uuid,
+      confirmed_at,
+      canceled_at,
+      attended_at,
+      created_at,
+      events (
+        id,
+        title,
+        slug,
+        date,
+        time,
+        location,
+        cover_image,
+        description
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
 
-    const loadRSVPs = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('events_rsvps')
-          .select(`
-            id,
-            uuid,
-            confirmed_at,
-            canceled_at,
-            attended_at,
-            created_at,
-            events (
-              id,
-              title,
-              slug,
-              date,
-              time,
-              location,
-              cover_image,
-              description
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+  if (error) {
+    console.error('Error loading RSVPs:', error);
+  }
 
-        if (error) {
-          console.error('Error loading RSVPs:', error);
-        } else {
-          setRsvps((data as unknown as RSVP[]) || []);
-        }
-      } catch (err) {
-        console.error('Unexpected error loading RSVPs:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadRSVPs();
-  }, [user, supabase]);
+  const rsvps = (data ?? []).flatMap((row) => {
+    const rsvp = toRsvp(row);
+    return rsvp ? [rsvp] : [];
+  });
+  const sevenDaysAgo = serverNow - 7 * 24 * 60 * 60 * 1000;
 
   const upcomingRSVPs = rsvps
-    .filter(r => now != null && !r.canceled_at && r.events && !isEventPast(r.events.date, now, r.events.time))
+    .filter(r => !r.canceled_at && !isEventPast(r.events.date, serverNow, r.events.time))
     .sort((a, b) => getDateSortValue(a.events.date) - getDateSortValue(b.events.date));
 
   const pastRSVPs = rsvps
-    .filter(r => {
-      if (now == null || !r.events) return false;
-      if (r.canceled_at) return true;
-      return isEventPast(r.events.date, now, r.events.time);
-    })
+    .filter(r => r.canceled_at || isEventPast(r.events.date, serverNow, r.events.time))
     .sort((a, b) => getDateSortValue(b.events.date) - getDateSortValue(a.events.date));
 
   return (
@@ -125,27 +131,6 @@ export default function MyEventsPage() {
         }
       />
 
-      {/* No-JS fallback */}
-      <noscript>
-        <style>
-          {'.js-loading { display: none !important; }'}
-        </style>
-        <div
-          className="text-center py-12"
-        >
-          <p
-            className="text-lg font-medium mb-2"
-          >
-            JavaScript required
-          </p>
-          <p
-            className="text-foreground/80"
-          >
-            Please enable JavaScript to view your event registrations.
-          </p>
-        </div>
-      </noscript>
-
       <div
         className="space-y-6 sm:space-y-10"
       >
@@ -156,16 +141,14 @@ export default function MyEventsPage() {
           <div
             className="grid gap-3 sm:gap-6"
           >
-            {isLoading ? (
-              <div
-                className="text-center animate-pulse js-loading py-12"
-              >
-                <p
-                  className="text-foreground/50"
-                >
-                  Loading your events...
-                </p>
-              </div>
+            {error ? (
+              <EmptyState
+                icon={<SadSVG
+                  className="size-10 fill-foreground/80 inline-block"
+                />}
+                title="Could not load your events"
+                description="Refresh the page to try again."
+              />
             ) : upcomingRSVPs.length === 0 ? (
               <EmptyState
                 icon={<SadSVG
@@ -190,7 +173,7 @@ export default function MyEventsPage() {
                 <RsvpEventCard
                   key={rsvp.id}
                   rsvp={rsvp}
-                  serverNow={now ?? Date.now()}
+                  serverNow={serverNow}
                   sevenDaysAgo={sevenDaysAgo}
                 />
               ))
@@ -210,7 +193,7 @@ export default function MyEventsPage() {
                 <RsvpEventCard
                   key={rsvp.id}
                   rsvp={rsvp}
-                  serverNow={now ?? Date.now()}
+                  serverNow={serverNow}
                   sevenDaysAgo={sevenDaysAgo}
                 />
               ))}

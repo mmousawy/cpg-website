@@ -30,10 +30,6 @@ export function useViewTracker(type: ViewEntityType, id: string) {
         setViewCount(count);
       }
     });
-
-    return () => {
-      trackedKey.current = null;
-    };
   }, [type, id, pathname]);
 
   return viewCount;

@@ -55,7 +55,7 @@ export default function SearchResults({
   if (isLoading) {
     return (
       <div
-        className="flex items-center gap-3 rounded-lg border border-border-color-strong p-3 min-h-[90px] bg-background-light"
+        className="flex items-center gap-3 rounded-lg border border-border-color-strong p-3 min-h-22.5 bg-background-light"
       >
         <div
           className="flex items-center justify-center size-16 shrink-0 animate-pulse rounded bg-background"
@@ -82,7 +82,7 @@ export default function SearchResults({
   if (isEmpty) {
     return (
       <div
-        className="flex flex-col items-center justify-center min-h-[90px] text-center"
+        className="flex flex-col items-center justify-center min-h-22.5 text-center"
       >
         <p
           className="text-foreground/60"

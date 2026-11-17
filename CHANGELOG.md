@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.49.2](https://github.com/mmousawy/cpg-website/compare/v1.49.1...v1.49.2) (2026-11-17)
+
+
+### ♻️ Refactoring
+
+* enhance proxy and event handling logic ([d021258](https://github.com/mmousawy/cpg-website/commit/d021258e2be2ee156c53383b76748f5c620a47dd))
+* standardize date handling in event components ([bcc7317](https://github.com/mmousawy/cpg-website/commit/bcc7317cde57ac065fcd8c298b79208ca6b768fd))
+
 ## [1.49.1](https://github.com/mmousawy/cpg-website/compare/v1.49.0...v1.49.1) (2026-11-15)
 
 

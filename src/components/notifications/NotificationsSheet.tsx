@@ -5,6 +5,7 @@ import { useLayoutEffect, useState } from 'react';
 
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
+import { useAutoMarkNotificationsSeen } from '@/hooks/useAutoMarkNotificationsSeen';
 import { useMounted } from '@/hooks/useMounted';
 import { useNotifications } from '@/hooks/useNotifications';
 import { createMockNotifications } from '@/lib/actions/notifications';
@@ -17,6 +18,11 @@ type NotificationsSheetProps = {
   isOpen: boolean;
   onClose: () => void;
 };
+
+function MarkSeenForOpenList() {
+  useAutoMarkNotificationsSeen();
+  return null;
+}
 
 export function NotificationsSheet({ isOpen, onClose }: NotificationsSheetProps) {
   const { user } = useAuth();
@@ -70,6 +76,7 @@ export function NotificationsSheet({ isOpen, onClose }: NotificationsSheetProps)
         <div
           className="flex-1 overflow-y-auto"
         >
+          {isOpen ? <MarkSeenForOpenList /> : null}
           {isLoading ? (
             <div
               className="flex flex-col items-center justify-center h-full py-12"

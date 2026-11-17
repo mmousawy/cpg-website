@@ -10,12 +10,13 @@ import {
 } from '@/components/photo/PhotoNavigationContext';
 import type { SiblingPhoto } from '@/components/photo/PhotoPageContent';
 import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
-import BlurImage from '@/components/shared/BlurImage';
 import { useHasHover } from '@/hooks/useHasHover';
 import { useHorizontalSwipe } from '@/hooks/useHorizontalSwipe';
 import clsx from 'clsx';
 import { getContainedPhotoSize, measureAlbumPhotoMaxHeightPx } from '@/utils/photoContainSize';
 import { getPhotoCollectionFallbackHref } from '@/utils/photoOverviewNavigation';
+import BlurImage from '@/components/shared/BlurImage';
+import { preloadPhoto } from '@/utils/preloadPhoto';
 import { prefersReducedMotion } from '@/utils/reduceMotion';
 import { PhotoStageIdleRevealProvider } from '@/context/PhotoStageIdleRevealContext';
 import { usePathname } from 'next/navigation';
@@ -50,6 +51,24 @@ function readTranslateX(element: HTMLElement | null): number {
 }
 
 const SWIPE_SNAP_MS = 250;
+
+const PHOTO_COVER_CLASS = 'h-full w-full [--photo-max-h:calc(100vh-162px)] sm:[--photo-max-h:calc(100vh-180px)] md:[--photo-max-h:calc(100vh-172px)] lg:[--photo-max-h:calc(100vh-218px)]';
+
+function PhotoSwipeCover({ photo }: { photo: SiblingPhoto }) {
+  return (
+    <BlurImage
+      src={photo.url}
+      blurhash={photo.blurhash}
+      width={photo.width}
+      height={photo.height}
+      alt=""
+      contain
+      unoptimized
+      className={PHOTO_COVER_CLASS}
+    />
+  );
+}
+
 const SWIPE_RUBBER_BAND = 0.32;
 /** Background visible between the current photo and the one sliding in. */
 const SWIPE_GAP_PX = 16;
@@ -69,7 +88,6 @@ function PhotoFilmstripShellInner({
   const showFilmstrip = siblingPhotos.length > 1;
   const [peekShortId, setPeekShortId] = useState<string | null>(null);
   const [peekOrigin, setPeekOrigin] = useState<'left' | 'right'>('right');
-  const [swipeLocked, setSwipeLocked] = useState(false);
   // Bumped when a committed swipe snap finishes so the height animation can
   // start on a full-frame photo instead of shrinking a mid-slide peek.
   const [swipeRestTick, setSwipeRestTick] = useState(0);
@@ -86,6 +104,8 @@ function PhotoFilmstripShellInner({
     nextIndex,
     hasPrev,
     hasNext,
+    getNeighbor,
+    getHeadingShortId,
     goToPrevPhoto,
     goToNextPhoto,
   } = useCollectionPhotoNavigation({
@@ -111,13 +131,20 @@ function PhotoFilmstripShellInner({
   const idleTargetRef = photoContainerRef;
   const swipeLayerRef = useRef<HTMLDivElement>(null);
   const contentScaleRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const lastPhotoHeightRef = useRef<number | null>(null);
   const heightAnimationRef = useRef<{ targetHeight: number; stop: () => void } | null>(null);
   const swipeOffsetRef = useRef(0);
   const swipeBaseRef = useRef(0);
   const swipeSettleRef = useRef<(() => void) | null>(null);
   const peekDirRef = useRef<'left' | 'right' | null>(null);
+  /** True from finger down until the swipe snaps or cancels. */
+  const gestureActiveRef = useRef(false);
+  const goToNextRef = useRef(goToNextPhoto);
+  const goToPrevRef = useRef(goToPrevPhoto);
+  useEffect(() => {
+    goToNextRef.current = goToNextPhoto;
+    goToPrevRef.current = goToPrevPhoto;
+  }, [goToNextPhoto, goToPrevPhoto]);
 
   const applySwipeTransforms = useCallback((dx: number) => {
     swipeOffsetRef.current = dx;
@@ -141,7 +168,10 @@ function PhotoFilmstripShellInner({
     peekDirRef.current = null;
     const swipeEl = swipeLayerRef.current;
     if (swipeEl) {
-      swipeEl.style.transition = '';
+      swipeEl.style.transition = 'none';
+      // Flush the snap transition. Otherwise a previous-photo swipe (positive
+      // translate) animates back to center and the cached image fades again.
+      void swipeEl.offsetWidth;
       swipeEl.style.transform = '';
     }
   }, [stopSwipeTransition]);
@@ -314,12 +344,43 @@ function PhotoFilmstripShellInner({
   }, []);
 
   const handleSwipeGrab = useCallback(() => {
+    gestureActiveRef.current = true;
+    const heightAnim = heightAnimationRef.current;
+    if (heightAnim && Number.isNaN(heightAnim.targetHeight)) {
+      heightAnim.stop();
+    }
     stopSwipeTransition();
     lockContainerHeight();
     const tx = readTranslateX(swipeLayerRef.current);
+    // A fast follow-up swipe starts while the previous snap is parked a full
+    // photo off-screen. Continuing from there slides every panel out of view.
+    // Recenter on the photo we're already navigating to and drag from zero.
+    if (Math.abs(tx) > 1) {
+      peekDirRef.current = null;
+      swipeOffsetRef.current = 0;
+      swipeBaseRef.current = 0;
+      const swipeEl = swipeLayerRef.current;
+      if (swipeEl) {
+        swipeEl.style.transition = 'none';
+        void swipeEl.offsetWidth;
+        swipeEl.style.transform = '';
+      }
+      const heading = getHeadingShortId();
+      if (heading && heading !== currentPhotoShortId) setPendingShortId(heading);
+      setPeekShortId(null);
+      setSwipeRestTick((tick) => tick + 1);
+      return;
+    }
     swipeBaseRef.current = tx;
     applySwipeTransforms(tx);
-  }, [applySwipeTransforms, lockContainerHeight, stopSwipeTransition]);
+  }, [
+    applySwipeTransforms,
+    currentPhotoShortId,
+    getHeadingShortId,
+    lockContainerHeight,
+    setPendingShortId,
+    stopSwipeTransition,
+  ]);
 
   const handleSwipeDrag = useCallback((dx: number) => {
     let visual = swipeBaseRef.current + dx;
@@ -329,34 +390,29 @@ function PhotoFilmstripShellInner({
     const dir = visual < -1 ? 'left' : visual > 1 ? 'right' : peekDirRef.current;
     if (dir && dir !== peekDirRef.current) {
       peekDirRef.current = dir;
-      const peek = dir === 'left'
-        ? (hasNext ? siblingPhotos[nextIndex] : null)
-        : (hasPrev ? siblingPhotos[prevIndex] : null);
+      const peek = getNeighbor(dir === 'left' ? 'next' : 'prev');
       setPeekOrigin(dir === 'left' ? 'right' : 'left');
       setPeekShortId(peek?.shortId ?? null);
+      preloadPhoto(peek?.url);
     }
 
     applySwipeTransforms(visual);
-  }, [applySwipeTransforms, hasNext, hasPrev, nextIndex, prevIndex, siblingPhotos]);
+  }, [applySwipeTransforms, getNeighbor, hasNext, hasPrev]);
 
   const commitSwipe = useCallback((direction: 'next' | 'prev') => {
+    gestureActiveRef.current = false;
+    // Navigate immediately. Waiting for the snap let a second finger-down
+    // cancel the transition and drop the route change, so the strip slid
+    // back to the same photo.
+    if (direction === 'next') goToNextRef.current();
+    else goToPrevRef.current();
     const width = photoContainerRef.current?.offsetWidth ?? 0;
-    if (!width) {
-      if (direction === 'next') goToNextPhoto();
-      else goToPrevPhoto();
-      return;
-    }
-    setSwipeLocked(true);
+    if (!width) return;
     const distance = width + SWIPE_GAP_PX;
     const target = direction === 'next' ? -distance : distance;
     animateSwipeTo(target, {
       onDone: () => {
-        // Navigate only after the old photo is off-screen. Committing earlier
-        // replaces the sliding layer with the incoming photo while it's still
-        // on-screen (especially prev: +translate keeps it in view) — that's
-        // the center-pop then the rest of the swipe finishing.
-        if (direction === 'next') goToNextPhoto();
-        else goToPrevPhoto();
+        gestureActiveRef.current = false;
         if (!heightAnimationRef.current) {
           heightAnimationRef.current = {
             targetHeight: Number.NaN,
@@ -366,11 +422,12 @@ function PhotoFilmstripShellInner({
         setSwipeRestTick((tick) => tick + 1);
       },
     });
-  }, [animateSwipeTo, goToNextPhoto, goToPrevPhoto]);
+  }, [animateSwipeTo]);
 
   const handleSwipeCancel = useCallback(() => {
     animateSwipeTo(0, {
       onDone: () => {
+        gestureActiveRef.current = false;
         peekDirRef.current = null;
         swipeOffsetRef.current = 0;
         swipeBaseRef.current = 0;
@@ -396,39 +453,34 @@ function PhotoFilmstripShellInner({
     onCancel: handleSwipeCancel,
     canSwipeLeft: hasNext,
     canSwipeRight: hasPrev,
-    disabled: !showFilmstrip || swipeLocked,
+    disabled: !showFilmstrip,
   });
 
   const peekPhoto = peekShortId
-    ? siblingPhotos.find((photo) => photo.shortId === peekShortId)
+    ? siblingPhotos.find((photo) => photo.shortId === peekShortId) ?? null
     : null;
-  const clickOverlayPhoto = !peekPhoto && pendingShortId
-    ? siblingPhotos.find((photo) => photo.shortId === pendingShortId)
+  const pendingPhoto = pendingShortId
+    ? siblingPhotos.find((photo) => photo.shortId === pendingShortId) ?? null
     : null;
+  // While the peek is the photo we just committed to, the live page is still
+  // the one sliding out. A fast follow-up peeks the photo after that, so the
+  // center has to be the committed photo's blurhash, not the stale page.
+  const peekIsDestination = !!pendingPhoto && peekPhoto?.shortId === pendingPhoto.shortId;
+  const hidePageSlotBehindPreview = !!pendingPhoto && !peekIsDestination;
+  const slidingStandIn = hidePageSlotBehindPreview && peekPhoto ? pendingPhoto : null;
+  const routeCoverPhoto = hidePageSlotBehindPreview && !peekPhoto ? pendingPhoto : null;
 
-  const overlayCallbackRef = useCallback((node: HTMLDivElement | null) => {
-    overlayRef.current = node;
-  }, []);
-
-  // Keep the overlay until the real photo underneath is fully visible, then
-  // lift it. Lifting earlier races the children's BlurImage: a fresh <img>
-  // element can need a frame or two to decode even when memory-cached, and its
-  // fade-in can start a task later than the overlay's own load — both flash the
-  // blurhash layer that sits behind the image. So poll the actual DOM: the
-  // target photo's img, fully loaded, fade completed ('opacity-100'), and
-  // decoded. The overlay shows the same photo at the same scale, so holding it
-  // longer is invisible.
+  // Same handoff as main: the swipe cover stays until the page image has
+  // finished its own fade (opacity-100) and decoded. Lifting earlier shows
+  // the page blurhash through a new <img> that is not painted yet.
   useEffect(() => {
     if (!pendingShortId || pendingShortId !== currentPhotoShortId) return;
 
-    const photo = siblingPhotos.find((p) => p.shortId === pendingShortId);
+    const photo = siblingPhotos.find((item) => item.shortId === pendingShortId);
     if (!photo) {
       resetSwipeTransforms();
-      // Defer so this isn't a synchronous setState in the effect body. The
-      // committed photo left the sibling list, so drop the overlay lock.
       const frameId = requestAnimationFrame(() => {
         setPeekShortId(null);
-        setSwipeLocked(false);
         setPendingShortId(null);
       });
       return () => cancelAnimationFrame(frameId);
@@ -438,18 +490,12 @@ function PhotoFilmstripShellInner({
     let frameId = 0;
 
     const liftOverlay = () => {
-      if (cancelled) return;
-      // Bring the real photo on-screen UNDER the overlay first. Lifting in the
-      // same turn leaves the first on-screen paint of children uncovered —
-      // they were sitting a slide away, plus the gap (especially to the right
-      // for prev) and often haven't been rasterized yet, which flashes
-      // blurhash/blank.
+      if (cancelled || gestureActiveRef.current) return;
       resetSwipeTransforms();
-      const img = photoContainerRef.current?.querySelector('#gallery img');
+      const img = photoContainerRef.current?.querySelector('[data-photo-page-image] img');
       const reveal = () => {
-        if (cancelled) return;
+        if (cancelled || gestureActiveRef.current) return;
         setPeekShortId(null);
-        setSwipeLocked(false);
         setPendingShortId(null);
       };
       const painted = () => {
@@ -464,20 +510,23 @@ function PhotoFilmstripShellInner({
 
     const poll = () => {
       if (cancelled) return;
-      // Wait for the swipe snap (and any following height animation) to
-      // finish so we don't lift onto a photo that's about to scale/grow.
-      if (swipeSettleRef.current || heightAnimationRef.current) {
+      if (gestureActiveRef.current || swipeSettleRef.current || heightAnimationRef.current) {
         frameId = requestAnimationFrame(poll);
         return;
       }
-      const frame = photoContainerRef.current?.querySelector('#gallery [data-photo-page-image]');
-      const img = frame?.querySelector('img');
-      // data-photo-page-src identifies the committed photo — guards against the
-      // pathname committing before the page slot (stale old-photo img).
-      const isTargetImg = frame?.getAttribute('data-photo-page-src') === photo.url;
-      // BlurImage sets 'opacity-100' only once the fade-in has completed (or
-      // immediately when mounted from the SPA cache).
-      if (isTargetImg && img?.complete && img.naturalWidth > 0 && img.classList.contains('opacity-100')) {
+      const frames = photoContainerRef.current?.querySelectorAll('[data-photo-page-image]');
+      let ready = false;
+      frames?.forEach((frame) => {
+        if (ready || frame.getAttribute('data-photo-page-src') !== photo.url) return;
+        const gallery = frame.closest('#gallery');
+        if (gallery && getComputedStyle(gallery).display === 'none') return;
+        const img = frame.querySelector('img');
+        ready = img instanceof HTMLImageElement
+          && img.complete
+          && img.naturalWidth > 0
+          && img.classList.contains('opacity-100');
+      });
+      if (ready) {
         liftOverlay();
         return;
       }
@@ -485,14 +534,21 @@ function PhotoFilmstripShellInner({
     };
     frameId = requestAnimationFrame(poll);
 
-    const fallback = setTimeout(liftOverlay, 3000);
+    const fallback = window.setTimeout(liftOverlay, 3000);
 
     return () => {
       cancelled = true;
       cancelAnimationFrame(frameId);
-      clearTimeout(fallback);
+      window.clearTimeout(fallback);
     };
-  }, [pendingShortId, currentPhotoShortId, siblingPhotos, setPendingShortId, resetSwipeTransforms]);
+  }, [
+    children,
+    currentPhotoShortId,
+    pendingShortId,
+    resetSwipeTransforms,
+    setPendingShortId,
+    siblingPhotos,
+  ]);
 
   const collectionFallbackHref = getPhotoCollectionFallbackHref({
     nickname,
@@ -507,7 +563,7 @@ function PhotoFilmstripShellInner({
       <section
         aria-label="Photo viewer"
         className={clsx(
-          'md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)] md:flex md:flex-col',
+          'md:flex-1 md:sticky md:self-start md:top-22.5 md:h-[calc(100vh-106px)] lg:top-26.5 lg:h-[calc(100vh-138px)] md:flex md:flex-col',
           !showFilmstrip && 'max-md:mb-3',
         )}
       >
@@ -523,7 +579,7 @@ function PhotoFilmstripShellInner({
               ref={photoContainerRef}
               data-photo-mobile-stage=""
               className={clsx(
-                'relative flex w-full touch-pan-y items-center justify-center overflow-hidden md:min-h-0 md:flex-1 md:aspect-auto md:max-h-none max-md:[aspect-ratio:var(--photo-ar)]',
+                'relative flex w-full touch-pan-y select-none items-center justify-center overflow-hidden md:min-h-0 md:flex-1 md:aspect-auto md:max-h-none max-md:aspect-(--photo-ar) [&_img]:[-webkit-user-drag:none]',
                 showFilmstrip
                   ? 'max-md:max-h-[calc(100vh-162px)] sm:max-md:max-h-[calc(100vh-180px)] max-md:[--photo-max-h:calc(100vh-162px)] sm:max-md:[--photo-max-h:calc(100vh-180px)]'
                   : 'max-md:max-h-[calc(100vh-98px)] sm:max-md:max-h-[calc(100vh-114px)] max-md:[--photo-max-h:calc(100vh-98px)] sm:max-md:[--photo-max-h:calc(100vh-114px)]',
@@ -534,6 +590,7 @@ function PhotoFilmstripShellInner({
               <PhotoStageIdleRevealProvider
                 targetRef={idleTargetRef}
                 routeKey={pathname}
+                chromeRouteKey={showFilmstrip ? collectionFallbackHref : pathname}
               >
                 <PhotoPageFixedStageChrome />
                 <div
@@ -545,67 +602,51 @@ function PhotoFilmstripShellInner({
                 >
                   <div
                     ref={swipeLayerRef}
-                    className="relative h-full w-full max-md:absolute max-md:inset-0"
+                    className="absolute inset-0"
                   >
                     <div
                       ref={contentScaleRef}
                       data-photo-stage-slot=""
-                      className="flex h-full w-full items-center justify-center max-md:absolute max-md:inset-0"
+                      className={clsx(
+                        'flex h-full w-full items-center justify-center max-md:absolute max-md:inset-0',
+                        hidePageSlotBehindPreview && 'invisible',
+                      )}
                     >
                       {children}
                     </div>
+                    {slidingStandIn && (
+                      <div
+                        className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background"
+                      >
+                        <PhotoSwipeCover
+                          photo={slidingStandIn}
+                        />
+                      </div>
+                    )}
                     {peekPhoto && (
                       <div
-                        ref={overlayCallbackRef}
                         data-photo-stage-slot=""
-                        className="absolute inset-0 z-20 flex items-center justify-center bg-background"
+                        className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-background"
                         style={{
                           transform: peekOrigin === 'left'
                             ? `translateX(calc(-100% - ${SWIPE_GAP_PX}px))`
                             : `translateX(calc(100% + ${SWIPE_GAP_PX}px))`,
                         }}
                       >
-                        <div
-                          data-photo-fit-frame=""
-                          className="relative"
-                          style={{ ['--photo-aspect' as string]: String(peekPhoto.width / peekPhoto.height) }}
-                        >
-                          <BlurImage
-                            src={peekPhoto.url}
-                            blurhash={peekPhoto.blurhash}
-                            width={peekPhoto.width}
-                            height={peekPhoto.height}
-                            alt=""
-                            contain
-                            unoptimized
-                            className="h-full w-full [--photo-max-h:calc(100vh-162px)] sm:[--photo-max-h:calc(100vh-180px)] md:[--photo-max-h:calc(100vh-172px)] lg:[--photo-max-h:calc(100vh-218px)]"
-                          />
-                        </div>
+                        <PhotoSwipeCover
+                          photo={peekPhoto}
+                        />
                       </div>
                     )}
                   </div>
-                  {clickOverlayPhoto && (
+                  {routeCoverPhoto && (
                     <div
-                      ref={overlayCallbackRef}
-                      data-photo-stage-slot=""
-                      className="absolute inset-0 z-10 flex items-center justify-center bg-background"
+                      data-photo-stage-preview=""
+                      className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-background"
                     >
-                      <div
-                        data-photo-fit-frame=""
-                        className="relative"
-                        style={{ ['--photo-aspect' as string]: String(clickOverlayPhoto.width / clickOverlayPhoto.height) }}
-                      >
-                        <BlurImage
-                          src={clickOverlayPhoto.url}
-                          blurhash={clickOverlayPhoto.blurhash}
-                          width={clickOverlayPhoto.width}
-                          height={clickOverlayPhoto.height}
-                          alt=""
-                          contain
-                          unoptimized
-                          className="h-full w-full [--photo-max-h:calc(100vh-162px)] sm:[--photo-max-h:calc(100vh-180px)] md:[--photo-max-h:calc(100vh-172px)] lg:[--photo-max-h:calc(100vh-218px)]"
-                        />
-                      </div>
+                      <PhotoSwipeCover
+                        photo={routeCoverPhoto}
+                      />
                     </div>
                   )}
                 </div>

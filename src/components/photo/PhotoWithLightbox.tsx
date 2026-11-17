@@ -1,12 +1,13 @@
 'use client';
 
 import { useProgressRouter } from '@/components/layout/NavigationProgress';
+import { usePhotoNavigation } from '@/components/photo/PhotoNavigationContext';
 import { usePhotoLightboxOpen } from '@/context/PhotoLightboxOpenContext';
 import { recordView } from '@/utils/recordView';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import clsx from 'clsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import BlurImage from '../shared/BlurImage';
+import BlurImage, { isFullSizePhotoCached } from '../shared/BlurImage';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import type { PhotoMemberTag } from '@/lib/data/photoMemberTags';
 import { PhotoMemberTagLayer } from './PhotoMemberTags';
@@ -67,8 +68,20 @@ export default function PhotoWithLightbox({
   const skipInitialLightboxViewRef = useRef(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
+  const [loadedUrl, setLoadedUrl] = useState(url);
+  if (loadedUrl !== url) {
+    setLoadedUrl(url);
+    setIsLoaded(false);
+    setShowSpinner(false);
+  }
   const router = useProgressRouter();
   const lightboxOpen = usePhotoLightboxOpen();
+  const { pendingShortId } = usePhotoNavigation();
+  // Already-seen photos fade in on the swipe cover. Fading the page image
+  // again would replace that photo with a blurhash. First views still fade here.
+  const fadeWhenCached = pendingShortId != null
+    && pendingShortId === currentShortId
+    && !isFullSizePhotoCached(url, width);
 
   const hasGallery = !!galleryPhotos && galleryPhotos.length > 1;
 
@@ -242,16 +255,16 @@ export default function PhotoWithLightbox({
     return () => lightboxOpen?.register(null);
   }, [lightboxOpen, openCurrentLightbox]);
 
-  // Show spinner after 200ms delay (avoid flash for fast loads)
+  // Spinner only if the full-size file is still downloading after 1s.
   useEffect(() => {
-    if (isLoaded) return;
+    if (!blurhash || isLoaded) return;
 
     const timer = setTimeout(() => {
       setShowSpinner(true);
-    }, 200);
+    }, 1000);
 
     return () => clearTimeout(timer);
-  }, [isLoaded]);
+  }, [blurhash, isLoaded, url]);
 
   return (
     <div
@@ -259,11 +272,11 @@ export default function PhotoWithLightbox({
       className="relative flex w-full text-center"
       ref={galleryRef}
     >
-      {/* Loading spinner - shows after 200ms, fades out when loaded */}
+      {/* Loading spinner - fades in after 1s, fades out when the full-size image loads */}
       <div
         className={clsx(
           'absolute inset-0 flex items-center justify-center pointer-events-none z-10 transition-opacity duration-300',
-          showSpinner && !isLoaded ? 'opacity-100' : 'opacity-0',
+          showSpinner && !isLoaded && blurhash ? 'opacity-100' : 'opacity-0',
         )}
       >
         <div
@@ -294,6 +307,7 @@ export default function PhotoWithLightbox({
             blurhash={blurhash}
             contain
             unoptimized
+            fadeWhenCached={fadeWhenCached}
             onLoad={() => setIsLoaded(true)}
             className={isInAlbum
               ? 'w-full [--photo-max-h:calc(100vh-162px)] sm:[--photo-max-h:calc(100vh-180px)] md:[--photo-max-h:calc(100vh-172px)] lg:[--photo-max-h:calc(100vh-218px)]'

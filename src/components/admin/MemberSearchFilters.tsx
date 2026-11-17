@@ -54,7 +54,7 @@ export default function MemberSearchFilters({
             { value: 'suspended', label: 'Suspended' },
           ]}
           fullWidth={false}
-          className="min-w-[140px]"
+          className="min-w-35"
         />
       </div>
     </div>

@@ -32,7 +32,7 @@ const activeFollowClassName = clsx(
   'border-primary bg-background-light text-primary hover:border-primary hover:bg-primary/5 hover:text-primary',
 );
 
-const iconOnlySizeClassName = 'size-[30px]';
+const iconOnlySizeClassName = 'size-7.5';
 const labeledSizeClassName = 'gap-1.5 px-2 py-1 text-sm font-medium';
 
 const iconClassName = 'size-3.5 sm:size-4';
