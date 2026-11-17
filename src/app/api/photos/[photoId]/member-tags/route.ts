@@ -1,10 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 
 import { revalidateProfile } from '@/app/actions/revalidate';
+import { expireTag } from '@/lib/cache/expireTag';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { fetchPhotoMemberTags } from '@/lib/data/photoMemberTags';
 import { scheduleNotification } from '@/lib/notifications/schedule';
 import { createClient } from '@/utils/supabase/server';
+
+async function expireMemberTagReadCaches(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  photoId: string,
+  profileId: string,
+) {
+  const [{ data: profile }, { data: photo }] = await Promise.all([
+    supabase.from('profiles').select('nickname').eq('id', profileId).maybeSingle(),
+    supabase
+      .from('photos')
+      .select('short_id, profiles!photos_user_id_fkey(nickname)')
+      .eq('id', photoId)
+      .maybeSingle(),
+  ]);
+
+  if (profile?.nickname) expireTag(`profile-${profile.nickname}`);
+  const ownerNickname = (photo?.profiles as unknown as { nickname: string | null } | null)?.nickname;
+  if (ownerNickname) expireTag(`profile-${ownerNickname}`);
+  if (photo?.short_id) expireTag(`photo-${photo.short_id}`);
+}
 
 async function revalidateTaggedMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -101,7 +122,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const x = clampUnit(body.x);
   const y = clampUnit(body.y);
-  if (!body.profileId || x == null || y == null) {
+  const profileId = body.profileId;
+  if (!profileId || x == null || y == null) {
     return NextResponse.json({ message: 'A member and a point on the photo are required' }, { status: 400 });
   }
 
@@ -109,7 +131,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     .from('photo_member_tags')
     .select('id')
     .eq('photo_id', photoId)
-    .eq('profile_id', body.profileId)
+    .eq('profile_id', profileId)
     .maybeSingle();
 
   if (existing) {
@@ -120,13 +142,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (error) {
       return NextResponse.json({ message: 'Could not move that tag' }, { status: 403 });
     }
-    await revalidateTaggedMember(supabase, body.profileId);
+    await expireMemberTagReadCaches(supabase, photoId, profileId);
+    after(() => {
+      void revalidateTaggedMember(supabase, profileId).catch((revalidateError) => {
+        console.error('member tag revalidate failed:', revalidateError);
+      });
+    });
     return NextResponse.json({ success: true, moved: true });
   }
 
   const { error } = await supabase.from('photo_member_tags').insert({
     photo_id: photoId,
-    profile_id: body.profileId,
+    profile_id: profileId,
     x,
     y,
     created_by: user.id,
@@ -136,23 +163,28 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: 'Could not tag that member' }, { status: 403 });
   }
 
-  await revalidateTaggedMember(supabase, body.profileId);
+  const actorId = user.id;
+  await expireMemberTagReadCaches(supabase, photoId, profileId);
+  after(() => {
+    void (async () => {
+      await revalidateTaggedMember(supabase, profileId);
+      if (profileId === actorId) return;
 
-  if (body.profileId !== user.id) {
-    const [{ data: actor }, { data: photo }] = await Promise.all([
-      supabase.from('profiles').select('full_name, nickname, avatar_url').eq('id', user.id).maybeSingle(),
-      supabase
-        .from('photos')
-        .select('title, url, short_id, profiles!photos_user_id_fkey(nickname)')
-        .eq('id', photoId)
-        .maybeSingle(),
-    ]);
-    const ownerNickname = (photo?.profiles as unknown as { nickname: string | null } | null)?.nickname;
-    const actorNickname = actor?.nickname ?? null;
-    if (ownerNickname && photo?.short_id) {
+      const [{ data: actor }, { data: photo }] = await Promise.all([
+        supabase.from('profiles').select('full_name, nickname, avatar_url').eq('id', actorId).maybeSingle(),
+        supabase
+          .from('photos')
+          .select('title, url, short_id, profiles!photos_user_id_fkey(nickname)')
+          .eq('id', photoId)
+          .maybeSingle(),
+      ]);
+      const ownerNickname = (photo?.profiles as unknown as { nickname: string | null } | null)?.nickname;
+      const actorNickname = actor?.nickname ?? null;
+      if (!ownerNickname || !photo?.short_id) return;
+
       await scheduleNotification({
-        userId: body.profileId,
-        actorId: user.id,
+        userId: profileId,
+        actorId,
         type: 'photo_member_tag',
         entityType: 'photo',
         entityId: photoId,
@@ -176,8 +208,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
           contextLabel: 'a photo',
         },
       });
-    }
-  }
+    })().catch((backgroundError) => {
+      console.error('member tag background work failed:', backgroundError);
+    });
+  });
 
   return NextResponse.json({ success: true });
 }
@@ -214,7 +248,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: 'Could not remove that tag' }, { status: 403 });
   }
 
-  await revalidateTaggedMember(supabase, profileId);
+  await expireMemberTagReadCaches(supabase, photoId, profileId);
+  after(() => {
+    void revalidateTaggedMember(supabase, profileId).catch((revalidateError) => {
+      console.error('member tag revalidate failed:', revalidateError);
+    });
+  });
 
   return NextResponse.json({ success: true });
 }
