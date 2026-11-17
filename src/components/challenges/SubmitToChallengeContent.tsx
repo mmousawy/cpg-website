@@ -132,7 +132,9 @@ export default function SubmitToChallengeContent({
   }, [user, supabase]);
 
   useEffect(() => {
-    fetchPhotos();
+    void (async () => {
+      await fetchPhotos();
+    })();
   }, [fetchPhotos]);
 
   // Get private photo IDs (these are disabled/non-selectable)
@@ -345,7 +347,9 @@ export default function SubmitToChallengeContent({
         challengeTitle={challengeTitle}
         selectedPhotos={selectedPhotos}
         onBack={() => setShowConfirm(false)}
-        onSuccess={onSuccessRef.current}
+        onSuccess={(submittedCount, photoUrls) => {
+          onSuccessRef.current(submittedCount, photoUrls);
+        }}
       />
     );
   }

@@ -249,6 +249,8 @@ export default function OnboardingClient() {
     enabled: isWizardVisible,
     centerContentInViewport: centerStepInViewport,
   });
+  // react-hook-form watch() cannot be memoized safely by the React Compiler.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedNickname = watch('nickname');
   const watchedFullName = watch('fullName');
   const watchedEmail = watch('email');
@@ -688,7 +690,7 @@ export default function OnboardingClient() {
         } catch (signOutErr) {
           console.error('Error signing out suspended account:', signOutErr);
         }
-        window.location.href = '/login?error=suspended';
+        router.push('/login?error=suspended');
         return;
       }
       if (outcome === 'under_review') {

@@ -76,7 +76,9 @@ export default function AdminEventAttendancePage() {
   }, [eventId, supabase]);
 
   useEffect(() => {
-    void loadData();
+    void (async () => {
+      await loadData();
+    })();
   }, [loadData]);
 
   const handleMarkAttended = async (rsvpId: number) => {
