@@ -40,6 +40,10 @@ type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'cance
   }
 }
 
+function readServerNow(): number {
+  return Date.now();
+}
+
 function toRsvp(row: {
   id: number
   uuid: string | null
@@ -70,7 +74,7 @@ export default async function MyEventsPage() {
     redirect('/login?redirectTo=/account/events');
   }
 
-  const serverNow = Date.now();
+  const serverNow = readServerNow();
   const { data, error } = await supabase
     .from('events_rsvps')
     .select(`

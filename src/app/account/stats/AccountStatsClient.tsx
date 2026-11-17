@@ -70,7 +70,9 @@ export default function AccountStatsClient() {
   }, [range]);
 
   useEffect(() => {
-    load();
+    void (async () => {
+      await load();
+    })();
   }, [load]);
 
   if (isLoading && !lifetime) {
