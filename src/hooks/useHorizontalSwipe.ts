@@ -1,7 +1,7 @@
 'use client';
 
 import { isPhotoSwipeOpen } from '@/utils/photoswipe';
-import { useCallback, useRef, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react';
+import { useCallback, useRef, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 
 const LOCK_DISTANCE = 8;
 /** Commit only after the pointer has moved this fraction of the swipe surface. */
@@ -46,6 +46,7 @@ export function useHorizontalSwipe({
 
   const onPointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
     if (disabled || event.button !== 0 || isPhotoSwipeOpen()) return;
+    window.getSelection()?.removeAllRanges();
     startRef.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
     axisLockRef.current = null;
     suppressClickRef.current = false;
@@ -68,6 +69,7 @@ export function useHorizontalSwipe({
     }
 
     if (axisLockRef.current === 'horizontal') {
+      window.getSelection()?.removeAllRanges();
       onDrag?.(dx);
     }
   }, [onDrag]);

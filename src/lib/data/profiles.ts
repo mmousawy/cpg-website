@@ -1,6 +1,5 @@
 import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
-import type { Photo } from '@/types/photos';
 import { filterMemberNicknames, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
 import { withPublicInterestCounts } from '@/lib/data/publicInterestCounts';
 import { fetchPhotoMemberTags } from '@/lib/data/photoMemberTags';
@@ -371,23 +370,18 @@ export async function getProfileSiblingPhotos(nickname: string, includeTestConte
 
   const supabase = createPublicClient();
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('nickname', nickname)
-    .is('suspended_at', null)
-    .is('under_review_at', null)
-    .is('deletion_scheduled_at', null)
-    .single();
-
-  if (!profile) {
-    return null;
-  }
-
+  // Join the profile in the same request so the filmstrip does not wait on a
+  // separate profile lookup before the photo list.
   const { data: photos } = await supabase
     .from('photos')
-    .select('id, short_id, url, blurhash, title, width, height')
-    .eq('user_id', profile.id)
+    .select(`
+      id, short_id, url, blurhash, title, width, height,
+      profile:profiles!photos_user_id_fkey!inner(nickname)
+    `)
+    .eq('profile.nickname', nickname)
+    .is('profile.suspended_at', null)
+    .is('profile.under_review_at', null)
+    .is('profile.deletion_scheduled_at', null)
     .eq('is_public', true)
     .is('deleted_at', null)
     .not('storage_path', 'like', 'events/%')
@@ -690,7 +684,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
       };
 
   return {
-    photo: photo as Photo,
+    photo,
     profile: photoOwnerProfile,
     albumOwnerNickname: profile.nickname!,
     currentAlbum: album,
@@ -721,34 +715,35 @@ export async function getPhotoByShortId(
 
   const supabase = createPublicClient();
 
-  // Get profile first
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, full_name, nickname, avatar_url')
-    .eq('nickname', nickname)
-    .is('suspended_at', null)
-    .is('under_review_at', null)
-    .is('deletion_scheduled_at', null)
-    .single();
-
-  if (!profile || !profile.nickname) {
-    return null;
-  }
-
-  // Get photo with tags (must be public, exclude event cover images)
-  const { data: photo } = await supabase
+  // One round trip: photo columns the page renders, plus the owner profile.
+  // search_vector is a generated index and is not sent to the client.
+  const { data: row } = await supabase
     .from('photos')
-    .select('*, tags:photo_tags(tag)')
+    .select(`
+      id, short_id, url, blurhash, title, description, width, height,
+      file_size, created_at, license, copyright_notice, exif_data,
+      user_id, storage_path, likes_count, mime_type, original_filename,
+      is_public, view_count, sort_order, deleted_at,
+      tags:photo_tags(tag),
+      profile:profiles!photos_user_id_fkey!inner(
+        id, full_name, nickname, avatar_url
+      )
+    `)
     .eq('short_id', photoShortId)
-    .eq('user_id', profile.id)
+    .eq('profile.nickname', nickname)
+    .is('profile.suspended_at', null)
+    .is('profile.under_review_at', null)
+    .is('profile.deletion_scheduled_at', null)
     .eq('is_public', true)
     .is('deleted_at', null)
     .not('storage_path', 'like', 'events/%')
     .single();
 
-  if (!photo) {
+  if (!row?.profile || Array.isArray(row.profile) || !row.profile.nickname) {
     return null;
   }
+
+  const { profile, ...photo } = row;
 
   // Get albums, challenges, and member tags in parallel (all depend only on photo.id)
   const [{ data: albumPhotos }, { data: challengeSubmissions }, memberTags] = await Promise.all([
@@ -819,7 +814,7 @@ export async function getPhotoByShortId(
     .filter((c): c is { id: string; title: string; slug: string; cover_image_url: string | null } => c !== null);
 
   return {
-    photo: photo as Photo,
+    photo,
     profile: {
       id: profile.id,
       full_name: profile.full_name,

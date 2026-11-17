@@ -88,7 +88,7 @@ function SubmitToSharedAlbumButtonAuthenticated(props: SubmitToSharedAlbumButton
         <Button
           onClick={handleClose}
           variant="primary"
-          className="min-w-[120px]"
+          className="min-w-30"
         >
           Got it!
         </Button>

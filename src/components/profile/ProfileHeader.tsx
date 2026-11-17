@@ -92,7 +92,7 @@ function ProfileHeaderRow({
             'flex items-center justify-center overflow-hidden rounded-full border-2 border-border-color',
             isPreview
               ? 'size-16 sm:size-20'
-              : 'size-[clamp(4.5rem,10svw,6rem)] md:size-[100px]',
+              : 'size-[clamp(4.5rem,10svw,6rem)] md:size-25',
           )}
         >
           <ClickableAvatar

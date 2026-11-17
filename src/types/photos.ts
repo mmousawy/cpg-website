@@ -1,6 +1,7 @@
 import type { Tables } from '@/database.types';
 
-export type Photo = Tables<'photos'>;
+/** Full-text index. Queries omit it; it is not part of the app photo type. */
+export type Photo = Omit<Tables<'photos'>, 'search_vector'>;
 export type PhotoTag = Tables<'photo_tags'>;
 export type Tag = Tables<'tags'>;
 

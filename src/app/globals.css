@@ -919,8 +919,8 @@ html.manage-page .app-header-inner {
   }
 
   html.mobile-pinned-shell .app-shell-main {
-    /* `height: 0` + flex-grow is the iOS-safe way to give the scroller a bounded
-       height. `display: block` avoids flex children stretching past scrollTop 0. */
+    /* height: 0 with flex: 1 1 0% is the iOS-safe way to give the scroller a bounded
+       height. display: block avoids flex children stretching past scrollTop 0. */
     display: block;
     flex: 1 1 0%;
     height: 0;

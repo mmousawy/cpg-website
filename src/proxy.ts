@@ -334,12 +334,10 @@ export default async function proxy(request: NextRequest) {
     terms_accepted_at: string | null;
   } | null = null;
 
-  const shouldLoadProfile = user && (
+  const shouldLoadProfile = Boolean(user && (
     needsProxyOwnProfile(pathname)
-    || isAtProfilePath
-    || needsOnboardingClassify
-    || (!isPublicApiRoute && !matchesRoute('/under-review') && pathname.startsWith('/'))
-  );
+    || (needsOnboardingClassify && onboardingCookie !== ONBOARDING_COOKIE_COMPLETE)
+  ));
 
   if (shouldLoadProfile) {
     const { data } = await supabase.rpc('get_own_profile');
@@ -472,12 +470,15 @@ export default async function proxy(request: NextRequest) {
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();
+    url.search = '';
     if (profile?.under_review_at && !profile.suspended_at) {
       url.pathname = '/under-review';
     } else {
       url.pathname = '/account/events';
     }
-    return finish(NextResponse.redirect(url));
+    const redirect = NextResponse.redirect(url);
+    copyResponseCookies(supabaseResponse, redirect);
+    return finish(redirect);
   }
 
   return finish(supabaseResponse);

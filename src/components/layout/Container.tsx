@@ -27,9 +27,9 @@ export default function Container({
   };
 
   const variantStyles = {
-    default: 'border-[0.0625rem] border-border-color bg-background-light',
-    centered: 'border-[0.0625rem] border-border-color bg-background-light flex min-h-28 justify-center items-center',
-    form: 'border-[0.0625rem] border-border-color bg-background-light',
+    default: 'border border-border-color bg-background-light',
+    centered: 'border border-border-color bg-background-light flex min-h-28 justify-center items-center',
+    form: 'border border-border-color bg-background-light',
     gradient: 'container-gradient',
   };
 

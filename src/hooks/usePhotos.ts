@@ -13,7 +13,7 @@ import {
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useMounted } from '@/hooks/useMounted';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export { fetchPhotosPage } from '@/hooks/managePhotosFetch';
 
@@ -32,9 +32,13 @@ export function usePhotos(
 ) {
   const mounted = useMounted();
   const isMobile = useIsMobile();
-  const pageSize = mounted
-    ? (isMobile ? MANAGE_PHOTOS_PAGE_SIZE_MOBILE : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP)
-    : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP;
+  const pageSizeRef = useRef<number | null>(null);
+  if (mounted && pageSizeRef.current == null) {
+    pageSizeRef.current = isMobile
+      ? MANAGE_PHOTOS_PAGE_SIZE_MOBILE
+      : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP;
+  }
+  const pageSize = pageSizeRef.current ?? MANAGE_PHOTOS_PAGE_SIZE_DESKTOP;
 
   const query = useInfiniteQuery({
     queryKey: photosQueryKey(userId!, pageSize, libraryFilters),
@@ -51,8 +55,12 @@ export function usePhotos(
 
   useEffect(() => {
     if (!loadAll || !hasNextPage || isFetching || isFetchNextPageError) return;
-    void fetchNextPage();
-  }, [loadAll, hasNextPage, isFetching, isFetchNextPageError, fetchNextPage]);
+    if (!query.data?.pages.length) return;
+    const frame = requestAnimationFrame(() => {
+      void fetchNextPage();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [loadAll, hasNextPage, isFetching, isFetchNextPageError, fetchNextPage, query.data?.pages.length]);
 
   const photos = getFlatPhotos(query.data as PhotosInfiniteData | undefined);
 

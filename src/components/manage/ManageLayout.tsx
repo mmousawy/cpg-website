@@ -177,7 +177,7 @@ function ManageLayoutContent({
                       id="photos-tour-albums-tab"
                       href="/account/albums"
                       onClick={(e) => handleTabClick(e, '/account/albums')}
-                      className="ml-[-2px] flex items-center gap-1.5 lg:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-(family-name:--font-geist-mono) text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
+                      className="-ml-0.5 flex items-center gap-1.5 lg:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-(family-name:--font-geist-mono) text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
                     >
                       <FolderMicroSVG
                         className="size-4"
@@ -260,7 +260,7 @@ function ManageLayoutContent({
 
           {/* Right Panel - Sidebar (hidden on mobile). min-h-0 prevents content from expanding past the viewport. */}
           <div
-            className="hidden md:flex w-[400px] shrink-0 min-h-0 flex-col overflow-hidden bg-background-light"
+            className="hidden md:flex w-100 shrink-0 min-h-0 flex-col overflow-hidden bg-background-light"
           >
             {sidebar}
           </div>

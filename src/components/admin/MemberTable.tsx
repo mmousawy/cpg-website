@@ -265,7 +265,7 @@ function StatusCell({ member }: { member: AdminMember }) {
         </span>
         {member.suspended_reason && (
           <p
-            className="mt-1 max-w-[200px] truncate text-xs text-foreground/50"
+            className="mt-1 max-w-50 truncate text-xs text-foreground/50"
             title={member.suspended_reason}
           >
             {member.suspended_reason}
@@ -1038,7 +1038,7 @@ export default function MemberTable({
             }}
             options={PAGE_SIZE_OPTIONS}
             fullWidth={false}
-            className="min-w-[120px]"
+            className="min-w-30"
           />
           {pageCount > 1 && (
             <>

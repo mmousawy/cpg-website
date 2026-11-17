@@ -38,7 +38,7 @@ export default function DetailSidebar({
         'md:mx-0 md:mt-0 md:flex md:w-96 md:shrink-0 md:flex-col md:rounded-lg md:border md:border-border-color md:px-6 md:pt-6 md:pb-6',
         'lg:w-lg',
         tightTopMargin ? 'mt-2' : 'mt-3',
-        sticky && 'md:sticky md:top-22.5 md:h-[calc(100vh-106px)] md:self-start md:overflow-y-auto lg:top-[106px] lg:h-[calc(100vh-138px)]',
+        sticky && 'md:sticky md:top-22.5 md:h-[calc(100vh-106px)] md:self-start md:overflow-y-auto lg:top-26.5 lg:h-[calc(100vh-138px)]',
         className,
       )}
     >

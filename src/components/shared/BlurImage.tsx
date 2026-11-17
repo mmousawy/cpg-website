@@ -38,6 +38,18 @@ export function isBlurImageCached(cacheKey: string): boolean {
   return loadedImages?.has(cacheKey) ?? false;
 }
 
+/** Cache key used by the full-size photo page image (`unoptimized`, no `sizes`). */
+export function fullSizePhotoCacheKey(src: string, width?: number | string | null): string {
+  return getBlurImageCacheKey(src, {
+    width: width || '',
+    unoptimized: true,
+  });
+}
+
+export function isFullSizePhotoCached(src: string, width?: number | string | null): boolean {
+  return isBlurImageCached(fullSizePhotoCacheKey(src, width));
+}
+
 // Safe useLayoutEffect that falls back to useEffect during SSR
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
@@ -58,6 +70,11 @@ type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
   onFadeComplete?: () => void;
   /** When false, SSR and first paint use opacity-100 (LCP heroes). Default true. */
   fadeIn?: boolean;
+  /**
+   * Play the fade even when this file is already decoded or in the SPA cache.
+   * Photo-page swipes use this so a preloaded neighbor still dissolves over its blurhash.
+   */
+  fadeWhenCached?: boolean;
   /** Lightweight fill thumbnails: blurhash bg + single image, no fade state machine */
   lite?: boolean;
 };
@@ -83,6 +100,7 @@ export default function BlurImage({
   onLoad: onLoadProp,
   onFadeComplete,
   fadeIn = true,
+  fadeWhenCached = false,
   lite = false,
   preload,
   fetchPriority,
@@ -114,8 +132,15 @@ export default function BlurImage({
   // - fade-in: image loaded from network, CSS animation 0→1 (300ms)
   // - visible: fully visible, no animation (cached or animation done)
   const [currentSrc, setCurrentSrc] = useState(srcString);
+  /** Src that should fade even if the file is already decoded. Survives pending-id clearing. */
+  const [replayFadeSrc, setReplayFadeSrc] = useState<string | null>(null);
+  if (fadeWhenCached && srcString && replayFadeSrc !== srcString) {
+    setReplayFadeSrc(srcString);
+  }
+  const replayFade = fadeIn && replayFadeSrc === srcString;
   const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>(() => {
     if (!fadeIn) return 'visible';
+    if (fadeWhenCached) return 'loading';
     if (cacheKey && loadedImages?.has(cacheKey)) return 'visible';
     return 'loading';
   });
@@ -135,7 +160,7 @@ export default function BlurImage({
   if (srcString !== currentSrc) {
     setCurrentSrc(srcString);
     setLoadState(
-      !fadeIn || loadedImages?.has(cacheKey ?? '')
+      !fadeIn || (loadedImages?.has(cacheKey ?? '') && !replayFade)
         ? 'visible'
         : 'loading',
     );
@@ -158,9 +183,10 @@ export default function BlurImage({
   // Runs after callback refs are set, so imgRef.current is available.
   //
   // Priority:
-  // 1. SPA cache hit → 'visible' (instant, no animation)
-  // 2. img.complete (SSR-preloaded, already decoded) → 'fade-in'
-  // 3. Otherwise → stay 'loading', wait for onLoad
+  // 1. fadeWhenCached (latched for this src) → 'fade-in' once decoded, else wait
+  // 2. SPA cache hit → 'visible' (instant, no animation)
+  // 3. img.complete (SSR-preloaded, already decoded) → 'visible'
+  // 4. Otherwise → stay 'loading', wait for onLoad
   useIsomorphicLayoutEffect(() => {
     if (!fadeIn) {
       hasCalledOnLoad.current = true;
@@ -168,26 +194,42 @@ export default function BlurImage({
       return;
     }
 
+    const replay = replayFadeSrc === currentSrc;
     const known = !!(cacheKey && loadedImages?.has(cacheKey));
+    const img = imgRef.current;
+    const decoded = !!(img && img.complete && img.naturalWidth > 0);
+
+    // A preloaded swipe target is often decoded before this mounts. Still fade
+    // it over the blurhash; skipping that is a pop, not a smoother handoff.
+    if (replay) {
+      if (decoded || known) {
+        hasCalledOnLoad.current = true;
+        setLoadState('fade-in');
+        onLoadPropRef.current?.();
+        return;
+      }
+      hasCalledOnLoad.current = false;
+      return;
+    }
+
     if (known) {
       hasCalledOnLoad.current = true;
       setLoadState('visible');
       return;
     }
 
-    // Not in SPA cache. Check if the browser already loaded this image
-    // (happens with SSR + preload — the image finishes before React hydrates).
-    const img = imgRef.current;
-    if (img && img.complete && img.naturalWidth > 0) {
+    // Already decoded (browser cache or a photo we just showed). Fading it
+    // again flashes grids and other views that remount a cached image.
+    if (decoded) {
       hasCalledOnLoad.current = true;
-      setLoadState('fade-in');
+      setLoadState('visible');
       onLoadPropRef.current?.();
       return;
     }
 
     // Image not ready yet — reset and wait for onLoad handler.
     hasCalledOnLoad.current = false;
-  }, [currentSrc, cacheKey, fadeIn]);
+  }, [cacheKey, currentSrc, fadeIn, replayFadeSrc]);
 
   // Remember loaded images before the next paint. A deferred write (rAF /
   // useEffect) is cancelled when Strict Mode or a parent remounts this image
@@ -259,17 +301,6 @@ export default function BlurImage({
   if (lite && fill) {
     return (
       <>
-        {!blurhashDataUrl && blurUrl && (
-          <Image
-            src={blurUrl}
-            alt=""
-            aria-hidden="true"
-            fill
-            className={className}
-            quality={30}
-            sizes="64px"
-          />
-        )}
         {blurhashDataUrl && (
           <div
             className={`${className} absolute inset-0 bg-neutral-200 dark:bg-neutral-800`}

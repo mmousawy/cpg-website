@@ -10,7 +10,7 @@ import Button from '@/components/shared/Button';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
 import TrashSVG from 'public/icons/trash.svg';
 
-const iconDeleteButtonClassName = 'size-[34px]! shrink-0 gap-0! p-0!';
+const iconDeleteButtonClassName = 'size-8.5! shrink-0 gap-0! p-0!';
 
 export interface ProfileImageUploadSectionsProps {
   profileId?: string;
@@ -240,7 +240,7 @@ export default function ProfileImageUploadSections({
           >
             <div
               className={clsx(
-                'relative size-[68px] shrink-0 overflow-hidden rounded-md border-2 bg-background-light transition-colors',
+                'relative size-17 shrink-0 overflow-hidden rounded-md border-2 bg-background-light transition-colors',
                 pendingBannerFile ? 'border-primary' : 'border-border-color',
               )}
             >

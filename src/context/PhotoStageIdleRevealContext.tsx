@@ -18,13 +18,17 @@ const PhotoStageIdleRevealContext = createContext<PhotoStageIdleRevealContextVal
 export function PhotoStageIdleRevealProvider({
   targetRef,
   routeKey,
+  chromeRouteKey,
   children,
 }: {
   targetRef: RefObject<HTMLElement | null>;
+  /** Changes per photo. Member-tag dots use this. */
   routeKey: string;
+  /** Stable for the whole collection so back / full screen do not replay on each photo. */
+  chromeRouteKey?: string;
   children: ReactNode;
 }) {
-  const chrome = useIdleReveal(targetRef, routeKey, { touchRoutePhase: 'hidden' });
+  const chrome = useIdleReveal(targetRef, chromeRouteKey ?? routeKey, { touchRoutePhase: 'hidden' });
   const tags = useIdleReveal(targetRef, routeKey, {
     touchRoutePhase: 'prominent',
     prominentMs: TOUCH_TAG_PROMINENT_MS,

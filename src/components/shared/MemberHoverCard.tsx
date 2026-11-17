@@ -185,7 +185,7 @@ function MemberHoverCardPanel({
           className="group mb-2 flex min-w-0 items-center gap-3 pr-10"
         >
           <div
-            className="size-14 shrink-0 overflow-hidden rounded-full border-2 border-[var(--hover-card-bg)]"
+            className="size-14 shrink-0 overflow-hidden rounded-full border-2 border-(--hover-card-bg)"
           >
             <Avatar
               avatarUrl={resolvedAvatar}

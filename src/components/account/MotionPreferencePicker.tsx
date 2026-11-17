@@ -12,21 +12,21 @@ type MotionPreferencePickerProps = {
 
 const MOTION_FRAMES = [
   {
-    position: 'left-[26px] top-[26px]',
+    position: 'left-6.5 top-6.5',
     fill: 'bg-[color-mix(in_srgb,var(--foreground)_15%,var(--background-light))] dark:bg-[color-mix(in_srgb,var(--foreground)_15%,var(--background-light))]',
   },
   {
-    position: 'left-[35px] top-[35px]',
+    position: 'left-8.75 top-8.75',
     fill: 'bg-[color-mix(in_srgb,var(--foreground)_25%,var(--background-light))] dark:bg-[color-mix(in_srgb,var(--foreground)_25%,var(--background-light))]',
     ghost: 'border-[color-mix(in_srgb,var(--foreground)_25%,transparent)]',
   },
   {
-    position: 'left-[45px] top-[45px]',
+    position: 'left-11.25 top-11.25',
     fill: 'bg-[color-mix(in_srgb,var(--foreground)_35%,var(--background-light))] dark:bg-[color-mix(in_srgb,var(--foreground)_35%,var(--background-light))]',
     ghost: 'border-[color-mix(in_srgb,var(--foreground)_35%,transparent)]',
   },
   {
-    position: 'left-[54px] top-[54px]',
+    position: 'left-13.5 top-13.5',
     fill: 'bg-[color-mix(in_srgb,var(--foreground)_45%,var(--background-light))] dark:bg-[color-mix(in_srgb,var(--foreground)_45%,var(--background-light))]',
   },
 ] as const;

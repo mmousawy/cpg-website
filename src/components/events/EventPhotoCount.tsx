@@ -26,7 +26,7 @@ export default function EventPhotoCount({ count, onCover, className }: EventPhot
       )}
     >
       <PhotoSVG
-        className="size-[18px] shrink-0 fill-current"
+        className="size-4.5 shrink-0 fill-current"
       />
       <span>
         {count}

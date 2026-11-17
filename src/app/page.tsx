@@ -25,13 +25,17 @@ export default function Home() {
     <>
       <HomeModalKeyboardTest />
       <HomeHeroSection />
-      <div
-        id="home-below-fold"
+      <Suspense
+        fallback={null}
       >
-        <CachedHomeBelowFold
-          includeTestContent={false}
-        />
-      </div>
+        <div
+          id="home-below-fold"
+        >
+          <CachedHomeBelowFold
+            includeTestContent={false}
+          />
+        </div>
+      </Suspense>
       {/* Header read stays outside the cached shell so `/` can prerender. */}
       <Suspense
         fallback={null}

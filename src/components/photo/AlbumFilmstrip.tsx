@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import ArrowLeftFillSVG from 'public/icons/arrow-left-fill.svg';
 import ArrowRightFillSVG from 'public/icons/arrow-right-fill.svg';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Swiper as SwiperType } from 'swiper';
 import { A11y, FreeMode } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -37,6 +37,8 @@ interface AlbumFilmstripProps {
   albumSlug?: string;
   /** Alternative: base path for non-album context (e.g. /challenges/my-challenge) */
   basePath?: string;
+  /** Pending thumb whose full-size image has already loaded. */
+  loadedShortId?: string | null;
 }
 
 function getPhotoShortIdFromPathname(pathname: string): string {
@@ -44,13 +46,6 @@ function getPhotoShortIdFromPathname(pathname: string): string {
   const photoIndex = segments.lastIndexOf('photo');
   if (photoIndex === -1 || photoIndex >= segments.length - 1) return '';
   return decodeURIComponent(segments[photoIndex + 1]);
-}
-
-function isThumbnailVisible(container: HTMLElement, element: HTMLElement): boolean {
-  const containerRect = container.getBoundingClientRect();
-  const elementRect = element.getBoundingClientRect();
-  // 1px slack so subpixel layout does not count a fully on-screen thumb as clipped.
-  return elementRect.left >= containerRect.left - 1 && elementRect.right <= containerRect.right + 1;
 }
 
 function filmstripSpeed(): number {
@@ -67,14 +62,14 @@ function scrollFilmstripToIndex(
   index: number,
   photoCount: number,
   viewport: HTMLElement,
+  speed = filmstripSpeed(),
 ) {
-  if (index < 0) return;
+  if (index < 0) return false;
 
+  swiper.update();
   const slideEl = swiper.slides[index];
-  if (!(slideEl instanceof HTMLElement)) return;
-  if (isThumbnailVisible(viewport, slideEl)) return;
+  if (!(slideEl instanceof HTMLElement) || slideEl.offsetWidth < 1) return false;
 
-  const speed = filmstripSpeed();
   let nextTranslate: number;
   if (index === 0) {
     nextTranslate = swiper.minTranslate();
@@ -90,8 +85,41 @@ function scrollFilmstripToIndex(
   }
 
   const clamped = Math.min(swiper.minTranslate(), Math.max(swiper.maxTranslate(), nextTranslate));
-  if (Math.abs(clamped - swiper.getTranslate()) < 1) return;
   swiper.setTransition(speed);
+  swiper.setTranslate(clamped);
+  swiper.updateProgress();
+  return true;
+}
+
+/** How close to the clip edge counts as "on the edge" (px). */
+const FILMSTRIP_EDGE_PX = 8;
+/** Nudge an edge thumb this far inside the clip — about one thumb, not the center. */
+const FILMSTRIP_NUDGE_PX = 56;
+
+function nudgeFilmstripThumb(
+  swiper: SwiperType,
+  index: number,
+  viewport: HTMLElement,
+) {
+  if (index < 0) return;
+  const slideEl = swiper.slides[index];
+  if (!(slideEl instanceof HTMLElement)) return;
+
+  const clip = viewport.getBoundingClientRect();
+  const slide = slideEl.getBoundingClientRect();
+  let shift = 0;
+  if (slide.left < clip.left + FILMSTRIP_EDGE_PX) {
+    shift = (clip.left + FILMSTRIP_NUDGE_PX) - slide.left;
+  } else if (slide.right > clip.right - FILMSTRIP_EDGE_PX) {
+    shift = (clip.right - FILMSTRIP_NUDGE_PX) - slide.right;
+  } else {
+    return;
+  }
+
+  const nextTranslate = swiper.getTranslate() + shift;
+  const clamped = Math.min(swiper.minTranslate(), Math.max(swiper.maxTranslate(), nextTranslate));
+  if (Math.abs(clamped - swiper.getTranslate()) < 1) return;
+  swiper.setTransition(filmstripSpeed());
   swiper.setTranslate(clamped);
   swiper.updateProgress();
 }
@@ -102,6 +130,7 @@ export default function AlbumFilmstrip({
   nickname,
   albumSlug,
   basePath,
+  loadedShortId,
 }: AlbumFilmstripProps) {
   const pathname = usePathname();
   const pathShortId = getPhotoShortIdFromPathname(pathname);
@@ -150,14 +179,68 @@ export default function AlbumFilmstrip({
       ? pendingShortId
       : currentPhotoShortId;
   const selectedIndex = photos.findIndex((photo) => photo.shortId === selectedShortId);
+  // Every photo is a slot. Blurhashes fill in batches around the selection
+  // and wherever a drag or snap has moved the strip.
+  const BLURHASH_BATCH = 10;
+  const anchor = selectedIndex < 0 ? 0 : selectedIndex;
+  const [loadedFrom, setLoadedFrom] = useState(() => Math.max(0, anchor - BLURHASH_BATCH));
+  const [loadedThrough, setLoadedThrough] = useState(() => Math.min(photos.length - 1, anchor + BLURHASH_BATCH));
+  const thumbsReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  const landedRef = useRef(false);
+  const userMovedRef = useRef(false);
+  const centeredTranslateRef = useRef<number | null>(null);
+
+  const extendLoadedRange = useCallback((swiper: SwiperType) => {
+    const viewport = clipRef.current;
+    if (!viewport) return;
+    const slides = swiper.slides;
+    if (!slides?.length) return;
+    const clip = viewport.getBoundingClientRect();
+    let first = -1;
+    let last = -1;
+    Array.from(slides).forEach((slide, index) => {
+      if (!(slide instanceof HTMLElement)) return;
+      const rect = slide.getBoundingClientRect();
+      if (rect.right < clip.left || rect.left > clip.right) return;
+      if (first < 0) first = index;
+      last = index;
+    });
+    if (first < 0) return;
+    const from = Math.max(0, first - BLURHASH_BATCH);
+    const through = Math.min(photos.length - 1, last + BLURHASH_BATCH);
+    setLoadedFrom((current) => Math.min(current, from));
+    setLoadedThrough((current) => Math.max(current, through));
+  }, [photos.length]);
+
+  if (selectedIndex >= 0) {
+    const nextFrom = Math.max(0, selectedIndex - BLURHASH_BATCH);
+    const nextThrough = Math.min(photos.length - 1, selectedIndex + BLURHASH_BATCH);
+    if (loadedFrom > nextFrom) setLoadedFrom(nextFrom);
+    if (loadedThrough < nextThrough) setLoadedThrough(nextThrough);
+  }
 
   const ensureSelectedThumbVisible = useCallback(() => {
     if (draggingRef.current) return;
     const swiper = swiperRef.current;
     const viewport = clipRef.current;
     if (!swiper || !viewport) return;
-    scrollFilmstripToIndex(swiper, selectedIndex, photos.length, viewport);
-  }, [photos.length, selectedIndex]);
+    if (!landedRef.current) {
+      const placed = scrollFilmstripToIndex(swiper, selectedIndex, photos.length, viewport, 0);
+      if (!placed) return;
+      landedRef.current = true;
+      centeredTranslateRef.current = swiper.getTranslate();
+    } else if (!userMovedRef.current && centeredTranslateRef.current != null) {
+      swiper.setTransition(0);
+      swiper.setTranslate(centeredTranslateRef.current);
+    } else {
+      nudgeFilmstripThumb(swiper, selectedIndex, viewport);
+    }
+    requestAnimationFrame(() => extendLoadedRange(swiper));
+  }, [extendLoadedRange, photos.length, selectedIndex]);
 
   useEffect(() => {
     ensureSelectedThumbVisible();
@@ -280,29 +363,55 @@ export default function AlbumFilmstrip({
               threshold={0}
               onSwiper={(swiper) => {
                 swiperRef.current = swiper;
-                syncEdges(swiper);
-                ensureSelectedThumbVisible();
+                const place = () => {
+                  ensureSelectedThumbVisible();
+                  if (swiper.slides?.length) {
+                    swiper.updateProgress();
+                    syncEdges(swiper);
+                  }
+                  extendLoadedRange(swiper);
+                };
+                requestAnimationFrame(() => {
+                  place();
+                  requestAnimationFrame(place);
+                });
               }}
               onTouchStart={(swiper) => {
                 draggingRef.current = true;
+                userMovedRef.current = true;
                 suppressThumbClickRef.current = false;
                 swiper.setTransition(0);
               }}
               onTouchEnd={(swiper) => {
                 draggingRef.current = false;
                 syncEdges(swiper);
+                extendLoadedRange(swiper);
               }}
               onSliderMove={() => {
                 suppressThumbClickRef.current = true;
               }}
-              onTransitionEnd={syncEdges}
+              onTransitionEnd={(swiper) => {
+                syncEdges(swiper);
+                extendLoadedRange(swiper);
+              }}
               onResize={syncEdges}
+              onUpdate={(swiper) => {
+                if (userMovedRef.current || centeredTranslateRef.current == null) return;
+                if (Math.abs(swiper.getTranslate() - centeredTranslateRef.current) < 1) return;
+                swiper.setTransition(0);
+                swiper.setTranslate(centeredTranslateRef.current);
+              }}
               className="overflow-visible! cursor-grab select-none [&_.swiper-wrapper]:cursor-grab [&_.swiper-wrapper]:h-auto [&_a]:cursor-grab [&_a]:[user-drag:none]"
             >
               {photos.map((photo, index) => {
                 const isSelected = photo.shortId === selectedShortId;
-                const isPending = photo.shortId === pendingShortId && pendingShortId !== currentPhotoShortId;
-                const thumbnailUrl = getSquareThumbnailUrl(photo.url, 48, 75) || photo.url;
+                const isPending = photo.shortId === pendingShortId
+                  && pendingShortId !== currentPhotoShortId
+                  && loadedShortId !== photo.shortId;
+                const showBlurhash = thumbsReady && index >= loadedFrom && index <= loadedThrough;
+                const thumbnailUrl = showBlurhash
+                  ? (getSquareThumbnailUrl(photo.url, 48, 75) || photo.url)
+                  : null;
                 const title = filmstripPhotoTitle(photo.title);
                 const thumbnail = (
                   <HoverPrefetchLink
@@ -320,7 +429,7 @@ export default function AlbumFilmstrip({
                       }
                       setPendingShortId(photo.shortId);
                     }}
-                    className="group relative block size-12"
+                    className="group relative block size-12 select-none"
                     aria-current={isSelected && !isPending ? 'page' : undefined}
                     aria-label={`Go to photo ${index + 1} of ${photos.length}${isSelected && !isPending ? ' (current)' : ''}${isPending ? ' (loading)' : ''}`}
                     aria-busy={isPending}
@@ -336,16 +445,23 @@ export default function AlbumFilmstrip({
                             : 'border-border-color group-hover:border-primary/50',
                         )}
                       >
-                        <BlurImage
-                          src={thumbnailUrl}
-                          alt={title || `Photo ${index + 1}`}
-                          blurhash={photo.blurhash}
-                          fill
-                          sizes="48px"
-                          loading="lazy"
-                          fetchPriority="low"
-                          className="object-cover"
-                        />
+                        {showBlurhash ? (
+                          <BlurImage
+                            src={thumbnailUrl || photo.url}
+                            alt={title || `Photo ${index + 1}`}
+                            blurhash={photo.blurhash}
+                            fill
+                            sizes="48px"
+                            loading="lazy"
+                            fetchPriority="low"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span
+                            className="absolute inset-0 bg-neutral-200 dark:bg-neutral-800"
+                            aria-hidden
+                          />
+                        )}
                         {isPending && (
                           <span
                             className="absolute inset-0 z-10 flex items-center justify-center bg-black/45"

@@ -743,7 +743,7 @@ export const sharedStoryFrames: Record<string, UiStoryFrame[]> = {
       title: 'Default',
       render: () => (
         <div
-          className="max-w-[10rem]"
+          className="max-w-40"
         >
           <MemberCard
             member={fixtureMember}
