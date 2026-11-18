@@ -15,7 +15,16 @@ function nominatimUserAgent(): string {
   return `CPG Website (${site}; photo location picker)`;
 }
 
-export async function searchPlaces(query: string, limit = 8): Promise<PlaceSearchResult[]> {
+type SearchPlacesOptions = {
+  /** ISO 3166-1 alpha-2 codes, comma-separated (e.g. `nl`). */
+  countryCodes?: string;
+};
+
+export async function searchPlaces(
+  query: string,
+  limit = 8,
+  options?: SearchPlacesOptions,
+): Promise<PlaceSearchResult[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) {
     return [];
@@ -27,6 +36,10 @@ export async function searchPlaces(query: string, limit = 8): Promise<PlaceSearc
     limit: String(Math.min(Math.max(limit, 1), 10)),
     addressdetails: '0',
   });
+
+  if (options?.countryCodes) {
+    params.set('countrycodes', options.countryCodes);
+  }
 
   const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
     headers: {

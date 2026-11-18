@@ -14,7 +14,7 @@ export default function PrivacyPage() {
     <PageContainer>
       <PageHeading
         title="Privacy Policy"
-        description="Last updated: March 9, 2026"
+        description="Last updated: March 22, 2026"
       />
       <Container
         padding="lg"
@@ -297,10 +297,92 @@ export default function PrivacyPage() {
             <h3
               className="mt-4 mb-3 text-lg font-medium sm:text-xl font-heading"
             >
+              Functional cookies (onboarding)
+            </h3>
+            <p>
+              After you log in, we may set a short-lived cookie so we can guide you through profile setup without loading your profile on every page. This cookie is only used while you are signed in.
+            </p>
+            <ul
+              className="mb-4 ml-6 list-disc"
+            >
+              <li>
+                <strong>
+                  Cookie name:
+                </strong>
+                {' '}
+                cpg_onboarding
+              </li>
+              <li>
+                <strong>
+                  Purpose:
+                </strong>
+                {' '}
+                Remember whether profile onboarding is pending or complete
+              </li>
+              <li>
+                <strong>
+                  Type:
+                </strong>
+                {' '}
+                Functional / essential (signed-in users only)
+              </li>
+              <li>
+                <strong>
+                  Retention:
+                </strong>
+                {' '}
+                Up to 7 days, or until you log out
+              </li>
+            </ul>
+            <h3
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl font-heading"
+            >
+              Admin preview cookies
+            </h3>
+            <p>
+              Administrators who use special preview links on the site may receive short-lived cookies that simulate member-review or network-block states for testing. These cookies are not set for normal visitors.
+            </p>
+            <ul
+              className="mb-4 ml-6 list-disc"
+            >
+              <li>
+                <strong>
+                  Cookie names:
+                </strong>
+                {' '}
+                cpg_block_preview, cpg_review_preview
+              </li>
+              <li>
+                <strong>
+                  Retention:
+                </strong>
+                {' '}
+                Up to 24 hours
+              </li>
+            </ul>
+            <h3
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl font-heading"
+            >
+              Security (Cloudflare)
+            </h3>
+            <p>
+              Our site is served through Cloudflare. When bot protection is active, Cloudflare may set strictly necessary cookies (for example __cf_bm) to distinguish legitimate visitors from automated traffic.
+            </p>
+            <h3
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl font-heading"
+            >
+              Embedded maps (Google Maps)
+            </h3>
+            <p>
+              Some event and photo pages show an embedded Google Maps preview. When the map loads, Google may set cookies or use similar technologies on your device under Google&apos;s own privacy policy. We do not control these cookies. You can open the location in Google Maps in a new tab instead of using the embedded map, or block third-party content in your browser settings.
+            </p>
+            <h3
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl font-heading"
+            >
               Web analytics (no cookies)
             </h3>
             <p>
-              We use Vercel Analytics to understand how visitors use our website. This service does not use cookies. It collects anonymous, aggregated data only (e.g. page views) and cannot identify individual visitors or track you across other websites. No personal data is collected.
+              When enabled on our hosting platform, we use Vercel Analytics to understand how visitors use our website. This service does not use cookies. It collects anonymous, aggregated data only (e.g. page views) and cannot identify individual visitors or track you across other websites. No personal data is collected.
             </p>
             <p>
               You can control or delete cookies through your browser settings. Note that disabling functional cookies may prevent you from logging in or using certain features.
