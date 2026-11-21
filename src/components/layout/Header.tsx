@@ -15,6 +15,7 @@ const navItems = [
   routes.challenges,
   routes.gallery,
   routes.members,
+  routes.learn,
 ] as const;
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {

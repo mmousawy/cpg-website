@@ -10,6 +10,7 @@ import {
   MIN_INDEXABLE_TAG_PHOTOS,
 } from '@/lib/seoThresholds';
 import { createPublicClient } from '@/utils/supabase/server';
+import { getLearnLessonSlugs } from '@/content/learn';
 import type { Tables } from '@/database.types';
 
 const baseUrl = 'https://creativephotography.group';
@@ -79,6 +80,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     },
     {
+      url: `${baseUrl}/learn`,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
       url: `${baseUrl}/privacy`,
       changeFrequency: 'monthly',
       priority: 0.3,
@@ -89,6 +95,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.3,
     },
   ];
+
+  const learnPages: MetadataRoute.Sitemap = getLearnLessonSlugs().map((slug) => ({
+    url: `${baseUrl}/learn/${slug}`,
+    changeFrequency: 'monthly',
+    priority: 0.65,
+  }));
 
   const { data: profileRows } = await supabase
     .from('profiles')
@@ -229,6 +241,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticPages,
+    ...learnPages,
     ...profilePages,
     ...albumPages,
     ...photoPages,

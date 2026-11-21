@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 700" width="700" height="700" opacity="0.26">
+  <defs>
+    <filter id="learn-noise-light" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.078" numOctaves="4" seed="9" stitchTiles="stitch" result="turbulence" />
+      <feSpecularLighting surfaceScale="14" specularConstant="0.85" specularExponent="18" lighting-color="#6a5acd" in="turbulence" result="specularLighting">
+        <feDistantLight azimuth="12" elevation="108" />
+      </feSpecularLighting>
+    </filter>
+  </defs>
+  <rect width="700" height="700" fill="#4a3f6e" filter="url(#learn-noise-light)" />
+</svg>

@@ -841,6 +841,110 @@ html.dev-workbench-page .mobile-main-bottom-spacer {
   display: none;
 }
 
+/* Learn: full-width header, viewport shell, no site footer (same chrome model as manage). */
+html.learn-page,
+html.learn-page body {
+  overflow: hidden;
+  height: 100%;
+  max-height: 100%;
+}
+
+html.learn-page .app-shell {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+html.learn-page .app-shell-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html.learn-page .app-footer {
+  display: none;
+}
+
+html.learn-page .app-header-inner {
+  max-width: none;
+}
+
+html.learn-page .learn-shell {
+  height: 100%;
+  min-height: 0;
+}
+
+@media (max-width: 639px) {
+  html.learn-page .mobile-main-bottom-spacer {
+    display: none;
+  }
+
+  html.learn-page .app-shell-main {
+    padding-bottom: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  html.learn-page .learn-shell {
+    min-height: 0;
+  }
+}
+
+/* Canon manual diagrams (camera anatomy) — inline SVG uses these custom properties */
+.learn-canon-diagram {
+  --learn-diagram-surface: none;
+  --learn-diagram-ink: var(--foreground);
+  --learn-diagram-knockout: var(--background-light);
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+  background: transparent;
+}
+
+/* Fills parent; width follows slide, height capped by viewport (diagram rescales on resize). */
+.learn-camera-diagram-stage {
+  width: 100%;
+  max-width: 100%;
+  max-height: min(78vh, 46rem);
+  height: auto;
+  min-height: 0;
+}
+
+/*
+ * Callout dots: embedded SVG <style> does not match SVGR-scoped class names,
+ * so theme colors and interactive states live here.
+ */
+.learn-canon-diagram [class*='learn-canon-callout-dot'] {
+  fill: var(--primary);
+  stroke: transparent;
+  stroke-width: 2px;
+}
+
+.learn-canon-diagram [class*='learn-canon-callout-dot'][data-active='true'],
+.learn-canon-diagram [class*='learn-canon-callout-dot']:focus-visible {
+  fill: transparent;
+  stroke: var(--primary);
+  stroke-width: 2px;
+}
+
+.learn-canon-diagram [class*='learn-canon-callout-dot'] {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+@keyframes learn-slide-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Storyboard: header + sidebar stay in the viewport; only the canvas pane scrolls. */
 html.dev-workbench-page,
 html.dev-workbench-page body {

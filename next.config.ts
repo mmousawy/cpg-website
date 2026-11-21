@@ -139,11 +139,16 @@ const nextConfig: NextConfig = {
       fileLoaderRule.exclude = /\.svg$/i;
     }
 
+    const svgrOptions = {
+      ref: true,
+      svgo: false,
+    };
+
     config.module.rules.push({
       test: /\.svg$/i,
       issuer: /\.[jt]sx?$/,
       resourceQuery: { not: [/__next_metadata__/, /url/] },
-      use: ['@svgr/webpack'],
+      use: [{ loader: '@svgr/webpack', options: svgrOptions }],
     });
 
     return config;
@@ -151,7 +156,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: {
       '*.svg': {
-        loaders: ['@svgr/webpack'],
+        loaders: [{ loader: '@svgr/webpack', options: { ref: true, svgo: false } }],
         as: '*.js',
       },
     },

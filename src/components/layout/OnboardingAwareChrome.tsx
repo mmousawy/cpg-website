@@ -14,7 +14,11 @@ type HideOnOnboardingProps = {
 /** Hides site footer on routes that use their own full-screen layout. */
 export function HideOnOnboarding({ children }: HideOnOnboardingProps) {
   const pathname = usePathname();
-  if (isOnboardingPath(pathname) || isNetworkBlockedPath(pathname) || isDevWorkbenchPath(pathname)) {
+  if (
+    isOnboardingPath(pathname) ||
+    isNetworkBlockedPath(pathname) ||
+    isDevWorkbenchPath(pathname)
+  ) {
     return null;
   }
   return children;
