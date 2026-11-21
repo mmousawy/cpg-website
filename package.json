@@ -1,6 +1,6 @@
 {
   "name": "cpg-website",
-  "version": "1.49.4",
+  "version": "1.50.0",
   "private": true,
   "packageManager": "pnpm@11.28.11",
   "engines": {
@@ -34,6 +34,9 @@
     "db:types": "node scripts/postprocess-database-types.mjs",
     "db:report-deletion": "npx tsx scripts/report-account-deletion-status.ts",
     "db:sync": "node scripts/sync-remote-database.mjs",
+    "canon:callouts": "npx tsx scripts/canon-callout-mapper.ts",
+    "canon:callouts:side-back": "npx tsx scripts/canon-callout-mapper.ts -- --diagram side-back",
+    "canon:theme": "node scripts/theme-canon-manual-svgs.mjs",
     "help:search-index": "vitest run --config vitest.help-search-index.config.ts",
     "sync:help-search-index": "node scripts/sync-help-search-index-if-needed.mjs --always",
     "prepare": "husky"

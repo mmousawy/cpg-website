@@ -1,6 +1,29 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatEventLocation, parseEventLocation } from './formatLocation';
+import {
+  formatEventLocation,
+  getGoogleMapsEmbedUrl,
+  getGoogleMapsSearchUrl,
+  parseEventLocation,
+} from './formatLocation';
+
+describe('getGoogleMapsSearchUrl', () => {
+  it('builds a Google Maps search link from a multiline address', () => {
+    const url = getGoogleMapsSearchUrl('The Villy\nGaffelstraat 61\n3014 RE Rotterdam');
+    expect(url).toBe(
+      'https://www.google.com/maps/search/?api=1&query='
+      + encodeURIComponent('The Villy, Gaffelstraat 61, 3014 RE Rotterdam'),
+    );
+  });
+});
+
+describe('getGoogleMapsEmbedUrl', () => {
+  it('builds an embed URL with output=embed', () => {
+    const url = getGoogleMapsEmbedUrl('Rotterdam');
+    expect(url).toContain('output=embed');
+    expect(url).toContain(encodeURIComponent('Rotterdam'));
+  });
+});
 
 describe('formatEventLocation', () => {
   it('returns venue and city from a multiline address', () => {

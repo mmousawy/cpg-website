@@ -15,6 +15,7 @@ import {
   DEV_WORKBENCH_PAGE_CLASS,
   isDevWorkbenchPath,
 } from '@/utils/devWorkbenchPath';
+import { LEARN_PAGE_CLASS, isLearnPagePath } from '@/utils/learnPath';
 import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 import {
   getRoutePathWithSearch,
@@ -54,6 +55,7 @@ export default function DocumentRouteState() {
     document.documentElement.classList.toggle('network-blocked-page', isNetworkBlockedPath(pathname));
     const isDevWorkbench = isDevWorkbenchPath(pathname);
     document.documentElement.classList.toggle(DEV_WORKBENCH_PAGE_CLASS, isDevWorkbench);
+    document.documentElement.classList.toggle(LEARN_PAGE_CLASS, isLearnPagePath(pathname));
     document.documentElement.classList.toggle('mobile-pinned-shell', pinnedMobileShell);
     document.documentElement.classList.toggle(
       'mobile-terminal-sticky-settle',

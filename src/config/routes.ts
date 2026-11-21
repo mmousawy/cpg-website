@@ -87,6 +87,10 @@ export const routes = {
     label: 'Contact',
     url: '/contact',
   },
+  learn: {
+    label: 'Learn',
+    url: '/learn',
+  },
   help: {
     label: 'Help',
     url: '/help',

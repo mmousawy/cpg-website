@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.50.0](https://github.com/mmousawy/cpg-website/compare/v1.49.4...v1.50.0) (2026-11-21)
+
+
+### ✨ Features
+
+* add Learn page and enhance routing ([de691db](https://github.com/mmousawy/cpg-website/commit/de691db9bb53f8b873f900a25d6c96dfec1990de))
+
+
+### 🐛 Bug Fixes
+
+* enhance Learn components and styles for improved user experience ([39f1a66](https://github.com/mmousawy/cpg-website/commit/39f1a6636b25d1741849a1ccde7558c75b54615a))
+* update focusPlane test thresholds for accuracy ([45091b9](https://github.com/mmousawy/cpg-website/commit/45091b96c7af6117bf166a3dfc19c58944123e3c))
+
 ## [1.49.4](https://github.com/mmousawy/cpg-website/compare/v1.49.3...v1.49.4) (2026-11-17)
 
 

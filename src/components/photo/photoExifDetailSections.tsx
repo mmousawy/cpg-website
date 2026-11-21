@@ -1,7 +1,7 @@
 'use client';
 
 import ScrappyCameraIllustration from '@/components/gear/ScrappyCameraIllustration';
-import { getGoogleMapsEmbedUrl, getGoogleMapsSearchUrl } from '@/utils/formatLocation';
+import { getGoogleMapsCoordSearchUrl, getGoogleMapsEmbedUrl } from '@/utils/formatLocation';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
 import CameraLensIcon from 'public/icons/camera-lens.svg';
 import ImageFrameIcon from 'public/icons/image-frame.svg';
@@ -49,7 +49,7 @@ export function buildPhotoExifDetailSections(
   if (location) {
     const query = `${location.lat},${location.lng}`;
     const embedUrl = getGoogleMapsEmbedUrl(query);
-    const mapsUrl = getGoogleMapsSearchUrl(query);
+    const mapsUrl = getGoogleMapsCoordSearchUrl(location.lat, location.lng);
     sections.push({
       key: 'location',
       title: 'Location',

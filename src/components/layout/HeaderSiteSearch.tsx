@@ -14,7 +14,7 @@ export default function HeaderSiteSearch() {
       onFocus={() => {
         window.dispatchEvent(new CustomEvent('search:intent'));
       }}
-      className="flex items-center justify-center gap-2 rounded-full p-2 text-foreground/80 transition-colors hover:text-foreground lg:rounded-lg lg:border lg:border-border-color lg:bg-background-medium lg:px-2 lg:py-1.5 lg:text-sm lg:hover:border-primary"
+      className="flex size-10 shrink-0 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-background-medium hover:text-foreground"
       aria-label="Search"
     >
       <svg
@@ -22,7 +22,8 @@ export default function HeaderSiteSearch() {
         stroke="currentColor"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
-        className="size-5 lg:size-4"
+        className="size-5"
+        aria-hidden
       >
         <path
           strokeLinecap="round"
@@ -31,24 +32,6 @@ export default function HeaderSiteSearch() {
           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
         />
       </svg>
-      <span
-        className="hidden lg:inline text-foreground/60"
-      >Search</span>
-      <kbd
-        className="hidden lg:inline-flex h-5 select-none items-center rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50"
-      >
-        <span
-          className="hidden in-data-[platform=mac]:inline"
-        >
-          ⌘
-        </span>
-        <span
-          className="inline in-data-[platform=mac]:hidden"
-        >
-          Ctrl
-        </span>
-        +K
-      </kbd>
     </button>
   );
 }

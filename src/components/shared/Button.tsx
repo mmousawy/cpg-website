@@ -82,13 +82,13 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     'btn-skeuo btn-skeuo-primary bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary focus-visible:bg-primary-alt focus-visible:text-slate-950 focus-visible:border-primary-alt disabled:bg-foreground/10 disabled:text-foreground/40 disabled:border-transparent disabled:hover:bg-foreground/10 disabled:hover:text-foreground/40 disabled:hover:border-transparent data-[disabled=true]:bg-foreground/10 data-[disabled=true]:text-foreground/40 data-[disabled=true]:border-transparent',
   secondary:
-    'btn-skeuo btn-skeuo-secondary bg-background-raised border-border-color-strong text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))]',
+    'btn-skeuo btn-skeuo-secondary bg-background-raised border-border-color-strong text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] disabled:border-border-color disabled:bg-background-raised/50 disabled:text-foreground/35 disabled:hover:border-border-color disabled:hover:bg-background-raised/50 disabled:hover:text-foreground/35 data-[disabled=true]:border-border-color data-[disabled=true]:bg-background-raised/50 data-[disabled=true]:text-foreground/35',
   danger:
-    'btn-skeuo btn-skeuo-danger bg-background border-red-500/50 dark:border-red-500/70 text-red-500 hover:border-red-500 hover:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))] focus-visible:border-red-500 focus-visible:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))]',
+    'btn-skeuo btn-skeuo-danger bg-background border-red-500/50 dark:border-red-500/70 text-red-500 hover:border-red-500 hover:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))] focus-visible:border-red-500 focus-visible:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))] disabled:border-transparent disabled:bg-foreground/10 disabled:text-foreground/35 disabled:hover:border-transparent disabled:hover:bg-foreground/10 disabled:hover:text-foreground/35 data-[disabled=true]:border-transparent data-[disabled=true]:bg-foreground/10 data-[disabled=true]:text-foreground/35',
   ghost:
-    'btn-skeuo btn-skeuo-ghost bg-transparent border-transparent text-foreground hover:bg-background focus-visible:bg-background',
+    'btn-skeuo btn-skeuo-ghost bg-transparent border-transparent text-foreground hover:bg-background focus-visible:bg-background disabled:text-foreground/35 disabled:hover:bg-transparent disabled:hover:text-foreground/35 data-[disabled=true]:text-foreground/35',
   tertiary:
-    'btn-skeuo btn-skeuo-outline bg-background/50 border-border-color text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))]',
+    'btn-skeuo btn-skeuo-outline bg-background/50 border-border-color text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] disabled:border-border-color disabled:bg-background/40 disabled:text-foreground/35 disabled:hover:border-border-color disabled:hover:bg-background/40 disabled:hover:text-foreground/35 data-[disabled=true]:border-border-color data-[disabled=true]:bg-background/40 data-[disabled=true]:text-foreground/35',
   custom:
     '',
 };
@@ -122,7 +122,6 @@ export default function Button({
     fullWidth && 'w-full',
     // Disabled/loading state
     isDisabled && 'cursor-not-allowed pointer-events-none',
-    isDisabled && variant !== 'primary' && 'opacity-70',
     // Custom className
     className,
   );

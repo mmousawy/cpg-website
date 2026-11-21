@@ -120,6 +120,14 @@ export default function AccountSiteLinksPanel({
         className="p-2"
       >
         <Link
+          href={routes.learn.url}
+          prefetch={false}
+          onClick={onClose}
+          className={menuLinkClass(routes.learn.url)}
+        >
+          {routes.learn.label}
+        </Link>
+        <Link
           href={routes.help.url}
           prefetch={false}
           onClick={onClose}
