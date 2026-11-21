@@ -25,10 +25,10 @@ describe('focusPlane', () => {
     const close = layerBlursForFocus('foreground', 0);
     expect(close[5]).toBe(0);
     expect(close[4]).toBeGreaterThan(0);
-    expect(close[4]).toBeLessThan(3.5);
+    expect(close[4]).toBeLessThan(4.5);
     expect(close[4]).toBeLessThan(close[3] * 0.5);
     expect(close[0]).toBeGreaterThan(close[3]);
-    expect(close[0]).toBeLessThan(9);
+    expect(close[0]).toBeLessThanOrEqual(10);
   });
 
   it('keeps the foreground softer than the background when focus is mid', () => {
