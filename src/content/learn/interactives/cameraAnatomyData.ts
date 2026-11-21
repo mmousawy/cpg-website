@@ -47,9 +47,9 @@ export const MANUAL_PART_NAMES_URL =
   'https://cam.start.canon/en/C005/manual/html/UG-00_Before_0090.html';
 
 export const CAMERA_VIEWS: { id: CameraView; label: string }[] = [
-  { id: 'threeQuarter', label: 'Top & front (¾)' },
-  { id: 'sideBack', label: 'Side & back' },
-  { id: 'sideBottom', label: 'Side & bottom' },
+  { id: 'threeQuarter', label: 'Front' },
+  { id: 'sideBack', label: 'Back' },
+  { id: 'sideBottom', label: 'Bottom' },
 ];
 
 export const CAMERA_PARTS: CameraPart[] = [
@@ -64,28 +64,28 @@ export const CAMERA_PARTS: CameraPart[] = [
   },
   {
     id: 'multi-lock',
-    label: 'Multi-function lock Multi-function lock button',
+    label: 'Multi-function lock',
     view: 'threeQuarter',
     manualRef: 2,
     description: 'Locks dials and buttons you select so a bump in the bag does not change settings.',
   },
   {
     id: 'iso',
-    label: 'ISO ISO speed setting button',
+    label: 'ISO speed button',
     view: 'threeQuarter',
     manualRef: 3,
     description: 'Quick access to sensitivity; often paired with a dial to change ISO while shooting.',
   },
   {
     id: 'main-dial',
-    label: 'Main dial Main dial',
+    label: 'Main dial',
     view: 'threeQuarter',
     manualRef: 4,
     description: 'Primary command dial on the grip — exposure, aperture, shutter, or menu values depending on mode.',
   },
   {
     id: 'multi-fn',
-    label: 'Multi-function Multi-function button',
+    label: 'Multi-function button',
     view: 'threeQuarter',
     manualRef: 5,
     description: 'Assignable control; many photographers map it to white balance, drive mode, or focus area.',
@@ -109,14 +109,14 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Self-timer lamp/AF-assist beam',
     view: 'threeQuarter',
     manualRef: 8,
-    description: 'Blinking countdown for self-timer and patterned light to help autofocus in the dark.',
+    description: 'Blinks during the self-timer countdown and casts a pattern that helps autofocus in low light.',
   },
   {
     id: 'remote-sensor',
     label: 'Remote control sensor',
     view: 'threeQuarter',
     manualRef: 9,
-    description: 'Receives signals from an infrared or wired remote for hands-off shutter release.',
+    description: 'Receives signals from an infrared remote for hands-off shutter release.',
   },
   {
     id: 'grip',
@@ -173,7 +173,7 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Flash sync contacts',
     view: 'threeQuarter',
     manualRef: 17,
-    description: 'Legacy sync pins for studio strobes and some third-party triggers.',
+    description: 'Extra sync pins used by studio strobes and some third-party flash triggers.',
   },
   {
     id: 'hot-shoe',
@@ -187,14 +187,14 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Microphone',
     view: 'threeQuarter',
     manualRef: 19,
-    description: 'Captures scratch audio with video; external mics usually sound better for serious work.',
+    description: 'Built-in mic for scratch audio with video — external mics sound better for serious work.',
   },
   {
     id: 'mount-index',
     label: 'RF lens mount index',
     view: 'threeQuarter',
     manualRef: 20,
-    description: 'Dot or line on body and lens that must line up before you rotate the lens into place.',
+    description: 'Dot or line on the body; align it with the matching mark on the lens before twisting until it clicks.',
   },
   {
     id: 'strap-front',
@@ -205,7 +205,7 @@ export const CAMERA_PARTS: CameraPart[] = [
   },
   {
     id: 'focal-plane',
-    label: 'Focal plane mark Focal plane mark',
+    label: 'Focal plane mark',
     view: 'threeQuarter',
     manualRef: 22,
     description: 'Marks the sensor plane for measuring focus distance with charts or calibration tools.',
@@ -258,14 +258,14 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Menu button',
     view: 'sideBack',
     manualRef: 3,
-    description: 'Opens deep setup: autofocus cases, card format, customization, connectivity, and more.',
+    description: 'Opens the full menu: autofocus, card format, customization, connectivity, and so on.',
   },
   {
     id: 'terminal-cover',
     label: 'Terminal cover',
     view: 'sideBack',
     manualRef: 4,
-    description: 'Rubber door over USB, HDMI, mic, headphone, and remote ports — keep it closed in the field.',
+    description: 'Rubber door over the USB, HDMI, mic, headphone, and remote ports — latch it closed in the field.',
   },
   {
     id: 'rear-dial',
@@ -279,14 +279,14 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Power switch',
     view: 'sideBack',
     manualRef: 6,
-    description: 'OFF / ON and often a movie position on hybrid bodies.',
+    description: 'OFF / ON, plus a dedicated movie position on many hybrid bodies.',
   },
   {
     id: 'af-on',
     label: 'AF start (AF-ON)',
     view: 'sideBack',
     manualRef: 7,
-    description: 'Focus without half-pressing the shutter — popular for action and back-button AF.',
+    description: 'Focuses the lens without using the shutter button — the basis of back-button focus.',
   },
   {
     id: 'joystick',
@@ -307,14 +307,14 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Card access lamp',
     view: 'sideBack',
     manualRef: 10,
-    description: 'Blinks while writing to the memory card — wait before removing power or the card.',
+    description: 'Blinks while the camera is writing to the memory card — wait for it to stop before removing power or the card.',
   },
   {
     id: 'quick-set',
     label: 'Quick control / Set',
     view: 'sideBack',
     manualRef: 11,
-    description: 'Opens the quick menu for common shooting tweaks without full menu diving.',
+    description: 'Opens the quick menu for everyday shooting tweaks without going into the full menu.',
   },
   {
     id: 'cross-keys',
@@ -392,14 +392,14 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Tripod socket',
     view: 'sideBottom',
     manualRef: 2,
-    description: 'Threaded insert on the base; align with the lens axis for good balance on a head.',
+    description: 'Threaded insert on the base — set it under the lens axis for good balance on a tripod head.',
   },
   {
     id: 'lcd',
     label: 'Rear screen',
     view: 'sideBottom',
     manualRef: 3,
-    description: 'Menus, live view, touch AF, and playback; may tilt or flip on some models.',
+    description: 'Live view, menus, touch AF, and playback — may tilt or flip out on many bodies.',
   },
   {
     id: 'speaker',
@@ -413,7 +413,7 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'AE lock',
     view: 'sideBottom',
     manualRef: 5,
-    description: 'Holds auto-exposure while you recompose — essential for spot metering workflows.',
+    description: 'Locks exposure while you recompose — essential when spot metering off a small subject.',
   },
   {
     id: 'strap-back',
@@ -427,7 +427,7 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'AF point / magnify',
     view: 'sideBottom',
     manualRef: 7,
-    description: 'Selects autofocus points and zooms playback to check sharpness.',
+    description: 'Opens the AF-point picker when shooting and magnifies playback to check sharpness.',
   },
   {
     id: 'card-cover',
@@ -441,28 +441,28 @@ export const CAMERA_PARTS: CameraPart[] = [
     label: 'Card slot 1',
     view: 'sideBottom',
     manualRef: 9,
-    description: 'Primary SD or CFexpress slot; label cards if you rotate them.',
+    description: 'Primary SD or CFexpress slot — label your cards so you can rotate them without guessing.',
   },
   {
     id: 'card-2',
     label: 'Card slot 2',
     view: 'sideBottom',
     manualRef: 10,
-    description: 'Second slot for overflow, backup, or separate formats on prosumer bodies.',
+    description: 'Second card slot on many enthusiast and pro bodies — use it for overflow, live backup, or splitting raw and JPEG.',
   },
   {
     id: 'battery-lock',
     label: 'Battery cover lock',
     view: 'sideBottom',
     manualRef: 11,
-    description: 'Latch that keeps the battery door closed under vibration.',
+    description: 'Latch that holds the battery door closed under vibration or when hanging upside-down on a strap.',
   },
   {
     id: 'battery-door',
     label: 'Battery compartment',
     view: 'sideBottom',
     manualRef: 12,
-    description: 'Holds the rechargeable pack; carry a charged spare on long days.',
+    description: 'Holds the rechargeable battery pack — carry a charged spare on long days.',
   },
 ];
 

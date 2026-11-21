@@ -77,16 +77,17 @@
         letter-spacing: -0.07em;
       }
 
-      .cls-13, .cls-14, .cls-17 {
+      .cls-17 {
         stroke: var(--primary);
+      }
+
+      .cls-13, .cls-14 {
+        stroke: #0082ba;
+        stroke-dasharray: 2;
       }
 
       .cls-13 {
         stroke-width: 0.82px;
-      }
-
-      .cls-13, .cls-14 {
-        stroke-dasharray: 2;
       }
 
       .cls-14 {
@@ -769,5 +770,6 @@
     <circle class="learn-canon-callout-dot" data-manual-ref="13" cx="470.11" cy="235.3" r="1.8" />
     <circle class="learn-canon-callout-dot" data-manual-ref="12" cx="461.02" cy="218.54" r="1.8" />
   </g>
-
+  <rect class="cls-13 learn-canon-port-guide" x="47.79" y="144.7" width="90.2" height="168.3" stroke="#0082ba" />
+  <polyline class="cls-14 learn-canon-port-guide" points="237.09 255.65 237.09 313 136.09 313" stroke="#0082ba" />
 </svg>

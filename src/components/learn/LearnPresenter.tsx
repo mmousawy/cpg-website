@@ -21,6 +21,7 @@ import {
 
 import ArrowLeftIcon from 'public/icons/arrow-left.svg';
 import ArrowRightIcon from 'public/icons/arrow-right.svg';
+import TocSVG from 'public/icons/toc.svg';
 
 import LearnSlideContent from './LearnSlideContent';
 import { useLearnTopics } from './LearnTopicsContext';
@@ -150,16 +151,27 @@ export default function LearnPresenter({ lesson }: LearnPresenterProps) {
     >
       {learnTopics ? (
         <div
-          className="absolute top-2 left-2 z-10 sm:hidden"
+          className="flex shrink-0 items-center gap-2 border-b border-border-color bg-background-light px-3 py-2 sm:hidden"
         >
           <Button
             type="button"
             variant="secondary"
             size="sm"
-            onClick={learnTopics.openTopics}
+            onClick={learnTopics.openMenu}
+            icon={
+              <TocSVG
+                className="size-5 shrink-0 fill-current"
+                aria-hidden
+              />
+            }
           >
-            Topics
+            Outline
           </Button>
+          <p
+            className="min-w-0 flex-1 truncate text-sm font-medium text-foreground"
+          >
+            {lesson.title}
+          </p>
         </div>
       ) : null}
 
@@ -172,7 +184,7 @@ export default function LearnPresenter({ lesson }: LearnPresenterProps) {
           <div
             key={index}
             className={clsx(
-              'm-auto flex w-full max-w-6xl min-h-full flex-col px-4 py-6 sm:px-8 sm:py-10',
+              'm-auto flex w-full max-w-6xl min-h-full flex-col px-3 py-6 sm:px-6 sm:py-8',
               'max-sm:pb-[calc(var(--mobile-nav-offset,4.5rem)+4.75rem)]',
               !reduceMotion && 'motion-safe:animate-[learn-slide-in_0.2s_ease-out]',
             )}

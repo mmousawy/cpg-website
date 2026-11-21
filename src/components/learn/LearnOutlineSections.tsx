@@ -12,7 +12,8 @@ type LearnOutlineSectionsProps = {
   /** Compact sidebar vs overview in the main pane */
   variant?: 'sidebar' | 'overview';
   onNavigate?: () => void;
-  onTopicChosen?: () => void;
+  /** Fires with the lesson slug as soon as a live topic is clicked (before navigation). */
+  onTopicChosen?: (slug: string) => void;
 };
 
 export default function LearnOutlineSections({
@@ -61,7 +62,9 @@ export default function LearnOutlineSections({
                       href={href}
                       prefetch={false}
                       onClick={() => {
-                        onTopicChosen?.();
+                        if (item.slug) {
+                          onTopicChosen?.(item.slug);
+                        }
                         onNavigate?.();
                       }}
                       className={clsx(

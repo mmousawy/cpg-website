@@ -149,6 +149,7 @@
       .cls-34 {
         stroke-width: 0.8px;
         stroke-dasharray: 2;
+        stroke: #0082ba;
       }
     </style>
     <clipPath id="clip-path">
@@ -1097,4 +1098,6 @@
     <circle class="learn-canon-callout-dot" data-manual-ref="4" cx="178.34" cy="83" r="1.9" />
     <circle class="learn-canon-callout-dot" data-manual-ref="7" cx="283.78" cy="110.25" r="1.9" />
   </g>
+  <line class="cls-34 learn-canon-port-guide" x1="299.89" y1="180.2" x2="354.1" y2="180.2" stroke="#0082ba"/>
+  <rect class="cls-34 learn-canon-port-guide" x="354.1" y="180.2" width="144.2" height="93.7" stroke="#0082ba"/>
 </svg>

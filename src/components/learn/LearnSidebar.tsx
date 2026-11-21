@@ -10,7 +10,7 @@ import LearnOutlineSections from './LearnOutlineSections';
 type LearnSidebarProps = {
   className?: string;
   onNavigate?: () => void;
-  onTopicChosen?: () => void;
+  onTopicChosen?: (slug: string) => void;
 };
 
 export default function LearnSidebar({ className, onNavigate, onTopicChosen }: LearnSidebarProps) {

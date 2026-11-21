@@ -3,7 +3,8 @@ import type { LearnLesson } from '../types';
 export const whatsOnYourCameraLesson: LearnLesson = {
   slug: 'whats-on-your-camera',
   title: "What's on your camera",
-  summary: 'A quick map of the body, lens, and controls you will actually touch in the field.',
+  summary:
+    'A quick map of the body, lens, and controls your hands return to in the field.',
   slides: [
     {
       kind: 'title',
@@ -14,8 +15,8 @@ export const whatsOnYourCameraLesson: LearnLesson = {
       kind: 'prose',
       heading: 'Same jobs, different layouts',
       paragraphs: [
-        'Manufacturers rearrange buttons, but the jobs repeat: hold steady, aim, focus, expose, review.',
-        'Learning the names — mode dial, command dial, lens release — makes every manual and menu faster to read.',
+        'Every camera has the same short list of jobs: hold steady, aim, focus, expose, review. Manufacturers rearrange the buttons, but the parts keep the same names.',
+        'Once you can name a control — mode dial, command dial, lens release — every manual, menu, and tutorial gets faster to read.',
       ],
     },
     {
@@ -24,83 +25,39 @@ export const whatsOnYourCameraLesson: LearnLesson = {
       interactiveId: 'camera-anatomy',
     },
     {
-      kind: 'bullets',
-      heading: 'Front of the body',
-      items: [
-        'Lens mount — bayonet ring; align index marks before twisting until it clicks',
-        'Lens release — press while rotating the lens off; support the lens with your other hand',
-        'AF/MF switch — often on the front or left; required for manual focus and many adapted lenses',
-        'Depth-of-field preview — stops the lens down to your shooting f-number; the view may go dark on optical finders',
-        'Grip and thumb ridge — stability beats a heavy shutter jab',
-        'AF-assist / self-timer lamp — countdown blink and low-light AF pattern on many DSLRs',
-      ],
-    },
-    {
-      kind: 'bullets',
-      heading: 'The lens',
-      items: [
-        'Front element and cap — fingerprints scratch coatings; cap both ends in the bag',
-        'Zoom and focus rings — focal length vs distance; on mirrorless, focus rings may be electronic only in MF',
-        'Lens switches — stabilization (OSS/IS/VR) and sometimes an AF override on longer zooms',
-        'Hood — blocks flare from side light; petal shape clears corners at wide angles',
+      kind: 'prose',
+      heading: 'Three zones your hands return to',
+      paragraphs: [
+        'Right hand on the grip: shutter, main dial, and a custom button or two. This is where you change exposure without lowering the camera from your eye.',
+        'Left hand under the lens: zoom ring, focus ring, and stabilization or AF switches. Supporting the lens here steadies the whole rig at the same time.',
+        'Thumb on the back: AF-ON, joystick, and rear dial — moving the focus point and nudging exposure both live under this thumb.',
       ],
     },
     {
       kind: 'prose',
-      heading: 'Top plate',
+      heading: 'The mode dial sets the tone',
       paragraphs: [
-        'Shutter on the grip: half-press for AF and metering, full press to capture.',
-        'Mode dial chooses auto scenes, program, aperture priority, shutter priority, manual, or custom banks.',
-        'Main and rear command dials change whichever setting is active in that mode.',
-        'Hot shoe and focal-plane mark sit along the top — flash power is live; the mark shows where the sensor plane is for distance measurements.',
+        'One knob on the top plate decides how much the camera does for you. Auto and scene modes pick everything. P, Av, Tv, and M hand increasing amounts of control to you — the exposure lesson is really a tour of that dial.',
+        'Learn where your mode dial is and how it locks or clicks between positions. It is the first thing to check when a photo comes out wildly wrong.',
       ],
     },
     {
       kind: 'bullets',
-      heading: 'Back and viewfinder',
+      heading: 'DSLR vs mirrorless (quick)',
       items: [
-        'Optical vs electronic viewfinder — mirror prism vs tiny screen with exposure preview',
-        'Diopter wheel — sharpens the finder for your eyes; set once',
-        'Eye sensor — dims the rear LCD when you look through the finder',
-        'AF-ON — back-button focus separates focusing from shutter release',
-        'Joystick or multi-controller — moves AF points and menu choices',
-        'Quick control / rear dial — exposure comp, scroll menus, or browse images in playback',
+        'DSLR: a mirror sends light to an optical finder — you see the real scene and hear a mirror slap at capture.',
+        'Mirrorless: the sensor feeds a small screen inside the finder, previewing exposure and focus before you press the shutter.',
+        'Controls and parts names are nearly the same; the big differences are what you see in the finder and how quietly the camera fires.',
       ],
     },
     {
       kind: 'bullets',
-      heading: 'Screen and everyday buttons',
+      heading: 'Habits that pay off fast',
       items: [
-        'Rear LCD — menus, touch AF, live view; many bodies add a tilt or flip hinge',
-        'Playback and delete — review and clear mistakes before the card fills up',
-        'Menu vs Info/DISP — deep settings vs cycling shooting overlays (grid, histogram, level)',
-      ],
-    },
-    {
-      kind: 'prose',
-      heading: 'Sides, base, and doors',
-      paragraphs: [
-        'Rubber doors hide USB, HDMI, microphone, headphone, and remote ports — latch them after use.',
-        'Memory card slots may be dual; battery door is usually on the bottom with a friction lock.',
-        'Tripod socket on the base should align near the lens axis for panos; strap lugs take pressure off the mount.',
-      ],
-    },
-    {
-      kind: 'prose',
-      heading: 'Mirrorless vs DSLR (quick)',
-      paragraphs: [
-        'DSLR: mirror, optical finder, often larger bodies; you hear the mirror slap.',
-        'Mirrorless: always-on sensor feed, usually smaller, strong video, short flange for native lenses.',
-        'Both are serious tools — know where your card, battery, and finder live on yours.',
-      ],
-    },
-    {
-      kind: 'bullets',
-      heading: 'Takeaways',
-      items: [
-        'Use the interactive views when a name on your manual does not match what you see',
-        'Practice battery and card changes without looking',
-        'Next in Camera basics: the physics behind light, focus, and exposure',
+        'With the camera off, trace the grip, top plate, and back until you can reach shutter, mode dial, and lens release without looking.',
+        'Before you shoot: mode dial where you expect, card seated, battery charged — most false alarms start with one of those.',
+        'Wait for the activity light to stop before opening the memory or battery door; the camera may still be writing files.',
+        'When a menu or manual mentions a part you do not recognize, find the numbered callout on the body and learn that name once.',
       ],
     },
   ],

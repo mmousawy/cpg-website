@@ -16,6 +16,15 @@ const REFRESH_HOLD_MS = 800;
 /** Wait until the finger has moved this far before choosing an axis. */
 const AXIS_LOCK_PX = 10;
 
+/** Touches that begin inside this subtree must not arm pull-to-refresh (e.g. pinch-pan diagrams). */
+export const PULL_TO_REFRESH_SUPPRESS_SELECTOR = '[data-prevent-pull-refresh]';
+
+function touchStartsInPullRefreshSuppressedZone(target: EventTarget | null): boolean {
+  return Boolean(
+    (target as Element | null)?.closest?.(PULL_TO_REFRESH_SUPPRESS_SELECTOR),
+  );
+}
+
 function RefreshIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -67,6 +76,7 @@ export default function MobilePullToRefresh() {
     if (!container || e.target === null) return;
     if (!container.contains(e.target as Node)) return;
     if (container.scrollTop > 0) return;
+    if (touchStartsInPullRefreshSuppressedZone(e.target)) return;
 
     const touch = e.touches[0];
     touchStartXRef.current = touch?.clientX ?? 0;

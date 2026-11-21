@@ -174,21 +174,26 @@ function PartList({
               type="button"
               onClick={() => onSelect(part.id)}
               className={clsx(
-                'grid w-full grid-cols-[2.75rem_minmax(0,1fr)] items-start gap-x-2 rounded-lg py-1.5 pr-2 pl-1 text-left text-sm leading-snug transition-colors',
+                'grid w-full grid-cols-[3rem_minmax(0,1fr)] items-start gap-x-2.5 rounded-lg py-1.5 pr-2 pl-1 text-left text-sm leading-snug transition-colors',
                 active
-                  ? 'bg-primary/15 font-medium text-primary'
+                  ? 'bg-primary/15 text-primary'
                   : 'text-foreground hover:bg-background-medium',
               )}
               aria-pressed={active}
             >
               <span
-                className="pt-px text-right font-(family-name:--font-geist-mono) text-xs tabular-nums text-foreground/55"
+                className={clsx(
+                  'pt-px text-right font-(family-name:--font-geist-mono) text-xs tabular-nums mt-0.25',
+                  active ? 'text-primary/70' : 'text-foreground/55',
+                )}
               >
                 ({part.manualRef})
               </span>
               <span
                 className="min-w-0"
-              >{part.label}</span>
+              >
+                {part.label}
+              </span>
             </button>
           </li>
         );
@@ -238,8 +243,9 @@ export default function CameraAnatomyInteractive() {
           ))}
         </div>
         <div
-          className="flex min-h-0 min-w-0 flex-1 flex-col rounded-xl border border-border-color bg-background-light p-1.5 sm:p-2"
+          className="learn-camera-diagram-panel flex min-h-0 min-w-0 flex-1 flex-col rounded-xl border border-border-color p-1.5 sm:p-2"
           role="tabpanel"
+          data-prevent-pull-refresh
         >
           <div
             className="flex min-h-0 flex-1 flex-col"
@@ -280,7 +286,7 @@ export default function CameraAnatomyInteractive() {
       </div>
 
       <div
-        className="lg:w-64 lg:shrink-0"
+        className="min-w-0 lg:w-80 lg:max-w-[min(100%,22rem)] lg:shrink-0"
       >
         <p
           className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground"

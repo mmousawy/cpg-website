@@ -905,6 +905,17 @@ html.learn-page .learn-shell {
   background: transparent;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .learn-canon-diagram {
+    --learn-diagram-knockout: #101012;
+  }
+}
+
+:root.dark .learn-canon-diagram,
+:root.midnight .learn-canon-diagram {
+  --learn-diagram-knockout: #101012;
+}
+
 /* Fills parent; width follows slide, height capped by viewport (diagram rescales on resize). */
 .learn-camera-diagram-stage {
   width: 100%;
@@ -912,6 +923,37 @@ html.learn-page .learn-shell {
   max-height: min(78vh, 46rem);
   height: auto;
   min-height: 0;
+}
+
+@media (max-width: 639px) {
+  .learn-camera-diagram-stage {
+    max-height: min(62vh, 40rem);
+    min-height: min(52vh, 28rem);
+  }
+
+  .learn-camera-diagram-panel {
+    min-height: min(56vh, 30rem);
+  }
+}
+
+.learn-canon-diagram-pinch-viewport {
+  touch-action: none;
+}
+
+/* Light: white card behind ink. Dark themes: deeper well than --background-light. */
+.learn-camera-diagram-panel {
+  background: var(--background-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .learn-camera-diagram-panel {
+    background: #101012;
+  }
+}
+
+:root.dark .learn-camera-diagram-panel,
+:root.midnight .learn-camera-diagram-panel {
+  background: #101012;
 }
 
 /*
@@ -934,6 +976,25 @@ html.learn-page .learn-shell {
 .learn-canon-diagram [class*='learn-canon-callout-dot'] {
   pointer-events: all;
   cursor: pointer;
+}
+
+/* Visual dots stay small; invisible hit discs match the active outline on touch. */
+.learn-canon-diagram.learn-canon-diagram--touch-callouts
+  [class*='learn-canon-callout-dot'][data-manual-ref] {
+  pointer-events: none;
+}
+
+.learn-canon-diagram.learn-canon-diagram--touch-callouts [data-learn-canon-callout-hit] {
+  pointer-events: all;
+  cursor: pointer;
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2px;
+}
+
+/* Side & back port-callout guides (Canon #0082ba). */
+.learn-canon-diagram [class*='learn-canon-port-guide'] {
+  stroke: #0082ba;
 }
 
 @keyframes learn-slide-in {

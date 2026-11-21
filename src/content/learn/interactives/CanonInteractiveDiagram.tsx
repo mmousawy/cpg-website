@@ -14,12 +14,18 @@ import {
 } from 'react';
 
 import { tooltipSurfaceClassName } from '@/components/shared/Tooltip';
+import { useMatchMedia } from '@/hooks/useMatchMedia';
+import { useMounted } from '@/hooks/useMounted';
 
 import type { CameraPart } from './cameraAnatomyData';
 import { CANON_CALLOUT_DOT_SELECTOR } from './canonCalloutSelectors';
 import { CanonDiagram, type CanonDiagramId } from './canonDiagrams';
+import LearnDiagramPinchPan, { DEFAULT_MOBILE_DIAGRAM_SCALE } from './LearnDiagramPinchPan';
 
 const DIAGRAM_CLASS = 'learn-canon-diagram';
+const TOUCH_CALLOUTS_CLASS = 'learn-canon-diagram--touch-callouts';
+const CALLOUT_HIT_ATTR = 'data-learn-canon-callout-hit';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** ViewBox units — at this distance from a dot, it stays at `MIN_CALLOUT_RADIUS`. */
 const PROXIMITY_RADIUS = 96;
@@ -42,9 +48,14 @@ function clientToSvg(
   return { x: mapped.x, y: mapped.y };
 }
 
-function calloutRadiusForDistance(distance: number): number {
-  const t = Math.min(1, distance / PROXIMITY_RADIUS);
-  return MIN_CALLOUT_RADIUS + (MAX_CALLOUT_RADIUS - MIN_CALLOUT_RADIUS) * (1 - t);
+function calloutRadiusForDistance(
+  distance: number,
+  proximityRadius: number,
+  minR: number,
+  maxR: number,
+): number {
+  const t = Math.min(1, distance / proximityRadius);
+  return minR + (maxR - minR) * (1 - t);
 }
 
 function calloutCenter(node: SVGGraphicsElement): { cx: number; cy: number } {
@@ -83,8 +94,64 @@ type Props = {
   onSelectPart: (id: string) => void;
 };
 
+function findCalloutHitTarget(
+  node: SVGGraphicsElement,
+  ref: number,
+): SVGCircleElement | null {
+  const parent = node.parentNode;
+  if (!parent) {
+    return null;
+  }
+  return parent.querySelector<SVGCircleElement>(
+    `circle[${CALLOUT_HIT_ATTR}][data-manual-ref="${ref}"]`,
+  );
+}
+
+function removeCalloutHitTarget(node: SVGGraphicsElement, ref: number) {
+  findCalloutHitTarget(node, ref)?.remove();
+}
+
+function syncCalloutHitTarget(
+  node: SVGGraphicsElement,
+  tapRadius: number,
+  ref: number,
+  label: string,
+) {
+  const parent = node.parentNode;
+  if (!parent) {
+    return;
+  }
+
+  const { cx, cy } = calloutCenter(node);
+  let hit = findCalloutHitTarget(node, ref);
+
+  if (!hit) {
+    hit = document.createElementNS(SVG_NS, 'circle');
+    hit.setAttribute(CALLOUT_HIT_ATTR, 'true');
+    hit.setAttribute('class', 'learn-canon-callout-hit');
+    parent.insertBefore(hit, node.nextSibling);
+  }
+
+  hit.setAttribute('data-manual-ref', String(ref));
+  hit.setAttribute('cx', String(cx));
+  hit.setAttribute('cy', String(cy));
+  hit.setAttribute('r', String(tapRadius));
+  hit.setAttribute('role', 'button');
+  hit.setAttribute('tabindex', '0');
+  hit.setAttribute('aria-label', `(${ref}) ${label}`);
+  hit.setAttribute('data-active', node.getAttribute('data-active') ?? 'false');
+}
+
 function calloutFromTarget(target: EventTarget | null): Element | null {
-  return (target as Element | null)?.closest?.(CANON_CALLOUT_DOT_SELECTOR) ?? null;
+  const el = target as Element | null;
+  if (!el) {
+    return null;
+  }
+  return (
+    el.closest?.(CANON_CALLOUT_DOT_SELECTOR) ??
+    el.closest?.(`[${CALLOUT_HIT_ATTR}]`) ??
+    null
+  );
 }
 
 function manualRefFromTarget(target: EventTarget | null): number | null {
@@ -107,6 +174,17 @@ export default function CanonInteractiveDiagram({
   onSelectPart,
 }: Props) {
   const tooltipId = useId();
+  const mounted = useMounted();
+  const isCoarsePointer = useMatchMedia('(pointer: coarse)');
+  const mobileDiagram = useMatchMedia('(max-width: 639px)');
+  const pinchPanEnabled = mounted;
+  const diagramDefaultScale = mobileDiagram ? DEFAULT_MOBILE_DIAGRAM_SCALE : 1;
+  const touchDiagram = isCoarsePointer || mobileDiagram;
+  const proximityRadius = touchDiagram ? 112 : PROXIMITY_RADIUS;
+  const minCalloutRadius = touchDiagram ? 3.5 : MIN_CALLOUT_RADIUS;
+  const maxCalloutRadius = touchDiagram ? 9 : MAX_CALLOUT_RADIUS;
+  /** Selected ring — smaller than proximity max so it does not dominate on zoomed mobile. */
+  const activeCalloutRadius = touchDiagram ? 6.5 : maxCalloutRadius;
   const frameRef = useRef<HTMLDivElement>(null);
   const proximityFrame = useRef<number | null>(null);
   const pointerSvgRef = useRef<{ x: number; y: number } | null>(null);
@@ -141,6 +219,10 @@ export default function CanonInteractiveDiagram({
     }
     const pointer = pointerInsideRef.current ? pointerSvgRef.current : null;
     const useProximity = pointer != null;
+    if (!touchDiagram) {
+      root.querySelectorAll(`[${CALLOUT_HIT_ATTR}]`).forEach((el) => el.remove());
+    }
+
     const nodes = root.querySelectorAll<SVGGraphicsElement>(CANON_CALLOUT_DOT_SELECTOR);
 
     for (const node of nodes) {
@@ -149,34 +231,64 @@ export default function CanonInteractiveDiagram({
       const ref = mapped ? Number(rawRef) : NaN;
       const isMapped = mapped && Number.isFinite(ref);
 
+      const isActive =
+        activeRef != null && Number.isFinite(ref) && activeRef === ref;
+      node.setAttribute('data-active', isActive ? 'true' : 'false');
+
       if (isMapped) {
         const part = partByRef.get(ref);
         const label = part?.label ?? `Part ${ref}`;
-        node.setAttribute('role', 'button');
-        node.setAttribute('tabindex', '0');
-        node.setAttribute('aria-label', `(${ref}) ${label}`);
+
+        if (touchDiagram) {
+          node.removeAttribute('role');
+          node.removeAttribute('tabindex');
+          node.removeAttribute('aria-label');
+          syncCalloutHitTarget(node, activeCalloutRadius, ref, label);
+          findCalloutHitTarget(node, ref)?.setAttribute(
+            'data-active',
+            isActive ? 'true' : 'false',
+          );
+        } else {
+          removeCalloutHitTarget(node, ref);
+          node.setAttribute('role', 'button');
+          node.setAttribute('tabindex', '0');
+          node.setAttribute('aria-label', `(${ref}) ${label}`);
+        }
       } else {
+        if (Number.isFinite(ref)) {
+          removeCalloutHitTarget(node, ref);
+        }
         node.removeAttribute('role');
         node.removeAttribute('tabindex');
         node.removeAttribute('aria-label');
       }
 
-      const isActive =
-        activeRef != null && Number.isFinite(ref) && activeRef === ref;
-      node.setAttribute('data-active', isActive ? 'true' : 'false');
-
-      let displayR = MIN_CALLOUT_RADIUS;
+      let displayR = minCalloutRadius;
       if (isActive) {
-        displayR = MAX_CALLOUT_RADIUS;
+        displayR = activeCalloutRadius;
       } else if (useProximity && pointer != null) {
         const { cx, cy } = calloutCenter(node);
         const dx = pointer.x - cx;
         const dy = pointer.y - cy;
-        displayR = calloutRadiusForDistance(Math.hypot(dx, dy));
+        displayR = calloutRadiusForDistance(
+          Math.hypot(dx, dy),
+          proximityRadius,
+          minCalloutRadius,
+          maxCalloutRadius,
+        );
       }
       setCalloutDisplayRadius(node, displayR);
     }
-  }, [activeRef, partByRef, svgRoot]);
+  }, [
+    activeCalloutRadius,
+    activeRef,
+    maxCalloutRadius,
+    minCalloutRadius,
+    partByRef,
+    proximityRadius,
+    svgRoot,
+    touchDiagram,
+  ]);
 
   useLayoutEffect(() => {
     applyCalloutVisuals();
@@ -293,7 +405,7 @@ export default function CanonInteractiveDiagram({
           role="tooltip"
           className={clsx(
             tooltipSurfaceClassName,
-            'pointer-events-none absolute top-2 left-1/2 z-20 max-w-[min(100%,16rem)] -translate-x-1/2 px-2.5 py-1.5 text-center',
+            'pointer-events-none absolute top-2 left-1/2 z-20 hidden max-w-[min(100%,16rem)] -translate-x-1/2 px-2.5 py-1.5 text-center sm:block',
           )}
         >
           <span
@@ -305,20 +417,30 @@ export default function CanonInteractiveDiagram({
         </div>
       ) : null}
 
-      <div
-        ref={frameRef}
-        className="relative h-full min-h-0 w-full"
-        onPointerEnter={onPointerEnterFrame}
-        onPointerMove={onPointerMoveFrame}
-        onPointerLeave={clearProximity}
+      <LearnDiagramPinchPan
+        key={diagramId}
+        enabled={pinchPanEnabled}
+        defaultScale={diagramDefaultScale}
       >
-        <CanonDiagram
-          id={diagramId}
-          interactiveCallouts
-          className={clsx(DIAGRAM_CLASS, 'h-full w-full')}
-          svgProps={svgProps}
-        />
-      </div>
+        <div
+          ref={frameRef}
+          className="relative h-full min-h-0 w-full"
+          onPointerEnter={onPointerEnterFrame}
+          onPointerMove={onPointerMoveFrame}
+          onPointerLeave={clearProximity}
+        >
+          <CanonDiagram
+            id={diagramId}
+            interactiveCallouts
+            className={clsx(
+              DIAGRAM_CLASS,
+              'h-full w-full',
+              touchDiagram && TOUCH_CALLOUTS_CLASS,
+            )}
+            svgProps={svgProps}
+          />
+        </div>
+      </LearnDiagramPinchPan>
     </div>
   );
 }
